@@ -61,7 +61,12 @@ class DiningBot:
                 text=messages.set_wrong_args_message)
             return
         student_number, password = args
-        # TODO
+        logging.info("Add user: {} {} to db".format(student_number, password))
+        self.db.add_user({
+            "user_id": update.message.chat.id,
+            "username": update.effective_user.username,
+            "student_number": student_number,
+            "password": password})
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=messages.set_result_message.format(student_number, password))

@@ -1,6 +1,7 @@
 start_message = "غذا می‌قولی؟!"
 
 help_message = """
+/set <student_number> <password>
 /help: مشاهده‌ی راهنما
 """
 

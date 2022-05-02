@@ -1,3 +1,4 @@
+from src.dining import Dining
 from src.db import DB
 from telegram.ext import (
     Updater,
@@ -9,13 +10,14 @@ import logging
 
 
 class DiningBot:
-
     def __init__(self, token, admin_ids=set(), log_level='INFO'):
         self.admin_ids = admin_ids
         self.updater = Updater(token=token, use_context=True)
         self.dispatcher = self.updater.dispatcher
 
         self.db = DB()
+
+        # TODO: self.dining = Dining(student_number, password)
 
         logging.basicConfig(
             format='%(asctime)s - %(levelname)s - %(message)s',
@@ -50,6 +52,20 @@ class DiningBot:
             chat_id=update.effective_chat.id,
             text=messages.start_message)
 
+    def set(self, update, context):
+        if not update.message.text: return # on edit
+        args = update.message.text.split()[1:]
+        if len(args) != 2:
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=messages.set_wrong_args_message)
+            return
+        student_number, password = args
+        # TODO
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=messages.set_result_message.format(student_number, password))
+
     def help(self, update, context):
         if self.is_admin(update):
             msg = messages.admin_help_message
@@ -66,6 +82,9 @@ class DiningBot:
 
         help_handler = CommandHandler('help', self.help)
         self.dispatcher.add_handler(help_handler)
+
+        set_handler = CommandHandler('set', self.set)
+        self.dispatcher.add_handler(set_handler)
 
 
     def run(self):

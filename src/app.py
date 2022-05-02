@@ -10,12 +10,12 @@ import logging
 
 
 class DiningBot:
-    def __init__(self, token, admin_ids=set(), log_level='INFO'):
+    def __init__(self, token, admin_ids=set(), log_level='INFO', db: DB = None):
         self.admin_ids = admin_ids
         self.updater = Updater(token=token, use_context=True)
         self.dispatcher = self.updater.dispatcher
 
-        self.db = DB()
+        self.db = db
 
         # TODO: self.dining = Dining(student_number, password)
 

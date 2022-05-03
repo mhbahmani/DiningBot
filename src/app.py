@@ -1,5 +1,6 @@
 from src.dining import Dining
 from src.db import DB
+from src.food_priorities_handler import FoodPrioritiesHandler
 from src.static_data import (
     PLACES
 )
@@ -87,8 +88,15 @@ class DiningBot:
             chat_id=update.effective_chat.id,
             text=msg)
 
+    def update_user_favorite_foods(self, update, context):
+        update.message.reply_text(
+            text=messages.choose_food_priorities_message,
+            reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(foods=self.foods, page=1)
+        )
+
     def load_foods(self):
-        self.foods = set(self.db.get_all_foods())
+        foods = [food.get("name") for food in self.db.get_all_foods()]
+        self.foods = set(foods)
         logging.info(f"Loaded {len(self.foods)} foods")
 
     @check_admin
@@ -119,6 +127,9 @@ class DiningBot:
 
         update_food_list_handler = CommandHandler('update_foods', self.update_food_list)
         self.dispatcher.add_handler(update_food_list_handler)
+
+        my_foods_handler = CommandHandler('my_foods', self.update_user_favorite_foods)
+        self.dispatcher.add_handler(my_foods_handler)
 
 
     def run(self):

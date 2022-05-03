@@ -15,6 +15,8 @@ class DiningBot:
         self.updater = Updater(token=token, use_context=True)
         self.dispatcher = self.updater.dispatcher
 
+        self.foods = []
+
         self.db = db
 
         # TODO: self.dining = Dining(student_number, password)
@@ -70,6 +72,12 @@ class DiningBot:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=messages.set_result_message.format(student_number, password))
+
+    def load_foods(self):
+        with open(Dining.FOODS_FILE_PATH, "r") as file:
+            for food in file.readlines():
+                self.foods.add(food.strip("\n"))
+        logging.info("Foods loaded")
 
     def help(self, update, context):
         if self.is_admin(update):

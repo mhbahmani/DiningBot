@@ -5,6 +5,8 @@ import re
 
 
 class Dining:
+    FOODS_FILE_PATH = "./foods.txt"
+
     SSO_BASE_URL = "https://sso.stu.sharif.ir"
     DINING_BASE_URL = "https://dining.sharif.ir/admin"
     SIGN_IN_URL = SSO_BASE_URL + "/students/sign_in"

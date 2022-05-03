@@ -12,7 +12,13 @@ class DB:
     def add_food(self, food):
         self.db.foods.insert_one(food)
 
-    def get_all_foods(self):
+    def get_all_foods(self, name: bool = False, id: bool = False):
         return self.db.foods.find(
-            projection={'_id': 0, 'name': 1}
-            ).sort([('name', 1)])
+            projection={'_id': False, 'name': name, 'id': id}
+            ).sort([('food_id', 1)])
+
+    def set_user_food_priorities(self, user_id: str, priorities: list):
+        self.db.users.update_one(
+            {'user_id': user_id},
+            {'$set': {'priorities': priorities}}
+        )

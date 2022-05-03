@@ -35,10 +35,6 @@ class Dining:
         res = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
         print(res.json())
 
-    def test(self):
-        self.__login()
-        self.__load_food_table()
-
     def cancel_food(self, user_id: int, food_id: int):
         params = {'user_id': user_id,}
         data = {'id': food_id,}
@@ -77,10 +73,10 @@ class Dining:
             "select", {"id": "foodreservesdefineform-self_id", "class": "form-control"}).attrs["onchange"][-10:]
         self.user_id = re.search("\w+", s).group()
 
-    def __load_food_table(self) -> requests.Response:
+    def __load_food_table(self, place_id: int) -> requests.Response:
         data = {
             'id': '0',
-            'parent_id': '21',
+            'parent_id': place_id,
             'week': '1',
             'user_id': self.user_id,
         }

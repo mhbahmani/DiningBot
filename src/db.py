@@ -14,5 +14,5 @@ class DB:
 
     def get_all_foods(self):
         return self.db.foods.find(
-            projection={'_id': 0, 'title': 1}
-            ).sort([('title', 1)])
+            projection={'_id': 0, 'name': 1}
+            ).sort([('name', 1)])

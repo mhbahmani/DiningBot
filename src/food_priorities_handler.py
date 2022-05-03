@@ -1,15 +1,15 @@
+import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from src.messages import next_page_button_message, previous_page_button_message
+from src.messages import (
+    next_page_button_message,
+    previous_page_button_message,
+    done_button_message
+)
 
 
 PAGE_SIZE = 10
 
-
 class FoodPrioritiesHandler:
-    @staticmethod
-    def create_callback_data(action: str, food_name: str = "-") -> str:
-        return "FOOD" + ";" + ";".join([action, food_name])
-
     @staticmethod
     def create_food_list_keyboard(foods: set, page: int = 1) -> InlineKeyboardMarkup:
         keyboard = []
@@ -23,9 +23,7 @@ class FoodPrioritiesHandler:
                 row.append(
                     InlineKeyboardButton(
                         food,
-                        callback_data=FoodPrioritiesHandler.create_callback_data(action="SELECT", food_name=food)
-                    )
-                )
+                        callback_data=FoodPrioritiesHandler.create_callback_data(action="SELECT", food_name=food)))
             keyboard.append(row)
 
         row = []
@@ -33,28 +31,31 @@ class FoodPrioritiesHandler:
             row.append(
                 InlineKeyboardButton(
                     previous_page_button_message,
-                    callback_data=FoodPrioritiesHandler.create_callback_data(action="PREV", food_name="")
-                )
-            )
+                    callback_data=FoodPrioritiesHandler.create_callback_data(action="PREV", food_name="", page=page)))
         else: 
             row.append(
                 InlineKeyboardButton(
-                    " ", callback_data=FoodPrioritiesHandler.create_callback_data("IGNORE")
-                )
-            )
+                    " ", callback_data=FoodPrioritiesHandler.create_callback_data("IGNORE")))
+        row.append(
+            InlineKeyboardButton(
+                done_button_message, callback_data=FoodPrioritiesHandler.create_callback_data("DONE")))
         if len(foods) > page * PAGE_SIZE:
             row.append(
                 InlineKeyboardButton(
                     next_page_button_message,
-                    callback_data=FoodPrioritiesHandler.create_callback_data(action="NEXT", food_name="")
-                )
-            )
+                    callback_data=FoodPrioritiesHandler.create_callback_data(action="NEXT", food_name="", page=page)))
         else: 
             row.append(
                 InlineKeyboardButton(
-                    " ", callback_data=FoodPrioritiesHandler.create_callback_data("IGNORE")
-                )
-            )
+                    " ", callback_data=FoodPrioritiesHandler.create_callback_data("IGNORE")))
         keyboard.append(row)
 
         return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def create_callback_data(action: str, food_name: str = "-", page: int = 0) -> str:
+        return "FOOD" + ";" + ";".join([action, food_name, str(page)])
+
+    @staticmethod
+    def separate_callback_data(data: str) -> list:
+        return data.split(";")

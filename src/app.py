@@ -7,6 +7,7 @@ from src.static_data import (
 from telegram.ext import (
     Updater,
     CommandHandler,
+    CallbackQueryHandler
 )
 
 import src.messages as messages
@@ -94,6 +95,35 @@ class DiningBot:
             reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(foods=self.foods, page=1)
         )
 
+    def inline_keyboard_handler(self, update, context):
+        type, action, choosed, page = FoodPrioritiesHandler.separate_callback_data(update.callback_query.data)
+        if type == "FOOD":
+            self.inline_food_choosing_handler(update, context, action, choosed, int(page))
+
+    def inline_food_choosing_handler(self, update, context, action, choosed, page: int):
+        query = update.callback_query
+        logging.debug("Process choosed action or food: {} {}".format(action, choosed))
+        if action == "NEXT":
+            context.bot.edit_message_text(
+                text=query.message.text,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+                reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(foods=self.foods, page=page + 1))
+        elif action == "PREV":
+            context.bot.edit_message_text(
+                text=query.message.text,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+                reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(foods=self.foods, page=page - 1))
+        elif action == "SELECT":
+            context.bot.send_message(
+                text=choosed,
+                chat_id=update.effective_chat.id
+            )
+        elif action == "IGNORE":
+            context.bot.answer_callback_query(callback_query_id=query.id)
+            
+
     def load_foods(self):
         foods = [food.get("name") for food in self.db.get_all_foods()]
         self.foods = set(foods)
@@ -131,6 +161,8 @@ class DiningBot:
         my_foods_handler = CommandHandler('my_foods', self.update_user_favorite_foods)
         self.dispatcher.add_handler(my_foods_handler)
 
+        inline_handler = CallbackQueryHandler(self.inline_keyboard_handler)
+        self.dispatcher.add_handler(inline_handler)
 
     def run(self):
         self.load_foods()

@@ -33,6 +33,7 @@ update_food_list_result = """
 
 next_page_button_message = "< صفحه‌ی بعد"
 previous_page_button_message = "صفحه‌ی قبل >"
+done_button_message = "حله"
 
 choose_food_priorities_message = """
 🍟🍺 به ترتیب علاقت، روی غذایی که می‌خوای کلیک کن. می‌تونی تو صفحه‌ی های دیگه هم دنبال غذاها بگردی

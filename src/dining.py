@@ -13,6 +13,10 @@ class Dining:
     CANCEL_FOOD_URL = DINING_BASE_URL + "/food/food-reserve/cancel-reserve"
     LOAD_FOOD_TABLE = DINING_BASE_URL + "/food/food-reserve/load-reserve-table"
 
+    FOOD_ID_REGEX = "do_reserve_from_diet\(\"(?P<food_id>\w+).*"
+    DATE_REGEX = "\W+(?P<day>\w+\W?\w+)\W+(?P<date>\d+/\d+/\d+).*"
+
+    FOOD_TIMES = ["eftari", "sahari", "dinner", "lunch"]
 
     def __init__(self, student_id: str, password: str) -> None:
         self.student_id = student_id
@@ -40,7 +44,7 @@ class Dining:
         res = self.session.get(Dining.CANCEL_FOOD_URL, params=params, data=data)
         # TODO
 
-    def __login(self):
+    def __login(self) -> None:
         logging.debug("Making session")
         self.session = requests.Session()
         logging.debug("Get login page")
@@ -71,7 +75,7 @@ class Dining:
             "select", {"id": "foodreservesdefineform-self_id", "class": "form-control"}).attrs["onchange"][-10:]
         self.user_id = re.search("\w+", s).group()
 
-    def __load_food_table(self):
+    def __load_food_table(self) -> requests.Response:
         data = {
             'id': '0',
             'parent_id': '21',
@@ -80,4 +84,24 @@ class Dining:
         }
 
         res = self.session.post(Dining.LOAD_FOOD_TABLE, data=data)
-        # TODO
+        return res
+
+    def __parse_food_table(self, response: requests.Response):
+        content = bs(response.content, "html.parser")
+        foods = content.find("table").find_all("td")
+        days = content.find("table").find_all("th")[5:]
+        res = {}
+        food_times = len(foods) // 7
+        for i in range(7):
+            day, date = re.match(Dining.DATE_REGEX, days.pop().text).groupdict().values()
+            time = f"{date} {day}"
+            res[time] = {}
+            for i in range(food_times):
+                food = foods.pop()
+                food_name = food.find("span", {"data-original-title": "رزرو"})
+                if food_name:
+                    res[time][Dining.FOOD_TIMES[i]] = {
+                        "food": food.getText(),
+                        "food_id": re.match(Dining.FOOD_ID_REGEX, food_name.get("onclick")).group("food_id"),
+                    }
+        return res

@@ -23,8 +23,8 @@ class Dining:
     def __init__(self, student_id: str, password: str) -> None:
         self.student_id = student_id
         self.password = password
+        self.__login()
 
-        
     def reserve_food(self, user_id: int, place_id: int, food_id: int):
         params = {'user_id': user_id,}
         data = {
@@ -41,6 +41,10 @@ class Dining:
 
         res = self.session.get(Dining.CANCEL_FOOD_URL, params=params, data=data)
         # TODO
+
+    def get_foods_list(self, place_id: int) -> list:
+        table = self.__load_food_table(place_id)
+        return self.__parse_food_table_to_get_foods_list(table)
 
     def __login(self) -> None:
         logging.debug("Making session")
@@ -70,8 +74,8 @@ class Dining:
 
         response = self.session.get(Dining.RESERVE_PAGE_URL)
         s = bs(response.content, "html.parser").find(
-            "select", {"id": "foodreservesdefineform-self_id", "class": "form-control"}).attrs["onchange"][-10:]
-        self.user_id = re.search("\w+", s).group()
+            "button", {"type": "button", "class": "btn btn-default navigation-link"}).get("onclick")
+        self.user_id = re.match("load_diet_reserve_table.*\,(?P<user_id>\w+)\)", s).group("user_id")
 
     def __load_food_table(self, place_id: int) -> requests.Response:
         data = {
@@ -84,8 +88,8 @@ class Dining:
         res = self.session.post(Dining.LOAD_FOOD_TABLE, data=data)
         return res
 
-    def __parse_food_table(self, response: requests.Response):
-        content = bs(response.content, "html.parser")
+    def __parse_food_table(self, reserve_table: requests.Response) -> dict:
+        content = bs(reserve_table.content, "html.parser")
         foods = content.find("table").find_all("td")
         days = content.find("table").find_all("th")[5:]
         res = {}
@@ -103,3 +107,13 @@ class Dining:
                         "food_id": re.match(Dining.FOOD_ID_REGEX, food_name.get("onclick")).group("food_id"),
                     }
         return res
+
+    def __parse_food_table_to_get_foods_list(self, table: requests.Response) -> list:
+        content = bs(table.content, "html.parser")
+        foods = content.find("table").find_all("td")
+        result = []
+        for food in foods:
+            food_name = re.sub(" \(.*\)", "" , food.getText())
+            if food_name != "-":
+                result.append(food_name)
+        return result

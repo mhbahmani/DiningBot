@@ -1,5 +1,8 @@
 from src.dining import Dining
 from src.db import DB
+from src.static_data import (
+    PLACES
+)
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -10,12 +13,14 @@ import logging
 
 
 class DiningBot:
-    def __init__(self, token, admin_ids=set(), log_level='INFO', db: DB = None):
+    def __init__(self, token, admin_ids=set(), log_level='INFO', db: DB = None, admin_sso_username: str = None, admin_sso_password: str = None):
         self.admin_ids = admin_ids
+        self.admin_username = admin_sso_username
+        self.admin_password = admin_sso_password
         self.updater = Updater(token=token, use_context=True)
         self.dispatcher = self.updater.dispatcher
 
-        self.foods = []
+        self.foods = set()
 
         self.db = db
 
@@ -73,12 +78,6 @@ class DiningBot:
             chat_id=update.effective_chat.id,
             text=messages.set_result_message.format(student_number, password))
 
-    def load_foods(self):
-        with open(Dining.FOODS_FILE_PATH, "r") as file:
-            for food in file.readlines():
-                self.foods.add(food.strip("\n"))
-        logging.info("Foods loaded")
-
     def help(self, update, context):
         if self.is_admin(update):
             msg = messages.admin_help_message
@@ -88,6 +87,25 @@ class DiningBot:
             chat_id=update.effective_chat.id,
             text=msg)
 
+    def load_foods(self):
+        self.foods = set(self.db.get_all_foods())
+        logging.info(f"Loaded {len(self.foods)} foods")
+
+    @check_admin
+    def update_food_list(self, update, context):
+        self.dining = Dining(self.admin_username, self.admin_password)
+        num_foods = len(self.foods)
+        new_foods = []
+        for place_id in PLACES.values():
+            table = self.dining.get_foods_list(place_id)
+            new_foods = list(set(table) - self.foods)
+            for new_food in new_foods:
+                self.db.add_food({"name": new_food})
+                logging.debug("Added food: {}".format(new_food))
+            self.foods.update(table)
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=messages.update_food_list_result.format(len(self.foods) - num_foods))
 
     def setup_handlers(self):
         start_handler = CommandHandler('start', self.start)
@@ -99,8 +117,12 @@ class DiningBot:
         set_handler = CommandHandler('set', self.set)
         self.dispatcher.add_handler(set_handler)
 
+        update_food_list_handler = CommandHandler('update_foods', self.update_food_list)
+        self.dispatcher.add_handler(update_food_list_handler)
+
 
     def run(self):
+        self.load_foods()
         self.setup_handlers()
         self.updater.start_polling()
 

@@ -8,3 +8,11 @@ class DB:
 
     def add_user(self, user):
         self.db.users.insert_one(user)
+
+    def add_food(self, food):
+        self.db.foods.insert_one(food)
+
+    def get_all_foods(self):
+        return self.db.foods.find(
+            projection={'_id': 0, 'title': 1}
+            ).sort([('title', 1)])

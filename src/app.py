@@ -6,11 +6,12 @@ from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import (
-    FORGET_CODE_MENU_CHOOSING,
     PLACES,
+    CHOOSING_SELF,
     MAIN_MENU_CHOICES,
     MAIN_MENU_CHOOSING,
     RESERVE_MENU_CHOOSING,
+    FORGET_CODE_MENU_CHOOSING,
 )
 from telegram import (
     ReplyKeyboardMarkup
@@ -238,6 +239,12 @@ class DiningBot:
                 ],
                 RESERVE_MENU_CHOOSING: [
                     # TODO
+                ],
+                CHOOSING_SELF: [
+                    MessageHandler(
+                        Filters.regex('^(Main|درویش‌وند|شادمان|ولیعصر|شهرک|شهید وزوایی|شهید حیدرتاش|شهید صادقی|مصلی نژاد|آزادی|شهید شوریده|احمدی روشن|طرشت ۲|طرشت ۳|سلف پسرها|سلف دخترها)$'),
+                        self.forget_code_handler.handle_choosing_self
+                    )
                 ]
             },
             fallbacks=[MessageHandler(Filters.regex('^Main$'), self.send_main_menu)],

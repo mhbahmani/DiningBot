@@ -1,5 +1,9 @@
 start_message = "🍕 غذا می‌قولی؟!"
 
+main_menu_message = "از منویی که این پایین هست انتخاب کن که چی می‌خوای"
+forget_code_menu_message = "منوی کد فراموشی" # TODO
+reserve_menu_messsage = "منوی رزرو" # TODO
+
 details_message = """
 توضیحات مربوط به انتخاب اولویت‌ها:
 """
@@ -51,3 +55,5 @@ choosing_food_priorities_done_message = """
 choosing_food_priorities_cancel_message = """
 لغو شد.
 """
+
+choose_self_message = "کدوم سلف می‌خوای غذا بخوری؟"

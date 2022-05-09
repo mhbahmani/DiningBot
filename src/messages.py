@@ -56,4 +56,11 @@ choosing_food_priorities_cancel_message = """
 لغو شد.
 """
 
-choose_self_message = "کدوم سلف می‌خوای غذا بخوری؟"
+choose_self_message_to_get = "کدوم سلف می‌خوای غذا بخوری؟"
+choose_self_message_to_give = """دمت خیلی گرمه :))
+کد فراموشیت برای کدوم سلفه؟"""
+
+get_forget_code_from_user_message = "حالا لطفا کد فراموشیت رو برام بفرست"
+
+not_int_code_error_message = "این چیه دیگه؟ کد بده بهم، کد فراموشی کلش باید عدد باشه"
+not_enough_number_error_message = "کد فراموشی زمان ما ۷ رقمی بود، الان عوض شده؟ :)) یه چک بکن ببین کجاشو اشتباه زدی، دوباره بفرست"

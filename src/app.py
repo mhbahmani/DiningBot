@@ -6,10 +6,12 @@ from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import (
+    INPUT_FORGET_CODE,
     PLACES,
-    CHOOSING_SELF,
     MAIN_MENU_CHOICES,
     MAIN_MENU_CHOOSING,
+    CHOOSING_SELF_TO_GET,
+    CHOOSING_SELF_TO_GIVE,
     RESERVE_MENU_CHOOSING,
     FORGET_CODE_MENU_CHOOSING,
 )
@@ -230,21 +232,36 @@ class DiningBot:
                 FORGET_CODE_MENU_CHOOSING: [
                     MessageHandler(
                         Filters.regex('^Get$'),
-                        self.forget_code_handler.send_choose_self_menu
+                        self.forget_code_handler.send_choose_self_menu_to_get
                     ),
                     MessageHandler(
                         Filters.regex('^Give$'),
-                        self.forget_code_handler.send_forget_code_menu # TODO
+                        self.forget_code_handler.send_choose_self_menu_to_give # TODO
                     )
                 ],
                 RESERVE_MENU_CHOOSING: [
                     # TODO
                 ],
-                CHOOSING_SELF: [
+                CHOOSING_SELF_TO_GET: [
                     MessageHandler(
                         Filters.regex('^(Main|درویش‌وند|شادمان|ولیعصر|شهرک|شهید وزوایی|شهید حیدرتاش|شهید صادقی|مصلی نژاد|آزادی|شهید شوریده|احمدی روشن|طرشت ۲|طرشت ۳|سلف پسرها|سلف دخترها)$'),
-                        self.forget_code_handler.handle_choosing_self
+                        self.forget_code_handler.handle_choosed_self_to_get
                     )
+                ],
+                CHOOSING_SELF_TO_GIVE: [
+                    MessageHandler(
+                        Filters.regex('^(Main|درویش‌وند|شادمان|ولیعصر|شهرک|شهید وزوایی|شهید حیدرتاش|شهید صادقی|مصلی نژاد|آزادی|شهید شوریده|احمدی روشن|طرشت ۲|طرشت ۳|سلف پسرها|سلف دخترها)$'),
+                        self.forget_code_handler.handle_choosed_self_to_give
+                    )
+                ],
+                INPUT_FORGET_CODE: [
+                    MessageHandler(
+                        Filters.text & ~(
+                            Filters.command |
+                            Filters.regex('^(Main|درویش‌وند|شادمان|ولیعصر|شهرک|شهید وزوایی|شهید حیدرتاش|شهید صادقی|مصلی نژاد|آزادی|شهید شوریده|احمدی روشن|طرشت ۲|طرشت ۳|سلف پسرها|سلف دخترها)$')
+                        ),
+                        self.forget_code_handler.handle_forget_code_input
+                    )                    
                 ]
             },
             fallbacks=[MessageHandler(Filters.regex('^Main$'), self.send_main_menu)],

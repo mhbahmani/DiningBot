@@ -12,6 +12,9 @@ class DB:
     def add_food(self, food):
         self.db.foods.insert_one(food)
 
+    def add_forget_code(self, forget_code: dict):
+        self.db.forget_codes.insert_one(forget_code)
+
     def get_all_foods(self, name: bool = False, id: bool = False):
         return self.db.foods.find(
             projection={'_id': False, 'name': name, 'id': id}

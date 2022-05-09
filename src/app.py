@@ -45,7 +45,7 @@ class DiningBot:
 
         self.db = db
 
-        self.forget_code_handler = ForgetCodeMenuHandler()
+        self.forget_code_handler = ForgetCodeMenuHandler(self.db)
         self.reserve_handler = ReserveMenuHandler()
         # TODO: self.dining = Dining(student_number, password)
 
@@ -81,13 +81,7 @@ class DiningBot:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=messages.start_message)
-        return self.send_main_menu(update, context)
-
-    def send_main_menu(self, update, context):
-        update.message.reply_text(
-            text=messages.main_menu_message,
-            reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES, one_time_keyboard=True),
-        )
+        self.send_main_menu(update, context)
         return MAIN_MENU_CHOOSING
 
     def set(self, update, context):
@@ -199,6 +193,12 @@ class DiningBot:
         logging.info(f"{len(self.foods) - num_foods} foods added")
         threading.Thread(target=self.update_food_lists_caches, args=()).start()
         logging.info("Updated food list in cache started")
+
+    def send_main_menu(self, update, context):
+        update.message.reply_text(
+            text=messages.main_menu_message,
+            reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES, one_time_keyboard=True),
+        )
 
     def setup_handlers(self):
         help_handler = CommandHandler('help', self.help)

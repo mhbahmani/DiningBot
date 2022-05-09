@@ -1,13 +1,14 @@
+from src.utils import get_food_court_id_by_name
 from telegram import ReplyKeyboardMarkup
 import src.messages as messages
 import src.static_data as static_data
-from src.db import DB
 
 
 class ForgetCodeMenuHandler:
     FORGET_CODE_LENGTH = 7
 
-    def __init__(self) -> None:
+    def __init__(self, db_client) -> None:
+        self.db = db_client
         self.markup = ReplyKeyboardMarkup(static_data.SELFS, one_time_keyboard=True)
 
     def send_forget_code_menu(self, update, context):
@@ -40,8 +41,8 @@ class ForgetCodeMenuHandler:
         return static_data.FORGET_CODE_MENU_CHOOSING
 
     def handle_choosed_self_to_give(self, update, context):
-        choosed_self = update.message.text
-        context.user_data['self'] = choosed_self
+        choosed_food_court = update.message.text
+        context.user_data['food_court'] = choosed_food_court
         update.message.reply_text(
             text=messages.get_forget_code_from_user_message
         )
@@ -61,4 +62,27 @@ class ForgetCodeMenuHandler:
                 text=messages.not_int_code_error_message
             )
             return static_data.INPUT_FORGET_CODE
-        print(forget_code)
+        if not context.user_data['food_court']:
+            update.message.reply_text(
+                text=messages.food_court_not_choosed_error_message
+            )
+            return static_data.CHOOSING_SELF_TO_GIVE
+        
+        self.db.add_forget_code({
+            "username": update.effective_user.username,
+            "user_id": update.message.chat.id,
+            "forget_code": forget_code,
+            "food_court_id": get_food_court_id_by_name(context.user_data['food_court'])
+        })
+        update.message.reply_text(
+            text=messages.forget_code_added_message
+        )
+        if context.user_data: context.user_data.clear()
+        self.back_to_main_menu(update)
+        return static_data.MAIN_MENU_CHOOSING
+    
+    def back_to_main_menu(self, update):
+        update.message.reply_text(
+            text=messages.main_menu_message,
+            reply_markup=ReplyKeyboardMarkup(static_data.MAIN_MENU_CHOICES, one_time_keyboard=True),
+        )

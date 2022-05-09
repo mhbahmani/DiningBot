@@ -13,6 +13,24 @@ PLACES = {
     # "رستوران های مکمل - سلف آزاد - لاله": "59"
 }
 
+FOOD_COURT_IDS = {
+    "سلف پسرها": 1,
+    "سلف دخترها": 2,
+    "احمدی روشن": 3,
+    'طرشت ۲': 4,
+    'طرشت ۳': 5,
+    'مصلی نژاد': 6,
+    'آزادی': 7,
+    'شهید شوریده': 8,
+    'شهید وزوایی': 9,
+    'شهید حیدرتاش': 10,
+    'شهید صادقی': 11,
+    'شادمان': 12,
+    'ولیعصر': 13,
+    'شهرک': 14,
+    'درویش‌وند': 15
+}
+
 # Stages
 MAIN_MENU_CHOOSING, FORGET_CODE_MENU_CHOOSING, RESERVE_MENU_CHOOSING, CHOOSING_SELF_TO_GET, CHOOSING_SELF_TO_GIVE, INPUT_FORGET_CODE = range(6)
 

@@ -7,6 +7,7 @@ from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import (
     BACK_TO_MAIN_MENU_LABEL,
+    BACK_TO_MAIN_MENU_REGEX,
     FOOD_COURTS_REGEX,
     FORGET_CODE_MENU_REGEX,
     GET_FORGET_CODE_REGEX,
@@ -269,7 +270,7 @@ class DiningBot:
                     )                    
                 ]
             },
-            fallbacks=[MessageHandler(Filters.regex(f'^{BACK_TO_MAIN_MENU_LABEL}$'), self.send_main_menu)],
+            fallbacks=[MessageHandler(Filters.regex(BACK_TO_MAIN_MENU_REGEX), self.send_main_menu)],
         )
         self.dispatcher.add_handler(menue_handler)
 

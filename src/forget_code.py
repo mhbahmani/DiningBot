@@ -92,5 +92,5 @@ class ForgetCodeMenuHandler:
     def back_to_main_menu(self, update):
         update.message.reply_text(
             text=messages.main_menu_message,
-            reply_markup=ReplyKeyboardMarkup(static_data.MAIN_MENU_CHOICES, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(static_data.MAIN_MENU_CHOICES),
         )

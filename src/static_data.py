@@ -12,3 +12,28 @@ PLACES = {
     # "رستوران های مکمل - سلف آزاد - دنا": "58",
     # "رستوران های مکمل - سلف آزاد - لاله": "59"
 }
+
+# Stages
+MAIN_MENU_CHOOSING, FORGET_CODE_MENU_CHOOSING, RESERVE_MENU_CHOOSING, CHOOSING_SELF = range(4)
+
+MAIN_MENU_CHOICES = [
+    ['Code', 'Reserve']
+]
+FORGET_CODE_MENU_CHOICES = [
+    ['Get', 'Give'],
+    ['Main']
+]
+RESERVE_MENU_CHOICES = [
+    ['Reserve', 'Set Favorites'],
+    ['Main']
+]
+
+SELFS = [
+    ['سلف البرز (پسرها)', 'سلف یاس (دخترها)'],
+    ['احمدی روشن', 'طرشت ۲', 'طرشت ۳'],
+    ['مصلی نژاد', 'آزادی', 'شهید شوریده'],
+    ['شهید وزوایی', 'شهید حیدرتاش', 'شهید صادقی'],
+    ['شادمان', 'ولیعصر', 'شهرک'],
+    ['درویش‌وند'],
+    ['Main']
+]

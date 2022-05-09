@@ -3,13 +3,25 @@ import threading
 from src.dining import Dining
 from src.db import DB
 from src.food_priorities_handler import FoodPrioritiesHandler
+from src.forget_code import ForgetCodeMenuHandler
+from src.reserve import ReserveMenuHandler
 from src.static_data import (
-    PLACES
+    FORGET_CODE_MENU_CHOOSING,
+    PLACES,
+    MAIN_MENU_CHOICES,
+    MAIN_MENU_CHOOSING,
+    RESERVE_MENU_CHOOSING,
+)
+from telegram import (
+    ReplyKeyboardMarkup
 )
 from telegram.ext import (
     Updater,
+    Filters,
     CommandHandler,
-    CallbackQueryHandler
+    MessageHandler,
+    CallbackQueryHandler,
+    ConversationHandler
 )
 
 import src.messages as messages
@@ -30,6 +42,8 @@ class DiningBot:
 
         self.db = db
 
+        self.forget_code_handler = ForgetCodeMenuHandler()
+        self.reserve_handler = ReserveMenuHandler()
         # TODO: self.dining = Dining(student_number, password)
 
         logging.basicConfig(
@@ -64,6 +78,14 @@ class DiningBot:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=messages.start_message)
+        return self.send_main_menu(update, context)
+
+    def send_main_menu(self, update, context):
+        update.message.reply_text(
+            text=messages.main_menu_message,
+            reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES, one_time_keyboard=True),
+        )
+        return MAIN_MENU_CHOOSING
 
     def set(self, update, context):
         if not update.message.text: return # on edit
@@ -176,9 +198,6 @@ class DiningBot:
         logging.info("Updated food list in cache started")
 
     def setup_handlers(self):
-        start_handler = CommandHandler('start', self.start)
-        self.dispatcher.add_handler(start_handler)
-
         help_handler = CommandHandler('help', self.help)
         self.dispatcher.add_handler(help_handler)
 
@@ -193,6 +212,37 @@ class DiningBot:
 
         inline_handler = CallbackQueryHandler(self.inline_keyboard_handler)
         self.dispatcher.add_handler(inline_handler)
+
+        menue_handler = ConversationHandler(
+            entry_points=[CommandHandler('start', self.start)],
+            states={
+                MAIN_MENU_CHOOSING: [
+                    MessageHandler(
+                        Filters.regex('^Code$'),
+                        self.forget_code_handler.send_forget_code_menu
+                    ),
+                    MessageHandler(
+                        Filters.regex('^Reserve$'),
+                        self.reserve_handler.send_reserve_menu
+                    )
+                ],
+                FORGET_CODE_MENU_CHOOSING: [
+                    MessageHandler(
+                        Filters.regex('^Get$'),
+                        self.forget_code_handler.send_choose_self_menu
+                    ),
+                    MessageHandler(
+                        Filters.regex('^Give$'),
+                        self.forget_code_handler.send_forget_code_menu # TODO
+                    )
+                ],
+                RESERVE_MENU_CHOOSING: [
+                    # TODO
+                ]
+            },
+            fallbacks=[MessageHandler(Filters.regex('^Main$'), self.send_main_menu)],
+        )
+        self.dispatcher.add_handler(menue_handler)
 
     def run(self):
         self.load_foods()

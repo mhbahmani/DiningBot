@@ -264,10 +264,7 @@ class DiningBot:
                 ],
                 INPUT_FORGET_CODE: [
                     MessageHandler(
-                        Filters.text & ~(
-                            Filters.command |
-                            Filters.regex(INPUT_FORGET_CODE_EXCLUDE)
-                        ),
+                        Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
                         self.forget_code_handler.handle_forget_code_input
                     )                    
                 ]

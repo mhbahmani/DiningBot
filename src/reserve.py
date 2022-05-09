@@ -9,6 +9,10 @@ class ReserveMenuHandler:
 
     def send_reserve_menu(self, update, context):
         update.message.reply_text(
+            text=messages.still_under_struction,
+        )
+        return static_data.MAIN_MENU_CHOOSING
+        update.message.reply_text(
             text=messages.reserve_menu_messsage,
             reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES, one_time_keyboard=True),
         )

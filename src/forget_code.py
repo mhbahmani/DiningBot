@@ -10,7 +10,7 @@ class ForgetCodeMenuHandler:
 
     def __init__(self, db_client) -> None:
         self.db = db_client
-        self.markup = ReplyKeyboardMarkup(static_data.SELFS, one_time_keyboard=True)
+        self.markup = ReplyKeyboardMarkup(static_data.SELFS)
 
     def send_forget_code_menu(self, update, context):
         update.message.reply_text(
@@ -40,14 +40,13 @@ class ForgetCodeMenuHandler:
             update.message.reply_text(
                 text=messages.no_code_for_this_food_court_message
             )
-            self.send_forget_code_menu(update, context)
-            return static_data.FORGET_CODE_MENU_CHOOSING
+            return self.send_choose_self_menu_to_get(update, context)
         forget_code = forget_codes[randint(0, len(forget_codes) - 1)].get("forget_code")
         update.message.reply_text(
             text=messages.forget_code_founded_message.format(forget_code)
         )
-        self.send_forget_code_menu(update, context)
-        return static_data.FORGET_CODE_MENU_CHOOSING
+        self.back_to_main_menu(update)
+        return static_data.MAIN_MENU_CHOOSING
 
     def handle_choosed_self_to_give(self, update, context):
         choosed_food_court = update.message.text

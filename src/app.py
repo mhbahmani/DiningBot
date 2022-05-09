@@ -197,7 +197,7 @@ class DiningBot:
     def send_main_menu(self, update, context):
         update.message.reply_text(
             text=messages.main_menu_message,
-            reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES),
         )
 
     def setup_handlers(self):

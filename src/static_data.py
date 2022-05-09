@@ -34,16 +34,29 @@ FOOD_COURT_IDS = {
 # Stages
 MAIN_MENU_CHOOSING, FORGET_CODE_MENU_CHOOSING, RESERVE_MENU_CHOOSING, CHOOSING_SELF_TO_GET, CHOOSING_SELF_TO_GIVE, INPUT_FORGET_CODE = range(6)
 
+FORGET_CODE_MENU_LABEL = 'کد فراموشی'
+FORGET_CODE_MENU_REGEX = '^{}$'.format(FORGET_CODE_MENU_LABEL)
+
+RESERVE_MENU_LABEL = 'رزرو غذا'
+RESERVE_MENU_REGEX = '^{}$'.format(RESERVE_MENU_LABEL)
+
+GET_FORGET_CODE_LABEL = "یه کد بده که بدجور گشنمه"
+GET_FORGET_CODE_REGEX = '^{}$'.format(GET_FORGET_CODE_LABEL)
+GIVE_FORGET_CODE_LABEL = "می‌خوام یه کد بدم عشق کنی"
+GIVE_FORGET_CODE_REGEX = '^{}$'.format(GIVE_FORGET_CODE_LABEL)
+BACK_TO_MAIN_MENU_LABEL = "برگردیم همون اول"
+BACK_TO_MAIN_MENU_REGEX = '^{}$'.format(BACK_TO_MAIN_MENU_LABEL)
+
 MAIN_MENU_CHOICES = [
-    ['Code', 'Reserve']
+    [FORGET_CODE_MENU_LABEL, RESERVE_MENU_LABEL]
 ]
 FORGET_CODE_MENU_CHOICES = [
-    ['Get', 'Give'],
-    ['Main']
+    [GET_FORGET_CODE_LABEL, GIVE_FORGET_CODE_LABEL],
+    [BACK_TO_MAIN_MENU_LABEL]
 ]
 RESERVE_MENU_CHOICES = [
     ['Reserve', 'Set Favorites'],
-    ['Main']
+    [BACK_TO_MAIN_MENU_LABEL]
 ]
 
 SELFS = [
@@ -55,3 +68,6 @@ SELFS = [
     ['درویش‌وند'],
     ['Main']
 ]
+
+FOOD_COURTS_REGEX = "^(درویش‌وند|شادمان|ولیعصر|شهرک|شهید وزوایی|شهید حیدرتاش|شهید صادقی|مصلی نژاد|آزادی|شهید شوریده|احمدی روشن|طرشت ۲|طرشت ۳|سلف پسرها|سلف دخترها)$"
+INPUT_FORGET_CODE_EXCLUDE = f'^({BACK_TO_MAIN_MENU_LABEL}|درویش‌وند|شادمان|ولیعصر|شهرک|شهید وزوایی|شهید حیدرتاش|شهید صادقی|مصلی نژاد|آزادی|شهید شوریده|احمدی روشن|طرشت ۲|طرشت ۳|سلف پسرها|سلف دخترها)$'

@@ -6,6 +6,12 @@ from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import (
+    BACK_TO_MAIN_MENU_LABEL,
+    FOOD_COURTS_REGEX,
+    FORGET_CODE_MENU_REGEX,
+    GET_FORGET_CODE_REGEX,
+    GIVE_FORGET_CODE_REGEX,
+    INPUT_FORGET_CODE_EXCLUDE,
     PLACES,
     INPUT_FORGET_CODE,
     MAIN_MENU_CHOICES,
@@ -14,6 +20,7 @@ from src.static_data import (
     CHOOSING_SELF_TO_GIVE,
     RESERVE_MENU_CHOOSING,
     FORGET_CODE_MENU_CHOOSING,
+    RESERVE_MENU_REGEX,
 )
 from telegram import (
     ReplyKeyboardMarkup
@@ -222,21 +229,21 @@ class DiningBot:
             states={
                 MAIN_MENU_CHOOSING: [
                     MessageHandler(
-                        Filters.regex('^Code$'),
+                        Filters.regex(FORGET_CODE_MENU_REGEX),
                         self.forget_code_handler.send_forget_code_menu
                     ),
                     MessageHandler(
-                        Filters.regex('^Reserve$'),
+                        Filters.regex(RESERVE_MENU_REGEX),
                         self.reserve_handler.send_reserve_menu
                     )
                 ],
                 FORGET_CODE_MENU_CHOOSING: [
                     MessageHandler(
-                        Filters.regex('^Get$'),
+                        Filters.regex(GET_FORGET_CODE_REGEX),
                         self.forget_code_handler.send_choose_self_menu_to_get
                     ),
                     MessageHandler(
-                        Filters.regex('^Give$'),
+                        Filters.regex(GIVE_FORGET_CODE_REGEX),
                         self.forget_code_handler.send_choose_self_menu_to_give # TODO
                     )
                 ],
@@ -245,13 +252,13 @@ class DiningBot:
                 ],
                 CHOOSING_SELF_TO_GET: [
                     MessageHandler(
-                        Filters.regex('^(درویش‌وند|شادمان|ولیعصر|شهرک|شهید وزوایی|شهید حیدرتاش|شهید صادقی|مصلی نژاد|آزادی|شهید شوریده|احمدی روشن|طرشت ۲|طرشت ۳|سلف پسرها|سلف دخترها)$'),
+                        Filters.regex(FOOD_COURTS_REGEX),
                         self.forget_code_handler.handle_choosed_self_to_get
                     )
                 ],
                 CHOOSING_SELF_TO_GIVE: [
                     MessageHandler(
-                        Filters.regex('^(درویش‌وند|شادمان|ولیعصر|شهرک|شهید وزوایی|شهید حیدرتاش|شهید صادقی|مصلی نژاد|آزادی|شهید شوریده|احمدی روشن|طرشت ۲|طرشت ۳|سلف پسرها|سلف دخترها)$'),
+                        Filters.regex(FOOD_COURTS_REGEX),
                         self.forget_code_handler.handle_choosed_self_to_give
                     )
                 ],
@@ -259,13 +266,13 @@ class DiningBot:
                     MessageHandler(
                         Filters.text & ~(
                             Filters.command |
-                            Filters.regex('^(Main|درویش‌وند|شادمان|ولیعصر|شهرک|شهید وزوایی|شهید حیدرتاش|شهید صادقی|مصلی نژاد|آزادی|شهید شوریده|احمدی روشن|طرشت ۲|طرشت ۳|سلف پسرها|سلف دخترها)$')
+                            Filters.regex(INPUT_FORGET_CODE_EXCLUDE)
                         ),
                         self.forget_code_handler.handle_forget_code_input
                     )                    
                 ]
             },
-            fallbacks=[MessageHandler(Filters.regex('^Main$'), self.send_main_menu)],
+            fallbacks=[MessageHandler(Filters.regex(f'^{BACK_TO_MAIN_MENU_LABEL}$'), self.send_main_menu)],
         )
         self.dispatcher.add_handler(menue_handler)
 

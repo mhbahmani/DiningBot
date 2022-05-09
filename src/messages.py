@@ -67,3 +67,9 @@ not_enough_number_error_message = """کد فراموشی زمان ما ۷ رقم
 یه چک بکن ببین کجاشو اشتباه زدی، دوباره بفرست"""
 food_court_not_choosed_error_message = "سلف رو هنوز انتخاب نکردی که، انتخاب کن"
 forget_code_added_message = "خیلی هم عالی، کد فراموشیت سیو شد. یه گشنه‌ای رو سیر می‌کنی :)"
+
+no_code_for_this_food_court_message = "متاسفم، ولی کسی کد فراموشی واسه این سلف نذاشته :("
+forget_code_founded_message = """یه کد برات پیدا کردم! :)
+برو بزن به بدن، عشق کن. اینم کد:
+{}
+"""

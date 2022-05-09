@@ -1,3 +1,4 @@
+from random import randint
 from src.utils import get_food_court_id_by_name
 from telegram import ReplyKeyboardMarkup
 import src.messages as messages
@@ -33,10 +34,18 @@ class ForgetCodeMenuHandler:
         return static_data.CHOOSING_SELF_TO_GIVE
 
     def handle_choosed_self_to_get(self, update, context):
-        # TODO
-        # Check is there a forget code for selected self
-        choosed_self = update.message.text
-        print(choosed_self)
+        choosed_food_court = update.message.text
+        forget_codes = list(self.db.find_forget_code(get_food_court_id_by_name(choosed_food_court)))
+        if not forget_codes:
+            update.message.reply_text(
+                text=messages.no_code_for_this_food_court_message
+            )
+            self.send_forget_code_menu(update, context)
+            return static_data.FORGET_CODE_MENU_CHOOSING
+        forget_code = forget_codes[randint(0, len(forget_codes) - 1)].get("forget_code")
+        update.message.reply_text(
+            text=messages.forget_code_founded_message.format(forget_code)
+        )
         self.send_forget_code_menu(update, context)
         return static_data.FORGET_CODE_MENU_CHOOSING
 

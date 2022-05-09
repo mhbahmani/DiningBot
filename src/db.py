@@ -25,3 +25,8 @@ class DB:
             {'user_id': user_id},
             {'$set': {'priorities': priorities}}
         )
+
+    def find_forget_code(self, food_court_id: int):
+        return self.db.forget_codes.find(
+            filter={"food_court_id": food_court_id},
+            projection={'_id': 0, "forget_code": 1, "username": 1, "user_id": 1})

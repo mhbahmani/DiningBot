@@ -69,6 +69,12 @@ class DB:
     def get_num_users(self) -> int:
         return self.db.bot_users.find().count()
 
+    def unset_users_forget_codes(self):
+        return self.db.bot_users.update_many(
+            {},
+            {"forget_code": None}
+        )
+
     def update_user_rank(self, user_id: str, rank: int):
         self.db.user_forget_code_counts.update_one(
             {'user_id': user_id},

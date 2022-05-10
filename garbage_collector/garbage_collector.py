@@ -23,7 +23,9 @@ class GarbageCollector:
     
     def clear_forget_codes(self):
         self.db.clear_forget_codes()
-        logging.info("Forget codes cleared")
+        logging.info("Forget codes collection cleared")
+        self.db.unset_users_forget_codes()
+        logging.info("Users forget codes unset")
 
     def update_user_records(self):
         forget_codes = self.db.get_all_forget_codes()

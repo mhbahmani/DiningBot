@@ -1,7 +1,6 @@
-from bdb import effective
 from random import randint
 from src.utils import get_food_court_id_by_name
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove
 import src.messages as messages
 import src.static_data as static_data
 
@@ -42,12 +41,12 @@ class ForgetCodeMenuHandler:
                 text=messages.no_code_for_this_food_court_message
             )
             return self.send_choose_self_menu_to_get(update, context)
-        forget_code = forget_codes[randint(0, len(forget_codes) - 1)].get("forget_code")
+        forget_code = forget_codes[randint(0, len(forget_codes) - 1)]
         update.message.reply_text(
-            text=messages.forget_code_founded_message.format(forget_code),
-            reply_markup=self.make_return_forget_code_button(forget_code)
+            text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name")),
+            reply_markup=self.make_return_forget_code_button(forget_code.get("forget_code"))
         )
-        self.db.update_forget_code_assignment_status(forget_code, True)
+        self.db.update_forget_code_assignment_status(forget_code.get("forget_code"), True)
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
 
@@ -55,7 +54,8 @@ class ForgetCodeMenuHandler:
         choosed_food_court = update.message.text
         context.user_data['food_court'] = choosed_food_court
         update.message.reply_text(
-            text=messages.get_forget_code_from_user_message
+            text=messages.get_forget_code_from_user_message,
+            reply_markup=ReplyKeyboardRemove()
         )
         return static_data.INPUT_FORGET_CODE
 
@@ -78,11 +78,18 @@ class ForgetCodeMenuHandler:
                 text=messages.food_court_not_choosed_error_message
             )
             return static_data.CHOOSING_SELF_TO_GIVE
-        
+        context.user_data['forget_code'] = forget_code
+        update.message.reply_text(
+            text=messages.get_food_name_message
+        )
+        return static_data.INPUT_FOOD_NAME
+    
+    def handle_forget_code_food_name_input(self, update, context):
         self.db.add_forget_code({
             "username": update.effective_user.username,
             "user_id": update.message.chat.id,
-            "forget_code": forget_code,
+            "forget_code": context.user_data['forget_code'],
+            "food_name": update.message.text,
             "food_court_id": get_food_court_id_by_name(context.user_data['food_court']),
             "assigned": False,
             "assigned_to_user_id": update.effective_user.id,
@@ -94,7 +101,7 @@ class ForgetCodeMenuHandler:
         if context.user_data: context.user_data.clear()
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
-    
+
     def send_forget_code_ranking(self, update, context):
         users = list(self.db.get_users_forget_code_counts())
         if users:
@@ -106,7 +113,7 @@ class ForgetCodeMenuHandler:
             return static_data.FORGET_CODE_MENU_CHOOSING
         message = ""
         for i, user in enumerate(users):
-            message += "{}- {}: {}\n".format(i, user.get("username"), user.get("count"))
+            message += "🍔 {}- {}: {}\n".format(i + 1, user.get("username"), user.get("count"))
         update.message.reply_text(
             text=messages.users_ranking_message.format(message)
         )
@@ -120,7 +127,6 @@ class ForgetCodeMenuHandler:
     
     def return_forget_code(self, update, context, forget_code: int):
         self.db.update_forget_code_assignment_status(forget_code, False)
-        print(f'**{forget_code}**')
         context.bot.edit_message_text(
             text=messages.forget_taked_back_message,
             chat_id=update.callback_query.message.chat_id,

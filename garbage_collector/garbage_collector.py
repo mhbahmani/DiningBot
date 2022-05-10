@@ -26,7 +26,7 @@ class GarbageCollector:
         logging.info("Forget codes cleared")
 
     def update_user_records(self):
-        forget_codes = self.db.find_forget_code()
+        forget_codes = self.db.get_all_forget_codes()
         users = {}
         for forget_code in forget_codes:
             users[forget_code['user_id']] = {

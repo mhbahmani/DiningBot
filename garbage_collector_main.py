@@ -37,5 +37,6 @@ schedule.every().day.at("15:00").do(update_user_records)
 schedule.every().day.at("16:00").do(clear_forget_codes)
 
 while True:
+    garbage_collector.update_user_records()
     schedule.run_pending()
     time.sleep(60 * 60)

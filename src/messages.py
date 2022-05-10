@@ -69,12 +69,13 @@ not_int_code_error_message = "این چیه دیگه؟ کد بده بهم، کد
 not_enough_number_error_message = """کد فراموشی زمان ما ۷ رقمی بود، الان عوض شده؟ :))
 یه چک بکن ببین کجاشو اشتباه زدی، دوباره بفرست"""
 food_court_not_choosed_error_message = "سلف رو هنوز انتخاب نکردی که، انتخاب کن"
-forget_code_added_message = "خیلی هم عالی، کد فراموشیت سیو شد. یه گشنه‌ای رو سیر می‌کنی :)"
+forget_code_added_message = "دمت گرم. خدا خیرت بده :)"
+get_food_name_message = "عیول، فقط بی‌زحمت بگو غذاش چیه؟ اگه نمی‌دونی هم بگو نمی‌دونم :)"
 
 no_code_for_this_food_court_message = "متاسفم، ولی کسی کد فراموشی واسه این سلف نذاشته :("
 forget_code_founded_message = """یه کد برات پیدا کردم! :)
 برو بزن به بدن، عشق کن. اینم کد:
-{}
+{} - {} - {}
 """
 
 still_under_struction = """

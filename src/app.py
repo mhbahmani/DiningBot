@@ -12,6 +12,7 @@ from src.static_data import (
     FORGET_CODE_MENU_REGEX,
     GET_FORGET_CODE_REGEX,
     GIVE_FORGET_CODE_REGEX,
+    INPUT_FOOD_NAME,
     INPUT_FORGET_CODE_EXCLUDE,
     PLACES,
     INPUT_FORGET_CODE,
@@ -278,12 +279,18 @@ class DiningBot:
                         self.forget_code_handler.handle_choosed_self_to_give
                     )
                 ],
+                INPUT_FOOD_NAME: [
+                    MessageHandler(
+                        Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
+                        self.forget_code_handler.handle_forget_code_food_name_input
+                    )                    
+                ],
                 INPUT_FORGET_CODE: [
                     MessageHandler(
                         Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
                         self.forget_code_handler.handle_forget_code_input
                     )                    
-                ]
+                ],
             },
             fallbacks=[MessageHandler(Filters.regex(BACK_TO_MAIN_MENU_REGEX), self.send_main_menu)],
         )

@@ -49,7 +49,7 @@ class ForgetCodeMenuHandler:
         # Assign random code to user
         forget_code = forget_codes[randint(0, len(forget_codes) - 1)]
         update.message.reply_text(
-            text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name")),
+            text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name"), forget_code.get("username")),
             reply_markup=self.make_return_forget_code_button(forget_code.get("forget_code"))
         )
         self.db.set_forget_code_for_user(update.effective_user.id, forget_code.get("forget_code"))

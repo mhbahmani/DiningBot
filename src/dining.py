@@ -1,3 +1,4 @@
+import http
 import logging
 from bs4 import BeautifulSoup as bs
 import requests
@@ -62,8 +63,10 @@ class Dining:
         response = self.session.post(Dining.SIGN_IN_URL, login_data)
         if response.status_code != 200:
             return False
-        self.session.get(Dining.DINING_BASE_URL)
-        
+        res = self.session.get(Dining.DINING_BASE_URL)
+        if res.status_code != http.HTTPStatus.OK:
+            logging.info("Something went wrong with status code: %s", res.status_code)
+            return
         logging.debug("Logged in as %s", self.student_id)
         logging.debug("Update session cookies and headers")
         csrf_token = bs(response.content, "html.parser").find("meta", {"name": "csrf-token"}).get('content')

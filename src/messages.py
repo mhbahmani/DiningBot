@@ -101,3 +101,9 @@ no_one_added_code_yet_message = """
 ایناس که بده!
 
 پ.ن.: آمار هر یه ساعت آپدیت می‌شه""" 
+
+i_dont_want_this_code_message = """
+این کد رو نمی‌خوام
+"""
+forget_taked_back_message = """
+ممنون، کد تحویل گرفته شد"""

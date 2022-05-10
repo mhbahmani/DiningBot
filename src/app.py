@@ -133,9 +133,16 @@ class DiningBot:
         )
 
     def inline_keyboard_handler(self, update, context):
-        type, action, choosed, page = FoodPrioritiesHandler.separate_callback_data(update.callback_query.data)
+        type = FoodPrioritiesHandler.separate_callback_data(update.callback_query.data)[0]
         if type == "FOOD":
+            _, action, choosed, page = FoodPrioritiesHandler.separate_callback_data(update.callback_query.data)
             self.inline_food_choosing_handler(update, context, action, choosed, int(page))
+        elif type == "FORGETCODE":
+            _, forget_code = ForgetCodeMenuHandler.separate_callback_data(update.callback_query.data)
+            self.inline_return_forget_code_handler(update, context, int(forget_code))
+
+    def inline_return_forget_code_handler(self, update, context, forget_code: int):
+        self.forget_code_handler.return_forget_code(update, context, forget_code)
 
     def inline_food_choosing_handler(self, update, context, action, choosed, page: int):
         query = update.callback_query

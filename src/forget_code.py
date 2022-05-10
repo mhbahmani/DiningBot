@@ -1,6 +1,7 @@
+from bdb import effective
 from random import randint
 from src.utils import get_food_court_id_by_name
-from telegram import ReplyKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 import src.messages as messages
 import src.static_data as static_data
 
@@ -43,8 +44,10 @@ class ForgetCodeMenuHandler:
             return self.send_choose_self_menu_to_get(update, context)
         forget_code = forget_codes[randint(0, len(forget_codes) - 1)].get("forget_code")
         update.message.reply_text(
-            text=messages.forget_code_founded_message.format(forget_code)
+            text=messages.forget_code_founded_message.format(forget_code),
+            reply_markup=self.make_return_forget_code_button(forget_code)
         )
+        self.db.update_forget_code_assignment_status(forget_code, True)
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
 
@@ -80,7 +83,10 @@ class ForgetCodeMenuHandler:
             "username": update.effective_user.username,
             "user_id": update.message.chat.id,
             "forget_code": forget_code,
-            "food_court_id": get_food_court_id_by_name(context.user_data['food_court'])
+            "food_court_id": get_food_court_id_by_name(context.user_data['food_court']),
+            "assigned": False,
+            "assigned_to_user_id": update.effective_user.id,
+            "asssigned_to_username": update.effective_user.username
         })
         update.message.reply_text(
             text=messages.forget_code_added_message
@@ -111,3 +117,25 @@ class ForgetCodeMenuHandler:
             text=messages.main_menu_message,
             reply_markup=ReplyKeyboardMarkup(static_data.MAIN_MENU_CHOICES),
         )
+    
+    def return_forget_code(self, update, context, forget_code: int):
+        self.db.update_forget_code_assignment_status(forget_code, False)
+        print(f'**{forget_code}**')
+        context.bot.edit_message_text(
+            text=messages.forget_taked_back_message,
+            chat_id=update.callback_query.message.chat_id,
+            message_id=update.callback_query.message.message_id
+        )
+
+    def make_return_forget_code_button(self, forget_code):
+        return InlineKeyboardMarkup([[InlineKeyboardButton(
+                    messages.i_dont_want_this_code_message,
+                    callback_data=ForgetCodeMenuHandler.create_callback_data(forget_code))]])
+
+    @staticmethod
+    def create_callback_data(forget_code) -> str:
+        return "FORGETCODE" + ";" + ";".join([str(forget_code)])
+
+    @staticmethod
+    def separate_callback_data(data: str) -> list:
+        return data.split(";")

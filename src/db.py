@@ -34,7 +34,7 @@ class DB:
 
     def find_forget_code(self, food_court_id: int = None):
         return self.db.forget_codes.find(
-            filter={"food_court_id": food_court_id},
+            filter={"food_court_id": food_court_id, "assigned": False},
             projection={'_id': 0, "forget_code": 1, "username": 1, "user_id": 1})
 
     def clear_forget_codes(self):
@@ -45,3 +45,9 @@ class DB:
             {},
             projection={'_id': 0, 'username': 1, 'count': 1}
         ).sort([('count', -1)])
+
+    def update_forget_code_assignment_status(self, forget_code: str, assigened: bool):
+        self.db.forget_codes.update_one(
+            {'forget_code': forget_code},
+            {'$set': {'assigned': assigened}}
+        )

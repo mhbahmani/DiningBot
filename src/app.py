@@ -1,4 +1,3 @@
-from threading import Thread
 import threading
 from src.dining import Dining
 from src.db import DB
@@ -6,7 +5,6 @@ from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import (
-    BACK_TO_MAIN_MENU_LABEL,
     BACK_TO_MAIN_MENU_REGEX,
     FOOD_COURTS_REGEX,
     FORGET_CODE_MENU_REGEX,

@@ -284,13 +284,13 @@ class DiningBot:
                     MessageHandler(
                         Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
                         self.forget_code_handler.handle_forget_code_food_name_input
-                    )                    
+                    )
                 ],
                 INPUT_FORGET_CODE: [
                     MessageHandler(
                         Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
                         self.forget_code_handler.handle_forget_code_input
-                    )                    
+                    )
                 ],
             },
             fallbacks=[MessageHandler(Filters.regex(BACK_TO_MAIN_MENU_REGEX), self.send_main_menu)],

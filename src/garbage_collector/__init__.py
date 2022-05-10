@@ -1,1 +1,0 @@
-from src.garbage_collector.garbage_collector import *

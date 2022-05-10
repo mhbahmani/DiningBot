@@ -90,6 +90,9 @@ class DiningBot:
             chat_id=update.effective_chat.id,
             text=messages.start_message)
         self.send_main_menu(update, context)
+        self.send_msg_to_admins(
+            context,
+            messages.new_user_message.format(update.effective_user.username))
         return MAIN_MENU_CHOOSING
 
     def set(self, update, context):

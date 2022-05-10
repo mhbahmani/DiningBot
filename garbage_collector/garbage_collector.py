@@ -36,3 +36,9 @@ class GarbageCollector:
         for user_id in users:
             self.db.update_user_forget_code_counts(users[user_id]['username'], user_id, users[user_id]['count'])
         logging.info("User records updated")
+
+    def update_ranks(self):
+        users = list(self.db.get_users_forget_code_counts())
+        for i, user in enumerate(users):
+            self.db.update_user_rank(user['user_id'], i + 1)
+        logging.info("User ranks updated")

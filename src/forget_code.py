@@ -105,7 +105,7 @@ class ForgetCodeMenuHandler:
     def send_forget_code_ranking(self, update, context):
         users = list(self.db.get_users_forget_code_counts())
         if users:
-            users = users[:20]
+            users = users[:50]
         else:
             update.message.reply_text(
                 text=messages.no_one_added_code_yet_message
@@ -114,7 +114,9 @@ class ForgetCodeMenuHandler:
         message = ""
         for i, user in enumerate(users):
             message += messages.ranking_message.format(i + 1, user.get("username"), user.get("count"))
-        message += messages.user_rank_message.format(self.db.get_user_forget_code_counts(update.effective_user.id))
+        message += messages.user_rank_message.format(
+            self.db.get_user_rank(update.effective_user.id).get('rank', messages.rank_not_found_message),
+            self.db.get_num_users())
         update.message.reply_text(
             text=messages.users_ranking_message.format(message)
         )

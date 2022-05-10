@@ -9,6 +9,7 @@ import time
 
 def update_user_records():
     garbage_collector.update_user_records()
+    garbage_collector.update_ranks()
 
 def clear_forget_codes():
     garbage_collector.clear_forget_codes()
@@ -38,5 +39,6 @@ schedule.every().day.at("16:00").do(clear_forget_codes)
 
 while True:
     garbage_collector.update_user_records()
+    garbage_collector.update_ranks()
     schedule.run_pending()
     time.sleep(60 * 60)

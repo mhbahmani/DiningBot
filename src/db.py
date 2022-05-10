@@ -47,11 +47,11 @@ class DB:
     def get_users_forget_code_counts(self):
         return self.db.user_forget_code_counts.find(
             {},
-            projection={'_id': 0, 'username': 1, 'count': 1}
+            projection={'_id': 0, 'username': 1, 'count': 1, 'user_id': 1}
         ).sort([('count', -1)])
     
     def get_user_forget_code_counts(self, user_id: str):
-        return self.db.user_forget_code_counts.find(
+        return self.db.user_forget_code_counts.find_one(
             filter={'user_id': user_id},
             projection={'_id': 0, 'count': 1}
         )
@@ -61,3 +61,24 @@ class DB:
             {'forget_code': forget_code},
             {'$set': {'assigned': assigened}}
         )
+    
+    def increase_users(self):
+        self.db.users_count.update({}, {"$inc": {"num_users": 1}}, upsert=True)
+
+    def get_num_users(self) -> int:
+        return self.db.users_count.find_one({}, projection={'_id': 0, 'num_users': 1})['num_users']
+
+    def update_user_rank(self, user_id: str, rank: int):
+        self.db.user_forget_code_counts.update_one(
+            {'user_id': user_id},
+            {'$set': {'rank': rank}}
+        )
+
+    def get_user_rank(self, user_id: str):
+        out = self.db.user_forget_code_counts.find_one(
+            filter={'user_id': user_id},
+            projection={'_id': 0, 'rank': 1}
+        )
+        if not out:
+            out = {}
+        return out

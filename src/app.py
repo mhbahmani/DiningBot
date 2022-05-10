@@ -95,6 +95,7 @@ class DiningBot:
         self.send_msg_to_admins(
             context,
             messages.new_user_message.format(update.effective_user.username))
+        threading.Thread(target=self.db.increase_users(), args=()).start()
         return MAIN_MENU_CHOOSING
 
     def set(self, update, context):

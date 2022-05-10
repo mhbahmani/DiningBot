@@ -223,8 +223,7 @@ class DiningBot:
 
     def unknown_command(self, update, context):
         update.message.reply_text(
-            text=messages.restart_bot_message,
-            reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES),
+            text=messages.restart_bot_message
         )
 
     def setup_handlers(self):

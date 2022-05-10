@@ -144,19 +144,21 @@ class ForgetCodeMenuHandler:
         return static_data.INPUT_FAKE_FORGET_CODE
 
     def handle_fake_forget_code_input(self, update, context):
-        forget_code = update.message.text
-        if len(forget_code) < ForgetCodeMenuHandler.FORGET_CODE_LENGTH:
+        fake_forget_code = update.message.text
+        if len(fake_forget_code) < ForgetCodeMenuHandler.FORGET_CODE_LENGTH:
             update.message.reply_text(
                 text=messages.not_enough_number_error_message
             )
             return static_data.INPUT_FAKE_FORGET_CODE
         try:
-            forget_code = int(forget_code)
+            fake_forget_code = int(fake_forget_code)
         except ValueError:
             update.message.reply_text(
                 text=messages.not_int_code_error_message
             )
             return static_data.INPUT_FAKE_FORGET_CODE
+        forget_code = self.db.get_forget_code_info(fake_forget_code)
+        # TODO
         update.message.reply_text(
             text=messages.fake_forget_code_taked_message,
         )

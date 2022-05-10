@@ -90,3 +90,12 @@ class DB:
             return True
         except DuplicateKeyError:
             return False
+
+    def get_forget_code_info(self, forget_code: str) -> dict:
+        out = self.db.forget_codes.find_one(
+            filter={'forget_code': forget_code},
+            projection={'_id': 0, 'username': 1, 'user_id': 1}
+        )
+        if not out:
+            out = {}
+        return out

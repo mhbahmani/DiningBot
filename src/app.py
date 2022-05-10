@@ -220,6 +220,12 @@ class DiningBot:
         )
         return MAIN_MENU_CHOOSING
 
+    def unknown_command(self, update, context):
+        update.message.reply_text(
+            text=messages.restart_bot_message,
+            reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES),
+        )
+
     def setup_handlers(self):
         help_handler = CommandHandler('help', self.help)
         self.dispatcher.add_handler(help_handler)
@@ -294,6 +300,10 @@ class DiningBot:
             fallbacks=[MessageHandler(Filters.regex(BACK_TO_MAIN_MENU_REGEX), self.send_main_menu)],
         )
         self.dispatcher.add_handler(menue_handler)
+
+        unknown_handler = MessageHandler(Filters.text & (~Filters.command), self.unknown_command)
+        self.dispatcher.add_handler(unknown_handler)
+
 
     def run(self):
         self.load_foods()

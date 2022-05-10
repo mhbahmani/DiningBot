@@ -6,10 +6,12 @@ from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import (
     BACK_TO_MAIN_MENU_REGEX,
+    FAKE_FORGET_CODE_REGEX,
     FOOD_COURTS_REGEX,
     FORGET_CODE_MENU_REGEX,
     GET_FORGET_CODE_REGEX,
     GIVE_FORGET_CODE_REGEX,
+    INPUT_FAKE_FORGET_CODE,
     INPUT_FOOD_NAME,
     INPUT_FORGET_CODE_EXCLUDE,
     PLACES,
@@ -267,6 +269,10 @@ class DiningBot:
                     MessageHandler(
                         Filters.regex(RANKING_FORGET_CODE_REGEX),
                         self.forget_code_handler.send_forget_code_ranking
+                    ),
+                    MessageHandler(
+                        Filters.regex(FAKE_FORGET_CODE_REGEX),
+                        self.forget_code_handler.get_fake_forget_code
                     )
                 ],
                 RESERVE_MENU_CHOOSING: [
@@ -294,6 +300,12 @@ class DiningBot:
                     MessageHandler(
                         Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
                         self.forget_code_handler.handle_forget_code_input
+                    )
+                ],
+                INPUT_FAKE_FORGET_CODE: [
+                    MessageHandler(
+                        Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
+                        self.forget_code_handler.handle_fake_forget_code_input
                     )
                 ],
             },

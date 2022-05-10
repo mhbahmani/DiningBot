@@ -136,6 +136,33 @@ class ForgetCodeMenuHandler:
             message_id=update.callback_query.message.message_id
         )
 
+    def get_fake_forget_code(self, update, context):
+        update.message.reply_text(
+            text=messages.fake_forget_code_report_message,
+            reply_markup=ReplyKeyboardMarkup(static_data.BACK_TO_MAIN_MENU_CHOICES),
+        )
+        return static_data.INPUT_FAKE_FORGET_CODE
+
+    def handle_fake_forget_code_input(self, update, context):
+        forget_code = update.message.text
+        if len(forget_code) < ForgetCodeMenuHandler.FORGET_CODE_LENGTH:
+            update.message.reply_text(
+                text=messages.not_enough_number_error_message
+            )
+            return static_data.INPUT_FAKE_FORGET_CODE
+        try:
+            forget_code = int(forget_code)
+        except ValueError:
+            update.message.reply_text(
+                text=messages.not_int_code_error_message
+            )
+            return static_data.INPUT_FAKE_FORGET_CODE
+        update.message.reply_text(
+            text=messages.fake_forget_code_taked_message,
+        )
+        self.back_to_main_menu(update)
+        return static_data.MAIN_MENU_CHOOSING
+    
     def make_return_forget_code_button(self, forget_code):
         return InlineKeyboardMarkup([[InlineKeyboardButton(
                     messages.i_dont_want_this_code_message,

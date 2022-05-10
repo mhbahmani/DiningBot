@@ -108,7 +108,7 @@ class DB:
 
     def set_forget_code_for_user(self, user_id: str, forget_code: str):
         self.db.bot_users.update_one(
-            {"user_id": user_id, "forget_code": None},
+            {"user_id": user_id},
             {"$set": {"forget_code": forget_code}}
         )
 

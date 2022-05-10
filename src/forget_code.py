@@ -52,6 +52,10 @@ class ForgetCodeMenuHandler:
             text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name"), forget_code.get("username")),
             reply_markup=self.make_return_forget_code_button(forget_code.get("forget_code"))
         )
+        context.bot.send_message(
+            chat_id=forget_code.get("user_id"),
+            text=messages.someone_took_your_code_message
+        )
         self.db.set_forget_code_for_user(update.effective_user.id, forget_code.get("forget_code"))
         self.db.update_forget_code_assignment_status(forget_code.get("forget_code"), True)
         self.back_to_main_menu(update)

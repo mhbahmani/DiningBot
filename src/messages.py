@@ -1,7 +1,7 @@
 start_message = "🍕 غذا می‌قولی؟!"
 
 main_menu_message = "از منویی که این پایین هست انتخاب کن که چی می‌خوای"
-forget_code_menu_message = "منوی کد فراموشی" # TODO
+forget_code_menu_message = "ازین پایین چیزی که می‌خوای رو پیدا کن" # TODO
 reserve_menu_messsage = "منوی رزرو" # TODO
 
 details_message = """
@@ -80,6 +80,8 @@ forget_code_founded_message = """یه کد برات پیدا کردم! :)
 🍽 دم @{} هم گرم که این کد رو گذاشته
 اگه خواستی ازش تشکر کن، منم براش یه پیام فرستادم و تشکر کردم :)
 """
+someone_took_your_code_message = "غرض از مزاحمت، یه نفر کدت رو گرفت! ممنون که کدت رو گذاشتی تو بات."
+
 
 still_under_struction = """
 ⚠️کارگران مشغول کارند!⚠️

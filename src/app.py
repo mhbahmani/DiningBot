@@ -19,6 +19,7 @@ from src.static_data import (
     MAIN_MENU_CHOOSING,
     CHOOSING_SELF_TO_GET,
     CHOOSING_SELF_TO_GIVE,
+    RANKING_FORGET_CODE_REGEX,
     RESERVE_MENU_CHOOSING,
     FORGET_CODE_MENU_CHOOSING,
     RESERVE_MENU_REGEX,
@@ -248,7 +249,11 @@ class DiningBot:
                     ),
                     MessageHandler(
                         Filters.regex(GIVE_FORGET_CODE_REGEX),
-                        self.forget_code_handler.send_choose_self_menu_to_give # TODO
+                        self.forget_code_handler.send_choose_self_menu_to_give
+                    ),
+                    MessageHandler(
+                        Filters.regex(RANKING_FORGET_CODE_REGEX),
+                        self.forget_code_handler.send_forget_code_ranking
                     )
                 ],
                 RESERVE_MENU_CHOOSING: [

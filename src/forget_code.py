@@ -15,7 +15,7 @@ class ForgetCodeMenuHandler:
     def send_forget_code_menu(self, update, context):
         update.message.reply_text(
             text=messages.forget_code_menu_message,
-            reply_markup=ReplyKeyboardMarkup(static_data.FORGET_CODE_MENU_CHOICES, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(static_data.FORGET_CODE_MENU_CHOICES),
         )
         return static_data.FORGET_CODE_MENU_CHOOSING
 
@@ -89,6 +89,23 @@ class ForgetCodeMenuHandler:
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
     
+    def send_forget_code_ranking(self, update, context):
+        users = list(self.db.get_users_forget_code_counts())
+        if users:
+            users = users[:20]
+        else:
+            update.message.reply_text(
+                text=messages.no_one_added_code_yet_message
+            )
+            return static_data.FORGET_CODE_MENU_CHOOSING
+        message = ""
+        for i, user in enumerate(users):
+            message += "{}- {}: {}\n".format(i, user.get("username"), user.get("count"))
+        update.message.reply_text(
+            text=messages.users_ranking_message.format(message)
+        )
+        return static_data.FORGET_CODE_MENU_CHOOSING
+
     def back_to_main_menu(self, update):
         update.message.reply_text(
             text=messages.main_menu_message,

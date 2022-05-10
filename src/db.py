@@ -39,3 +39,9 @@ class DB:
 
     def clear_forget_codes(self):
         self.db.forget_codes.delete_many({})
+
+    def get_users_forget_code_counts(self):
+        return self.db.user_forget_code_counts.find(
+            {},
+            projection={'_id': 0, 'username': 1, 'count': 1}
+        ).sort([('count', -1)])

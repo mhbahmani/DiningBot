@@ -113,7 +113,8 @@ class ForgetCodeMenuHandler:
             return static_data.FORGET_CODE_MENU_CHOOSING
         message = ""
         for i, user in enumerate(users):
-            message += "🍔 {}- {}: {}\n".format(i + 1, user.get("username"), user.get("count"))
+            message += messages.ranking_message.format(i + 1, user.get("username"), user.get("count"))
+        message += messages.user_rank_message.format(self.db.get_user_forget_code_counts(update.effective_user.id))
         update.message.reply_text(
             text=messages.users_ranking_message.format(message)
         )

@@ -49,6 +49,12 @@ class DB:
             {},
             projection={'_id': 0, 'username': 1, 'count': 1}
         ).sort([('count', -1)])
+    
+    def get_user_forget_code_counts(self, user_id: str):
+        return self.db.user_forget_code_counts.find(
+            filter={'user_id': user_id},
+            projection={'_id': 0, 'count': 1}
+        )
 
     def update_forget_code_assignment_status(self, forget_code: str, assigened: bool):
         self.db.forget_codes.update_one(

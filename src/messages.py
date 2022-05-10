@@ -96,6 +96,8 @@ users_ranking_message = """
 
 دمشون گرم :)
 """
+ranking_message = "🍔 {}- {}: {}\n" 
+user_rank_message = "\nرتبه‌ی تو: {}\n"
 
 no_one_added_code_yet_message = """
 متاسفانه هنوز کسی کدی اضافه نکرده 🥲

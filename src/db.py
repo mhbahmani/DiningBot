@@ -99,3 +99,18 @@ class DB:
         if not out:
             out = {}
         return out
+
+    def set_forget_code_for_user(self, user_id: str, forget_code: str):
+        self.db.bot_users.update_one(
+            {"user_id": user_id, "forget_code": None},
+            {"$set": {"forget_code": forget_code}}
+        )
+
+    def get_user_current_forget_code(self, user_id: str) -> str:
+        out = self.db.bot_users.find_one(
+            filter={'user_id': user_id},
+            projection={'_id': 0, 'forget_code': 1}
+        )
+        if not out:
+            out = {}
+        return out.get('forget_code', None)

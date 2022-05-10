@@ -20,6 +20,11 @@ class ForgetCodeMenuHandler:
         return static_data.FORGET_CODE_MENU_CHOOSING
 
     def send_choose_self_menu_to_get(self, update, context):
+        if self.db.get_user_current_forget_code(update.effective_user.id):
+            update.message.reply_text(
+                text=messages.you_already_have_forget_code_message,
+            )
+            return static_data.BACK_TO_MAIN_MENU_CHOICES
         update.message.reply_text(
             text=messages.choose_self_message_to_get,
             reply_markup=self.markup,
@@ -41,11 +46,13 @@ class ForgetCodeMenuHandler:
                 text=messages.no_code_for_this_food_court_message
             )
             return self.send_choose_self_menu_to_get(update, context)
+        # Assign random code to user
         forget_code = forget_codes[randint(0, len(forget_codes) - 1)]
         update.message.reply_text(
             text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name")),
             reply_markup=self.make_return_forget_code_button(forget_code.get("forget_code"))
         )
+        self.db.set_forget_code_for_user(update.effective_user.id, forget_code.get("forget_code"))
         self.db.update_forget_code_assignment_status(forget_code.get("forget_code"), True)
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
@@ -135,6 +142,7 @@ class ForgetCodeMenuHandler:
             chat_id=update.callback_query.message.chat_id,
             message_id=update.callback_query.message.message_id
         )
+        self.db.set_forget_code_for_user(update.effective_user.id, None)
 
     def get_fake_forget_code(self, update, context):
         update.message.reply_text(

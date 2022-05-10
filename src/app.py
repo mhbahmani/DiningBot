@@ -89,7 +89,9 @@ class DiningBot:
 
     def start(self, update, context):
         if self.db.add_bot_user({
-            "user_id": update.effective_user.id, "username": update.effective_user.username}):
+            "user_id": update.effective_user.id,
+            "username": update.effective_user.username,
+            "forget_code": None}):
             context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=messages.start_message)

@@ -86,14 +86,15 @@ class DiningBot:
             )
 
     def start(self, update, context):
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=messages.start_message)
+        if self.db.add_bot_user({
+            "user_id": update.effective_user.id, "username": update.effective_user.username}):
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=messages.start_message)
+            self.send_msg_to_admins(
+                context,
+                messages.new_user_message.format(update.effective_user.username))
         self.send_main_menu(update, context)
-        self.send_msg_to_admins(
-            context,
-            messages.new_user_message.format(update.effective_user.username))
-        threading.Thread(target=self.db.increase_users(), args=()).start()
         return MAIN_MENU_CHOOSING
 
     def set(self, update, context):

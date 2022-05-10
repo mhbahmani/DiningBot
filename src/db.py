@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 
 
 class DB:
@@ -66,7 +67,7 @@ class DB:
         self.db.users_count.update({}, {"$inc": {"num_users": 1}}, upsert=True)
 
     def get_num_users(self) -> int:
-        return self.db.users_count.find_one({}, projection={'_id': 0, 'num_users': 1})['num_users']
+        return self.db.bot_users.find().count()
 
     def update_user_rank(self, user_id: str, rank: int):
         self.db.user_forget_code_counts.update_one(
@@ -82,3 +83,10 @@ class DB:
         if not out:
             out = {}
         return out
+
+    def add_bot_user(self, user: dict) -> bool:
+        try:
+            self.db.bot_users.insert_one(user)
+            return True
+        except DuplicateKeyError:
+            return False

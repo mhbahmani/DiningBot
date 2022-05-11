@@ -72,7 +72,7 @@ class DB:
     def unset_users_forget_codes(self):
         return self.db.bot_users.update_many(
             {},
-            {"forget_code": None}
+            {"$set": {"forget_code": None}}
         )
 
     def update_user_rank(self, user_id: str, rank: int):

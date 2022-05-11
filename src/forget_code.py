@@ -24,7 +24,7 @@ class ForgetCodeMenuHandler:
             update.message.reply_text(
                 text=messages.you_already_have_forget_code_message,
             )
-            return static_data.BACK_TO_MAIN_MENU_CHOICES
+            return static_data.MAIN_MENU_CHOOSING
         update.message.reply_text(
             text=messages.choose_self_message_to_get,
             reply_markup=self.markup,
@@ -66,7 +66,7 @@ class ForgetCodeMenuHandler:
         context.user_data['food_court'] = choosed_food_court
         update.message.reply_text(
             text=messages.get_forget_code_from_user_message,
-            reply_markup=ReplyKeyboardRemove()
+            reply_markup=ReplyKeyboardMarkup(static_data.BACK_TO_MAIN_MENU_CHOICES)
         )
         return static_data.INPUT_FORGET_CODE
 

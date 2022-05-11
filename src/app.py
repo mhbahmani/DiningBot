@@ -219,6 +219,7 @@ class DiningBot:
         logging.info("Updated food list in cache started")
 
     def send_main_menu(self, update, context):
+        if context.user_data: context.user_data.clear()
         update.message.reply_text(
             text=messages.main_menu_message,
             reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES),

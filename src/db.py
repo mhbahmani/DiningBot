@@ -121,7 +121,10 @@ class DB:
             out = {}
         return out.get('forget_code', None)
     
-    def get_forget_codes_by_food_court_id(self) -> dict:
+    def get_forget_codes_by_food_court_id(self) -> tuple:
         return self.db.forget_codes.aggregate([
+            {'$group': {'_id': '$food_court_id', 'count': {'$sum': 1}}}
+        ]), self.db.forget_codes.aggregate([
+            {'$match': {'assigned': False}},
             {'$group': {'_id': '$food_court_id', 'count': {'$sum': 1}}}
         ])

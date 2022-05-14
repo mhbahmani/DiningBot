@@ -157,7 +157,7 @@ class ForgetCodeMenuHandler:
 
     def forget_code_statistics(self, update, context):
         update.message.reply_text(
-            text=make_forget_code_statistics_message(list(self.db.get_forget_codes_by_food_court_id())))
+            text=make_forget_code_statistics_message(self.db.get_forget_codes_by_food_court_id()))
         return static_data.FORGET_CODE_MENU_CHOOSING
 
     def handle_fake_forget_code_input(self, update, context):

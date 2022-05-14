@@ -83,11 +83,16 @@ forget_code_founded_message = """یه کد برات پیدا کردم! :)
 code_statistics_message = """
 کد مد چه خبر؟
 
+کل کدهای امروز:
+{}
+
+کدهای قابل دریافت:
 {}
 """
 no_code_for_today_message = """
-هیچی کد امروز ثبت نشده🥲
+امروز هیچی کد ثبت نشده🥲
 ایناس که بده!"""
+no_available_code_for_today_message = """فعلا کدی که گرفته نشده باشه ندارم🥲"""
 someone_took_your_code_message = "غرض از مزاحمت، یه نفر کدت رو گرفت! ممنون که کدت رو گذاشتی تو بات."
 
 still_under_struction = """

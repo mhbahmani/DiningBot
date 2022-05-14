@@ -1,5 +1,5 @@
 from random import randint
-from src.utils import get_food_court_id_by_name
+from src.utils import get_food_court_id_by_name, make_forget_code_statistics_message
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove
 import src.messages as messages
 import src.static_data as static_data
@@ -154,6 +154,11 @@ class ForgetCodeMenuHandler:
             reply_markup=ReplyKeyboardMarkup(static_data.BACK_TO_MAIN_MENU_CHOICES),
         )
         return static_data.INPUT_FAKE_FORGET_CODE
+
+    def forget_code_statistics(self, update, context):
+        update.message.reply_text(
+            text=make_forget_code_statistics_message(list(self.db.get_forget_codes_by_food_court_id())))
+        return static_data.MAIN_MENU_CHOOSING
 
     def handle_fake_forget_code_input(self, update, context):
         fake_forget_code = update.message.text

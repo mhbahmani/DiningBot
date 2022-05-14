@@ -24,6 +24,7 @@ from src.static_data import (
     RESERVE_MENU_CHOOSING,
     FORGET_CODE_MENU_CHOOSING,
     RESERVE_MENU_REGEX,
+    TODAY_CODE_STATISTICS_REGEX,
 )
 from telegram import (
     ReplyKeyboardMarkup
@@ -276,6 +277,10 @@ class DiningBot:
                     MessageHandler(
                         Filters.regex(FAKE_FORGET_CODE_REGEX),
                         self.forget_code_handler.get_fake_forget_code
+                    ),
+                    MessageHandler(
+                        Filters.regex(TODAY_CODE_STATISTICS_REGEX),
+                        self.forget_code_handler.forget_code_statistics
                     )
                 ],
                 RESERVE_MENU_CHOOSING: [

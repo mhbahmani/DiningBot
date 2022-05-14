@@ -1,6 +1,7 @@
+from bs4 import BeautifulSoup as bs
+import src.static_data as static_data
 import http
 import logging
-from bs4 import BeautifulSoup as bs
 import requests
 import re
 
@@ -18,8 +19,6 @@ class Dining:
 
     FOOD_ID_REGEX = "do_reserve_from_diet\(\"(?P<food_id>\w+).*"
     DATE_REGEX = "\W+(?P<day>\w+\W?\w+)\W+(?P<date>\d+/\d+/\d+).*"
-
-    FOOD_TIMES = ["eftari", "sahari", "dinner", "lunch"]
 
     def __init__(self, student_id: str, password: str) -> None:
         self.student_id = student_id
@@ -44,7 +43,7 @@ class Dining:
         # TODO
 
     def get_foods_list(self, place_id: int) -> list:
-        table = self.__load_food_table(place_id)
+        table = self.__load_food_table(place_id=place_id, week=0)
         return self.__parse_food_table_to_get_foods_list(table)
 
     def __login(self) -> None:
@@ -80,11 +79,11 @@ class Dining:
             "button", {"type": "button", "class": "btn btn-default navigation-link"}).get("onclick")
         self.user_id = re.match("load_diet_reserve_table.*\,(?P<user_id>\w+)\)", s).group("user_id")
 
-    def __load_food_table(self, place_id: int) -> requests.Response:
+    def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
         data = {
             'id': '0',
             'parent_id': place_id,
-            'week': '1',
+            'week': str(week),
             'user_id': self.user_id,
         }
 
@@ -93,6 +92,7 @@ class Dining:
 
     def __parse_food_table(self, reserve_table: requests.Response) -> dict:
         content = bs(reserve_table.content, "html.parser")
+        food_times = [static_data.food_times_to_en[time.text] for time in content.find("table").find_all("th")[1:-7]]
         foods = content.find("table").find_all("td")
         days = content.find("table").find_all("th")[5:]
         res = {}
@@ -105,7 +105,7 @@ class Dining:
                 food = foods.pop()
                 food_name = food.find("span", {"data-original-title": "رزرو"})
                 if food_name:
-                    res[time][Dining.FOOD_TIMES[i]] = {
+                    res[time][food_times[i]] = {
                         "food": food.getText(),
                         "food_id": re.match(Dining.FOOD_ID_REGEX, food_name.get("onclick")).group("food_id"),
                     }
@@ -118,5 +118,5 @@ class Dining:
         for food in foods:
             food_name = re.sub(" \(.*\)", "" , food.getText())
             if food_name != "-":
-                result.append(food_name)
+                result.append(food_name.strip())
         return result

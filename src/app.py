@@ -47,19 +47,13 @@ import logging
 class DiningBot:
     def __init__(self, token, admin_ids=set(), log_level='INFO', db: DB = None, admin_sso_username: str = None, admin_sso_password: str = None):
         self.admin_ids = admin_ids
-        self.admin_username = admin_sso_username
-        self.admin_password = admin_sso_password
         self.updater = Updater(token=token, use_context=True)
         self.dispatcher = self.updater.dispatcher
-
-        self.foods = set()
-        self.foods_with_id = []
-        self.food_name_by_id = {}
 
         self.db = db
 
         self.forget_code_handler = ForgetCodeMenuHandler(self.db)
-        self.reserve_handler = ReserveMenuHandler()
+        self.reserve_handler = ReserveMenuHandler(self.db, admin_sso_username, admin_sso_password)
         # TODO: self.dining = Dining(student_number, password)
 
         logging.basicConfig(
@@ -132,94 +126,14 @@ class DiningBot:
             chat_id=update.effective_chat.id,
             text=msg)
 
-    def update_user_favorite_foods(self, update, context):
-        context.user_data['priorities'] = []
-        update.message.reply_text(
-            text=messages.choose_food_priorities_message,
-            reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(
-                foods=self.foods_with_id, page=1)
-        )
-
     def inline_keyboard_handler(self, update, context):
         type = FoodPrioritiesHandler.separate_callback_data(update.callback_query.data)[0]
         if type == "FOOD":
             _, action, choosed, page = FoodPrioritiesHandler.separate_callback_data(update.callback_query.data)
-            self.inline_food_choosing_handler(update, context, action, choosed, int(page))
+            return self.reserve_handler.inline_food_choosing_handler(update, context, action, choosed, int(page))
         elif type == "FORGETCODE":
             _, forget_code = ForgetCodeMenuHandler.separate_callback_data(update.callback_query.data)
-            self.inline_return_forget_code_handler(update, context, int(forget_code))
-
-    def inline_return_forget_code_handler(self, update, context, forget_code: int):
-        self.forget_code_handler.return_forget_code(update, context, forget_code)
-
-    def inline_food_choosing_handler(self, update, context, action, choosed, page: int):
-        query = update.callback_query
-        logging.debug("Process choosed action or food: {} {}".format(action, choosed))
-        if action == "NEXT":
-            context.bot.edit_message_text(
-                text=query.message.text,
-                chat_id=query.message.chat_id,
-                message_id=query.message.message_id,
-                reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(foods=self.foods_with_id, page=page + 1))
-        elif action == "PREV":
-            context.bot.edit_message_text(
-                text=query.message.text,
-                chat_id=query.message.chat_id,
-                message_id=query.message.message_id,
-                reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(foods=self.foods_with_id, page=page - 1))
-        elif action == "SELECT":
-            context.user_data.get('priorities').append(choosed)
-            context.bot.send_message(
-                text=self.food_name_by_id[choosed],
-                chat_id=update.effective_chat.id
-            )
-        elif action == "DONE":
-            self.db.set_user_food_priorities(update.effective_chat.id, context.user_data.get('priorities'))
-            context.user_data['priorities'].clear()
-            context.bot.edit_message_text(
-                text=messages.choosing_food_priorities_done_message,
-                chat_id=query.message.chat_id,
-                message_id=query.message.message_id)
-        elif action == "CANCEL":
-            context.user_data['priorities'].clear()
-            context.bot.edit_message_text(
-                text=messages.choosing_food_priorities_cancel_message,
-                chat_id=query.message.chat_id,
-                message_id=query.message.message_id)     
-        elif action == "IGNORE":
-            context.bot.answer_callback_query(callback_query_id=query.id)
-            
-    def load_foods(self):
-        for food in self.db.get_all_foods(name=True, id=True):
-            self.foods.add(food['name'])
-            self.foods_with_id.append((food['id'], food['name']))
-            self.food_name_by_id[food['id']] = food['name']
-        logging.info(f"Loaded {len(self.foods)} foods")
-
-    def update_food_lists_caches(self):
-        for food in self.db.get_all_foods(name=True, id=True):
-            self.foods_with_id.append((food['id'], food['name']))
-            self.food_name_by_id[food['id']] = food['name']
-
-    @check_admin
-    def update_food_list(self, update, context):
-        self.dining = Dining(self.admin_username, self.admin_password)
-        new_foods = []
-        food_id = num_foods = len(self.foods)
-        for place_id in PLACES.values():
-            table = self.dining.get_foods_list(place_id)
-            new_foods = list(set(table) - self.foods)
-            for food_name in new_foods:
-                food_id += 1
-                self.db.add_food({"name": food_name, "id": str(food_id)})
-                logging.debug("Added food: {} {}".format(food_name, food_id))
-            self.foods.update(table)
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=messages.update_food_list_result.format(len(self.foods) - num_foods))
-        logging.info(f"{len(self.foods) - num_foods} foods added")
-        threading.Thread(target=self.update_food_lists_caches, args=()).start()
-        logging.info("Updated food list in cache started")
+            self.forget_code_handler.inline_return_forget_code_handler(update, context, int(forget_code))
 
     def send_main_menu(self, update, context):
         if context.user_data: context.user_data.clear()
@@ -233,6 +147,13 @@ class DiningBot:
         update.message.reply_text(
             text=messages.restart_bot_message
         )
+    
+    @check_admin
+    def update_user_favorite_foods(self, update, context):
+        update.message.reply_text(
+            text=messages.update_foods_started_message
+        )
+        self.reserve_handler.update_food_list(update, context)
 
     def setup_handlers(self):
         help_handler = CommandHandler('help', self.help)
@@ -241,11 +162,8 @@ class DiningBot:
         set_handler = CommandHandler('set', self.set)
         self.dispatcher.add_handler(set_handler)
 
-        update_food_list_handler = CommandHandler('update_foods', self.update_food_list)
+        update_food_list_handler = CommandHandler('update_foods', self.update_user_favorite_foods)
         self.dispatcher.add_handler(update_food_list_handler)
-
-        my_foods_handler = CommandHandler('my_foods', self.update_user_favorite_foods)
-        self.dispatcher.add_handler(my_foods_handler)
 
         inline_handler = CallbackQueryHandler(self.inline_keyboard_handler)
         self.dispatcher.add_handler(inline_handler)
@@ -266,7 +184,7 @@ class DiningBot:
                 RESERVE_MENU_CHOOSING: [
                     MessageHandler(
                         Filters.regex(SET_FAVORITES_REGEX),
-                        self.reserve_handler.update_favorties
+                        self.reserve_handler.update_user_favorite_foods
                     ),
                     MessageHandler(
                         Filters.regex(RESERVE_REGEX),
@@ -335,7 +253,7 @@ class DiningBot:
 
 
     def run(self):
-        self.load_foods()
+        self.reserve_handler.load_foods()
         self.setup_handlers()
         self.updater.start_polling()
 

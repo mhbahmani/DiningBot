@@ -139,7 +139,7 @@ class ForgetCodeMenuHandler:
             reply_markup=ReplyKeyboardMarkup(static_data.MAIN_MENU_CHOICES),
         )
     
-    def return_forget_code(self, update, context, forget_code: int):
+    def inline_return_forget_code_handler(self, update, context, forget_code: int):
         self.db.update_forget_code_assignment_status(forget_code, False)
         context.bot.edit_message_text(
             text=messages.forget_taked_back_message,

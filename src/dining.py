@@ -116,6 +116,12 @@ class Dining:
         foods = content.find("table").find_all("td")
         result = []
         for food in foods:
+            if len(food.find_all("div")) != 1:
+                for day_food in food.find_all("div"):
+                    food_name = re.sub(" \(.*\)", "" , day_food.getText())
+                    if food_name != "-":
+                        result.append(food_name.strip())
+                continue
             food_name = re.sub(" \(.*\)", "" , food.getText())
             if food_name != "-":
                 result.append(food_name.strip())

@@ -100,7 +100,6 @@ class ReserveMenuHandler:
         for place_id in static_data.PLACES.values():
             table = self.dining.get_foods_list(place_id)
             new_foods = list(set(table) - self.foods)
-            print(place_id, table, new_foods)
             for food_name in new_foods:
                 food_id += 1
                 self.db.add_food({"name": food_name, "id": str(food_id)})

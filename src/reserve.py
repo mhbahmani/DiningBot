@@ -8,12 +8,24 @@ class ReserveMenuHandler:
         pass
 
     def send_reserve_menu(self, update, context):
+        # update.message.reply_text(
+        #     text=messages.still_under_struction,
+        # )
+        # return static_data.MAIN_MENU_CHOOSING
+        update.message.reply_text(
+            text=messages.reserve_menu_messsage,
+            reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES),
+        )
+        return static_data.RESERVE_MENU_CHOOSING
+
+    def update_favorties(self, update, context):
         update.message.reply_text(
             text=messages.still_under_struction,
         )
-        return static_data.MAIN_MENU_CHOOSING
+        return static_data.RESERVE_MENU_CHOOSING
+
+    def reserve_next_week_food(self, update, context):
         update.message.reply_text(
-            text=messages.reserve_menu_messsage,
-            reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES, one_time_keyboard=True),
+            text=messages.still_under_struction,
         )
         return static_data.RESERVE_MENU_CHOOSING

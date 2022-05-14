@@ -24,6 +24,8 @@ from src.static_data import (
     RESERVE_MENU_CHOOSING,
     FORGET_CODE_MENU_CHOOSING,
     RESERVE_MENU_REGEX,
+    RESERVE_REGEX,
+    SET_FAVORITES_REGEX,
     TODAY_CODE_STATISTICS_REGEX,
 )
 from telegram import (
@@ -261,6 +263,16 @@ class DiningBot:
                         self.reserve_handler.send_reserve_menu
                     )
                 ],
+                RESERVE_MENU_CHOOSING: [
+                    MessageHandler(
+                        Filters.regex(SET_FAVORITES_REGEX),
+                        self.reserve_handler.update_favorties
+                    ),
+                    MessageHandler(
+                        Filters.regex(RESERVE_REGEX),
+                        self.reserve_handler.reserve_next_week_food
+                    )
+                ],
                 FORGET_CODE_MENU_CHOOSING: [
                     MessageHandler(
                         Filters.regex(GET_FORGET_CODE_REGEX),
@@ -282,9 +294,6 @@ class DiningBot:
                         Filters.regex(TODAY_CODE_STATISTICS_REGEX),
                         self.forget_code_handler.forget_code_statistics
                     )
-                ],
-                RESERVE_MENU_CHOOSING: [
-                    # TODO
                 ],
                 CHOOSING_SELF_TO_GET: [
                     MessageHandler(

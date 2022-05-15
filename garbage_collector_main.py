@@ -55,7 +55,7 @@ schedule.every().day.at("11:30").do(update_user_records)
 schedule.every().day.at("12:00").do(update_user_records)
 schedule.every().day.at("12:30").do(update_user_records)
 
-schedule.every().day.at("14:00").do(clear_forget_codes)
+schedule.every().day.at("19:00").do(clear_forget_codes)
 
 while True:
     garbage_collector.update_user_records()

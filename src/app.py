@@ -228,7 +228,8 @@ class DiningBot:
         return MAIN_MENU_CHOOSING
 
     def unknown_command(self, update, context):
-        update.message.reply_text(
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
             text=messages.restart_bot_message
         )
 

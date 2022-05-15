@@ -61,4 +61,4 @@ while True:
     garbage_collector.update_user_records()
     garbage_collector.update_ranks()
     schedule.run_pending()
-    time.sleep(60 * 60)
+    time.sleep(15 * 60)

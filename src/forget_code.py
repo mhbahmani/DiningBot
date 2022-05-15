@@ -24,7 +24,7 @@ class ForgetCodeMenuHandler:
             update.message.reply_text(
                 text=messages.you_already_have_forget_code_message,
             )
-            return static_data.MAIN_MENU_CHOOSING
+            return static_data.FORGET_CODE_MENU_CHOOSING
         update.message.reply_text(
             text=messages.choose_self_message_to_get,
             reply_markup=self.markup,

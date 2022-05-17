@@ -153,7 +153,12 @@ class DiningBot:
         update.message.reply_text(
             text=messages.update_foods_started_message
         )
-        self.reserve_handler.update_food_list(update, context)
+        # /update_foods <week>
+        splited_text = update.message.text.split()
+        week = 1
+        if len(splited_text) == 2:
+            week = splited_text[-1]
+        self.reserve_handler.update_food_list(update, context, week)
 
     def setup_handlers(self):
         help_handler = CommandHandler('help', self.help)

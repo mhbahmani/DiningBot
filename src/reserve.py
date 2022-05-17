@@ -93,12 +93,12 @@ class ReserveMenuHandler:
             self.foods_with_id.append((food['id'], food['name']))
             self.food_name_by_id[food['id']] = food['name']
 
-    def update_food_list(self, update, context):
+    def update_food_list(self, update, context, week_number: int):
         self.dining = Dining(self.admin_username, self.admin_password)
         new_foods = []
         food_id = num_foods = len(self.foods)
         for place_id in static_data.PLACES.values():
-            table = self.dining.get_foods_list(place_id)
+            table = self.dining.get_foods_list(place_id, week_number)
             new_foods = list(set(table) - self.foods)
             for food_name in new_foods:
                 food_id += 1

@@ -42,8 +42,8 @@ class Dining:
         res = self.session.get(Dining.CANCEL_FOOD_URL, params=params, data=data)
         # TODO
 
-    def get_foods_list(self, place_id: int) -> list:
-        table = self.__load_food_table(place_id=place_id, week=0)
+    def get_foods_list(self, place_id: int, week: int = 1) -> list:
+        table = self.__load_food_table(place_id=place_id, week=week)
         return self.__parse_food_table_to_get_foods_list(table)
 
     def __login(self) -> None:

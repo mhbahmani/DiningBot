@@ -34,12 +34,14 @@ class Dining:
 
         res = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
         print(res.json())
+        # TODO
 
     def cancel_food(self, user_id: int, food_id: int):
         params = {'user_id': user_id,}
         data = {'id': food_id,}
 
         res = self.session.get(Dining.CANCEL_FOOD_URL, params=params, data=data)
+        print(res.json())
         # TODO
 
     def get_foods_list(self, place_id: int, week: int = 1) -> list:

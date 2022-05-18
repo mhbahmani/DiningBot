@@ -22,6 +22,8 @@ class Dining:
     def __init__(self, student_id: str, password: str) -> None:
         self.student_id = student_id
         self.password = password
+
+        self.meals = []
         self.__login()
 
     def reserve_food(self, user_id: int, place_id: int, food_id: int):
@@ -112,7 +114,7 @@ class Dining:
 
     def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
         content = bs(reserve_table.content, "html.parser")
-        FOOD_TIMES = [static_data.food_times_to_en[time.text] for time in content.find("table").find_all("th")[1:-7]]
+        self.meals = [static_data.food_times_to_en[time.text] for time in content.find("table").find_all("th")[1:-7]]
         foods = content.find("table").find_all("td")
         days = content.find("table").find_all("th")[-7:]
         res = {}
@@ -122,13 +124,13 @@ class Dining:
             time = f"{date} {day}"
             res[time] = {}
             for j in range(food_times):
-                res[time][FOOD_TIMES[j]] = res[time].get(FOOD_TIMES[j], [])
+                res[time][self.meals[j]] = res[time].get(self.meals[j], [])
                 food = foods.pop()
                 for food_row in food.find_all("div", {"class": "food-reserve-diet-div"}):
                     food_reserve_function = food_row.find("span", {"data-original-title": "رزرو"})
                     if food_reserve_function:
                         food_name, price = re.match(Dining.FOOD_NAME_AND_PRICE_REGEX, food_row.getText()).groups()
-                        res[time][FOOD_TIMES[j]].append({
+                        res[time][self.meals[j]].append({
                             "food": food_name,
                             "price": price,
                             "food_id": re.match(Dining.FOOD_ID_REGEX, food_reserve_function.get("onclick")).group("food_id"),

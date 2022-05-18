@@ -1,3 +1,4 @@
+from random import randint
 import threading
 from telegram import ReplyKeyboardMarkup
 from src.dining import Dining
@@ -16,6 +17,7 @@ class ReserveMenuHandler:
         self.foods = set()
         self.foods_with_id = []
         self.food_name_by_id = {}
+        self.food_id_by_name = {}
 
     def update_user_favorite_foods(self, update, context):
         context.user_data['priorities'] = []
@@ -30,12 +32,14 @@ class ReserveMenuHandler:
             self.foods.add(food['name'])
             self.foods_with_id.append((food['id'], food['name']))
             self.food_name_by_id[food['id']] = food['name']
+            self.food_id_by_name[food['name']] = food['id']
         logging.info(f"Loaded {len(self.foods)} foods")
 
     def update_food_lists_caches(self):
         for food in self.db.get_all_foods(name=True, id=True):
             self.foods_with_id.append((food['id'], food['name']))
             self.food_name_by_id[food['id']] = food['name']
+            self.food_id_by_name[food['name']] = food['id']
 
     def update_food_list(self, update, context, week_number: int):
         self.dining = Dining(self.admin_username, self.admin_password)
@@ -104,11 +108,20 @@ class ReserveMenuHandler:
         user_id = update.effective_user.id
         week_number = 1
         place_id = 19
+        user_priorities: list = self.db.get_user_food_priorities(user_id)
         self.dining = Dining(self.admin_username, self.admin_password)
         foods = self.dining.get_reserve_table_foods(place_id, week_number)
-        for f in foods:
-            print(f)
-            print(foods[f])
+        for day in foods:
+            for meal in self.dining.meals:
+                day_foods = list(map(lambda food: self.food_id_by_name.get(food.get("food")), foods[day][meal]))
+                if not day_foods:
+                    continue
+                if len(day_foods) > 1:
+                    choosed_food_index = min(map(lambda x: user_priorities.index(x) if x in user_priorities else 100, day_foods))
+                    if choosed_food_index == 100:
+                        choosed_food_index = randint(0, len(day_foods) - 1)
+                print(day, meal, self.food_name_by_id[day_foods[choosed_food_index]])
+                # Reserve food
 
     def reserve_next_week_food(self, update, context):
         update.message.reply_text(

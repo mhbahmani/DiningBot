@@ -136,6 +136,11 @@ class ReserveMenuHandler:
             update.message.reply_text(messages.username_or_password_incorrect_message)
         else:
             update.message.reply_text(messages.username_and_password_correct_message)
+            self.db.update_user_info({
+                "user_id": update.message.chat.id,
+                "username": update.effective_user.username,
+                "student_number": context.user_data['username'],
+                "password": password})
         self.send_reserve_menu(update, context)
         return static_data.RESERVE_MENU_CHOOSING
 

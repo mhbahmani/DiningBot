@@ -174,7 +174,7 @@ class Dining:
         return result
 
     def __parse_reserve_page_to_get_food_courts(self, reserve_page: requests.Response) -> dict:
-        content = bs(reserve_page, "html.parser")
+        content = bs(reserve_page.content, "html.parser")
         return dict(map(lambda x: (x.getText(), x.attrs["value"]), content.find_all("option")))
 
     def get_user_food_courts(self):

@@ -17,23 +17,6 @@ class ReserveMenuHandler:
         self.foods_with_id = []
         self.food_name_by_id = {}
 
-    def send_reserve_menu(self, update, context):
-        # update.message.reply_text(
-        #     text=messages.still_under_struction,
-        # )
-        # return static_data.MAIN_MENU_CHOOSING
-        update.message.reply_text(
-            text=messages.reserve_menu_messsage,
-            reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES),
-        )
-        return static_data.RESERVE_MENU_CHOOSING
-
-    def reserve_next_week_food(self, update, context):
-        update.message.reply_text(
-            text=messages.still_under_struction,
-        )
-        return static_data.RESERVE_MENU_CHOOSING
-
     def update_user_favorite_foods(self, update, context):
         context.user_data['priorities'] = []
         update.message.reply_text(
@@ -41,7 +24,38 @@ class ReserveMenuHandler:
             reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(
                 foods=self.foods_with_id, page=1)
         )
-    
+
+    def load_foods(self):
+        for food in self.db.get_all_foods(name=True, id=True):
+            self.foods.add(food['name'])
+            self.foods_with_id.append((food['id'], food['name']))
+            self.food_name_by_id[food['id']] = food['name']
+        logging.info(f"Loaded {len(self.foods)} foods")
+
+    def update_food_lists_caches(self):
+        for food in self.db.get_all_foods(name=True, id=True):
+            self.foods_with_id.append((food['id'], food['name']))
+            self.food_name_by_id[food['id']] = food['name']
+
+    def update_food_list(self, update, context, week_number: int):
+        self.dining = Dining(self.admin_username, self.admin_password)
+        new_foods = []
+        food_id = num_foods = len(self.foods)
+        for place_id in static_data.PLACES.values():
+            table = self.dining.get_foods_list(place_id, week_number)
+            new_foods = list(set(table) - self.foods)
+            for food_name in new_foods:
+                food_id += 1
+                self.db.add_food({"name": food_name, "id": str(food_id)})
+                logging.debug("Added food: {} {}".format(food_name, food_id))
+            self.foods.update(table)
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=messages.update_food_list_result.format(len(self.foods) - num_foods))
+        logging.info(f"{len(self.foods) - num_foods} foods added")
+        threading.Thread(target=self.update_food_lists_caches, args=()).start()
+        logging.info("Updated food list in cache started")
+
     def inline_food_choosing_handler(self, update, context, action, choosed, page: int):
         query = update.callback_query
         logging.debug("Process choosed action or food: {} {}".format(action, choosed))
@@ -81,33 +95,19 @@ class ReserveMenuHandler:
         elif action == "IGNORE":
             context.bot.answer_callback_query(callback_query_id=query.id)
 
-    def load_foods(self):
-        for food in self.db.get_all_foods(name=True, id=True):
-            self.foods.add(food['name'])
-            self.foods_with_id.append((food['id'], food['name']))
-            self.food_name_by_id[food['id']] = food['name']
-        logging.info(f"Loaded {len(self.foods)} foods")
+    def reserve_next_week_food(self, update, context):
+        update.message.reply_text(
+            text=messages.still_under_struction,
+        )
+        return static_data.RESERVE_MENU_CHOOSING
 
-    def update_food_lists_caches(self):
-        for food in self.db.get_all_foods(name=True, id=True):
-            self.foods_with_id.append((food['id'], food['name']))
-            self.food_name_by_id[food['id']] = food['name']
-
-    def update_food_list(self, update, context, week_number: int):
-        self.dining = Dining(self.admin_username, self.admin_password)
-        new_foods = []
-        food_id = num_foods = len(self.foods)
-        for place_id in static_data.PLACES.values():
-            table = self.dining.get_foods_list(place_id, week_number)
-            new_foods = list(set(table) - self.foods)
-            for food_name in new_foods:
-                food_id += 1
-                self.db.add_food({"name": food_name, "id": str(food_id)})
-                logging.debug("Added food: {} {}".format(food_name, food_id))
-            self.foods.update(table)
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=messages.update_food_list_result.format(len(self.foods) - num_foods))
-        logging.info(f"{len(self.foods) - num_foods} foods added")
-        threading.Thread(target=self.update_food_lists_caches, args=()).start()
-        logging.info("Updated food list in cache started")
+    def send_reserve_menu(self, update, context):
+        # update.message.reply_text(
+        #     text=messages.still_under_struction,
+        # )
+        # return static_data.MAIN_MENU_CHOOSING
+        update.message.reply_text(
+            text=messages.reserve_menu_messsage,
+            reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES),
+        )
+        return static_data.RESERVE_MENU_CHOOSING

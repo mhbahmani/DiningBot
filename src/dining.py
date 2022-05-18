@@ -44,6 +44,9 @@ class Dining:
 
     def get_foods_list(self, place_id: int, week: int = 1) -> list:
         table = self.__load_food_table(place_id=place_id, week=week)
+        if table.status_code != http.HTTPStatus.OK:
+            logging.info("Something went wrong with status code: %s", table.status_code)
+            return []
         return self.__parse_food_table_to_get_foods_list(table)
 
     def get_reserve_table(self, place_id: int, week: int = 1) -> dict:

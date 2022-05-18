@@ -24,23 +24,24 @@ class Dining:
         self.password = password
 
         self.meals = []
+        self.user_id = None
         self.__login()
 
-    def reserve_food(self, user_id: int, place_id: int, food_id: int):
-        params = {'user_id': user_id,}
+    def reserve_food(self, place_id: int, food_id: int) -> bool:
+        logging.debug("Reserving food %s", food_id)
+        params = {'user_id': self.user_id,}
         data = {
             'id': food_id,
             'place_id': place_id,
         }
-
-        res = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
-        print(res.json())
-        # TODO
+        response = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
+        if response.json().get("success"):
+            return True
+        return False
 
     def cancel_food(self, user_id: int, food_id: int):
         params = {'user_id': user_id,}
         data = {'id': food_id,}
-
         res = self.session.get(Dining.CANCEL_FOOD_URL, params=params, data=data)
         print(res.json())
         # TODO
@@ -151,7 +152,7 @@ class Dining:
                     if food_reserve_function:
                         food_name, price = re.match(Dining.FOOD_NAME_AND_PRICE_REGEX, food_row.getText()).groups()
                         res[time][self.meals[j]].append({
-                            "food": food_name,
+                            "food": re.sub(" \(.*\)", "" , food_name),
                             "price": price,
                             "food_id": re.match(Dining.FOOD_ID_REGEX, food_reserve_function.get("onclick")).group("food_id"),
                         })

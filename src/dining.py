@@ -16,6 +16,7 @@ class Dining:
     LOAD_FOOD_TABLE = DINING_BASE_URL + "/food/food-reserve/load-reserve-table"
 
     FOOD_ID_REGEX = "do_reserve_from_diet\(\"(?P<food_id>\w+).*"
+    FOOD_NAME_AND_PRICE_REGEX = "(?P<name>.*)\W\((?P<price>\d+,\d+) تومان\)"
     DATE_REGEX = "\W+(?P<day>\w+\W?\w+)\W+(?P<date>\d+/\d+/\d+).*"
 
     def __init__(self, student_id: str, password: str) -> None:
@@ -55,6 +56,7 @@ class Dining:
             <date>: {
                 <food_time>: {
                     food: <food_name>,
+                    price: <price>,
                     food_id: <food_reserve_id>    
                 }
             }
@@ -120,13 +122,17 @@ class Dining:
             time = f"{date} {day}"
             res[time] = {}
             for j in range(food_times):
+                res[time][FOOD_TIMES[j]] = res[time].get(FOOD_TIMES[j], [])
                 food = foods.pop()
-                food_name = food.find("span", {"data-original-title": "رزرو"})
-                if food_name:
-                    res[time][FOOD_TIMES[j]] = {
-                        "food": food.getText(),
-                        "food_id": re.match(Dining.FOOD_ID_REGEX, food_name.get("onclick")).group("food_id"),
-                    }
+                for food_row in food.find_all("div", {"class": "food-reserve-diet-div"}):
+                    food_reserve_function = food_row.find("span", {"data-original-title": "رزرو"})
+                    if food_reserve_function:
+                        food_name, price = re.match(Dining.FOOD_NAME_AND_PRICE_REGEX, food_row.getText()).groups()
+                        res[time][FOOD_TIMES[j]].append({
+                            "food": food_name,
+                            "price": price,
+                            "food_id": re.match(Dining.FOOD_ID_REGEX, food_reserve_function.get("onclick")).group("food_id"),
+                        })
         return res
 
     def __parse_food_table_to_get_foods_list(self, table: requests.Response) -> list:

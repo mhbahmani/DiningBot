@@ -33,6 +33,12 @@ class DB:
             {'$set': {'priorities': priorities}}
         )
 
+    def set_automatic_reserve_status(self, user_id: str, status: bool):
+        self.db.bot_users.update_one(
+            {"user_id": user_id},
+            {"$set": {"automatic_reserve": status}}
+        )
+
     def find_forget_code(self, food_court_id: int = None):
         return self.db.forget_codes.find(
             filter={"food_court_id": food_court_id, "assigned": False},

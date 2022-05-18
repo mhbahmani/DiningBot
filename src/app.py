@@ -16,8 +16,8 @@ from src.static_data import (
     INPUT_FORGET_CODE_EXCLUDE,
     INPUT_PASSWORD,
     INPUT_USERNAME,
-    PLACES,
     INPUT_FORGET_CODE,
+    INPUT_USERNAME_AND_PASSWORD_EXCLUDE,
     MAIN_MENU_CHOICES,
     MAIN_MENU_CHOOSING,
     CHOOSING_SELF_TO_GET,
@@ -221,13 +221,13 @@ class DiningBot:
                 ],
                 INPUT_USERNAME: [
                     MessageHandler(
-                        Filters.text & ~(Filters.command),
+                        Filters.text & ~(Filters.command | Filters.regex(INPUT_USERNAME_AND_PASSWORD_EXCLUDE)),
                         self.reserve_handler.handle_username_input
                     )
                 ],
                 INPUT_PASSWORD: [
                     MessageHandler(
-                        Filters.text & ~(Filters.command),
+                        Filters.text & ~(Filters.command | Filters.regex(INPUT_USERNAME_AND_PASSWORD_EXCLUDE)),
                         self.reserve_handler.handle_password_input
                     )
                 ],

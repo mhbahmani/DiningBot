@@ -143,12 +143,18 @@ class ReserveMenuHandler:
         return res
 
     def set_username_and_password_handler(self, update, context):
-        update.message.reply_text(messages.get_username_message)
+        update.message.reply_text(
+            text=messages.get_username_message,
+            reply_markup=ReplyKeyboardMarkup(static_data.BACK_TO_MAIN_MENU_CHOICES)
+        )
         return static_data.INPUT_USERNAME
 
     def handle_username_input(self, update, context):
         username = update.message.text
-        update.message.reply_text(messages.get_password_message)
+        update.message.reply_text(
+            text=messages.get_password_message,
+            reply_markup=ReplyKeyboardMarkup(static_data.BACK_TO_MAIN_MENU_CHOICES)
+        )
         context.user_data['username'] = username
         return static_data.INPUT_PASSWORD
 

@@ -172,3 +172,11 @@ class Dining:
             if food_name != "-":
                 result.append(food_name.strip())
         return result
+
+    def __parse_reserve_page_to_get_food_courts(self, reserve_page: requests.Response) -> dict:
+        content = bs(reserve_page, "html.parser")
+        return dict(map(lambda x: (x.getText(), x.attrs["value"]), content.find_all("option")))
+
+    def get_user_food_courts(self):
+        response = self.session.get(Dining.RESERVE_PAGE_URL)
+        return self.__parse_reserve_page_to_get_food_courts(response)

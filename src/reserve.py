@@ -104,18 +104,14 @@ class ReserveMenuHandler:
         elif action == "IGNORE":
             context.bot.answer_callback_query(callback_query_id=query.id)
 
-    def reserve_next_week_food_based_on_user_priorities(self, update, context):
-        user_id = update.effective_user.id
-        week_number = 1
-        place_id = 19
+    def reserve_next_week_food_based_on_user_priorities(self, user_id, place_id):
         user_priorities: list = self.db.get_user_food_priorities(user_id)
         self.dining = Dining(self.admin_username, self.admin_password)
-        foods = self.dining.get_reserve_table_foods(place_id, week_number)
+        foods = self.dining.get_reserve_table_foods(place_id, week=1)
         for day in foods:
             for meal in self.dining.meals:
                 day_foods = list(map(lambda food: self.food_id_by_name.get(food.get("food")), foods[day][meal]))
-                if not day_foods:
-                    continue
+                if not day_foods: continue
                 if len(day_foods) > 1:
                     choosed_food_index = min(map(lambda x: user_priorities.index(x) if x in user_priorities else 100, day_foods))
                     if choosed_food_index == 100:

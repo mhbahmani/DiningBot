@@ -170,9 +170,6 @@ class DiningBot:
         update_food_list_handler = CommandHandler('update_foods', self.update_user_favorite_foods)
         self.dispatcher.add_handler(update_food_list_handler)
 
-        reserve_handler = CommandHandler('re', self.reserve_handler.reserve_next_week_food_based_on_user_priorities)
-        self.dispatcher.add_handler(reserve_handler)
-
         inline_handler = CallbackQueryHandler(self.inline_keyboard_handler)
         self.dispatcher.add_handler(inline_handler)
 

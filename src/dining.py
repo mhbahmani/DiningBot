@@ -49,7 +49,16 @@ class Dining:
             return []
         return self.__parse_food_table_to_get_foods_list(table)
 
-    def get_reserve_table(self, place_id: int, week: int = 1) -> dict:
+    def get_reserve_table_foods(self, place_id: int, week: int = 1) -> dict:
+        """ output:
+        {
+            <date>: {
+                <food_time>: {
+                    food: <food_name>,
+                    food_id: <food_reserve_id>    
+                }
+            }
+        """
         table = self.__load_food_table(place_id=place_id, week=week)
         if table.status_code != http.HTTPStatus.OK:
             logging.info("Something went wrong with status code: %s", table.status_code)
@@ -101,20 +110,20 @@ class Dining:
 
     def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
         content = bs(reserve_table.content, "html.parser")
-        food_times = [static_data.food_times_to_en[time.text] for time in content.find("table").find_all("th")[1:-7]]
+        FOOD_TIMES = [static_data.food_times_to_en[time.text] for time in content.find("table").find_all("th")[1:-7]]
         foods = content.find("table").find_all("td")
-        days = content.find("table").find_all("th")[5:]
+        days = content.find("table").find_all("th")[-7:]
         res = {}
         food_times = len(foods) // 7
         for i in range(7):
             day, date = re.match(Dining.DATE_REGEX, days.pop().text).groupdict().values()
             time = f"{date} {day}"
             res[time] = {}
-            for i in range(food_times):
+            for j in range(food_times):
                 food = foods.pop()
                 food_name = food.find("span", {"data-original-title": "رزرو"})
                 if food_name:
-                    res[time][food_times[i]] = {
+                    res[time][FOOD_TIMES[j]] = {
                         "food": food.getText(),
                         "food_id": re.match(Dining.FOOD_ID_REGEX, food_name.get("onclick")).group("food_id"),
                     }

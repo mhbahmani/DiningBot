@@ -1,10 +1,12 @@
 import threading
+from src.choose_food_courts_handler import FoodCourtSelectingHandler
 from src.dining import Dining
 from src.db import DB
 from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import (
+    ACTIVATE_AUTOMATIC_RESERVE_REGEX,
     BACK_TO_MAIN_MENU_REGEX,
     FAKE_FORGET_CODE_REGEX,
     FOOD_COURTS_REGEX,
@@ -134,6 +136,9 @@ class DiningBot:
         if type == "FOOD":
             _, action, choosed, page = FoodPrioritiesHandler.separate_callback_data(update.callback_query.data)
             return self.reserve_handler.inline_food_choosing_handler(update, context, action, choosed, int(page))
+        elif type == "FOODCOURT":
+            _, action, choosed = FoodCourtSelectingHandler.separate_callback_data(update.callback_query.data)
+            return self.reserve_handler.inline_food_court_choosing_handler(update, context, action, choosed)
         elif type == "FORGETCODE":
             _, forget_code = ForgetCodeMenuHandler.separate_callback_data(update.callback_query.data)
             self.forget_code_handler.inline_return_forget_code_handler(update, context, int(forget_code))
@@ -201,6 +206,10 @@ class DiningBot:
                     MessageHandler(
                         Filters.regex(SET_USERNAME_AND_PASSWORD_REGEX),
                         self.reserve_handler.set_username_and_password_handler
+                    ),
+                    MessageHandler(
+                        Filters.regex(ACTIVATE_AUTOMATIC_RESERVE_REGEX),
+                        self.reserve_handler.activate_automatic_reserve_handler
                     )
                 ],
                 INPUT_USERNAME: [

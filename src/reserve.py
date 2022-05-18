@@ -1,6 +1,7 @@
 from random import randint
 import threading
 from telegram import ReplyKeyboardMarkup
+from src.choose_food_courts_handler import FoodCourtSelectingHandler
 from src.dining import Dining
 from src.food_priorities_handler import FoodPrioritiesHandler
 import src.messages as messages
@@ -144,6 +145,21 @@ class ReserveMenuHandler:
         self.send_reserve_menu(update, context)
         return static_data.RESERVE_MENU_CHOOSING
 
+    def activate_automatic_reserve_handler(self, update, context):
+        update.message.reply_text(messages.activate_automatic_reserve_started_message)
+        user_login_info = self.db.get_user_login_info(update.effective_chat.id)
+        if not user_login_info:
+            update.message.reply_text(
+                text=messages.no_user_info_message,
+            )
+            return static_data.RESERVE_MENU_CHOOSING
+        dining = Dining(user_login_info['student_number'], user_login_info['password'])
+        context.user_data['food_courts'] = []
+        update.message.reply_text(
+            text=messages.choose_food_courts_to_automatic_reserve_message,
+            reply_markup=FoodCourtSelectingHandler.create_food_courts_keyboard(dining.get_user_food_courts())
+        )
+
     def reserve_next_week_food(self, update, context):
         update.message.reply_text(
             text=messages.still_under_struction,
@@ -160,3 +176,27 @@ class ReserveMenuHandler:
             reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES),
         )
         return static_data.RESERVE_MENU_CHOOSING
+
+    def inline_food_court_choosing_handler(self, update, context, action, choosed):
+        query = update.callback_query
+        logging.debug("Process choosed action or food: {} {}".format(action, choosed))
+        if action == "SELECT":
+            context.user_data.get('food_courts').append(choosed)
+            context.bot.send_message(
+                text=static_data.PLACES_NAME_BY_ID[choosed],
+                chat_id=update.effective_chat.id
+            )
+        elif action == "DONE":
+            self.db.set_user_food_courts(update.effective_chat.id, context.user_data.get('food_courts', []))
+            context.bot.edit_message_text(
+                text=messages.choosing_food_courts_done_message,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id)
+            return static_data.RESERVE_MENU_CHOOSING
+        elif action == "CANCEL":
+            context.user_data['priorities'].clear()
+            context.bot.edit_message_text(
+                text=messages.choosing_food_courts_cancel_message,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id)     
+            return static_data.RESERVE_MENU_CHOOSING

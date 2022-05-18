@@ -13,6 +13,21 @@ PLACES = {
     "رستوران های مکمل - سلف آزاد - لاله": "59"
 }
 
+PLACES_NAME_BY_ID = {
+    "19": "مرکزی - سلف دانشجویان آقا",
+    "21": "خوابگاه - طرشت 3",
+    "22": "خوابگاه - شهید احمدی روشن",
+    "24": "خوابگاه - مصلی نژاد",
+    "25": "خوابگاه - شهید وزوایی",
+    "26": "خوابگاه - شادمان",
+    "28": "خوابگاه - آزادی",
+    "29": "خوابگاه - 12واحدی",
+    "30": "خوابگاه - ولیعصر",
+    "55": "خوابگاه - درویشوند",
+    "58": "رستوران های مکمل - سلف آزاد - دنا",
+    "59": "رستوران های مکمل - سلف آزاد - لاله"
+}
+
 FOOD_COURT_IDS = {
     "سلف پسرها": 1,
     "سلف دخترها": 2,
@@ -66,6 +81,8 @@ RESERVE_LABEL = "Reserve"
 RESERVE_REGEX = '^{}$'.format(RESERVE_LABEL)
 SET_USERNAME_AND_PASSWORD_LABEL = "Set Username and Password"
 SET_USERNAME_AND_PASSWORD_REGEX = '^{}$'.format(SET_USERNAME_AND_PASSWORD_LABEL)
+ACTIVATE_AUTOMATIC_RESERVE_LABEL = "Activate Automatic Reserve"
+ACTIVATE_AUTOMATIC_RESERVE_REGEX = '^{}$'.format(ACTIVATE_AUTOMATIC_RESERVE_LABEL)
 
 MAIN_MENU_CHOICES = [
     [FORGET_CODE_MENU_LABEL, RESERVE_MENU_LABEL]
@@ -80,7 +97,7 @@ FORGET_CODE_MENU_CHOICES = [
 ]
 RESERVE_MENU_CHOICES = [
     [RESERVE_LABEL, SET_FAVORITES_LABEL],
-    [SET_USERNAME_AND_PASSWORD_LABEL],
+    [SET_USERNAME_AND_PASSWORD_LABEL, ACTIVATE_AUTOMATIC_RESERVE_LABEL],
     [BACK_TO_MAIN_MENU_LABEL]
 ]
 

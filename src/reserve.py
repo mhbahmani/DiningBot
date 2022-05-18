@@ -42,11 +42,11 @@ class ReserveMenuHandler:
             self.food_id_by_name[food['name']] = food['id']
 
     def update_food_list(self, update, context, week_number: int):
-        self.dining = Dining(self.admin_username, self.admin_password)
+        dining = Dining(self.admin_username, self.admin_password)
         new_foods = []
         food_id = num_foods = len(self.foods)
         for place_id in static_data.PLACES.values():
-            table = self.dining.get_foods_list(place_id, week_number)
+            table = dining.get_foods_list(place_id, week_number)
             if not table: 
                 context.bot.send_message(
                     chat_id=update.effective_chat.id,
@@ -106,10 +106,10 @@ class ReserveMenuHandler:
 
     def reserve_next_week_food_based_on_user_priorities(self, user_id, place_id):
         user_priorities: list = self.db.get_user_food_priorities(user_id)
-        self.dining = Dining(self.admin_username, self.admin_password)
-        foods = self.dining.get_reserve_table_foods(place_id, week=1)
+        dining = Dining(self.admin_username, self.admin_password)
+        foods = dining.get_reserve_table_foods(place_id, week=1)
         for day in foods:
-            for meal in self.dining.meals:
+            for meal in dining.meals:
                 day_foods = list(map(lambda food: self.food_id_by_name.get(food.get("food")), foods[day][meal]))
                 if not day_foods: continue
                 if len(day_foods) > 1:

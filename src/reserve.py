@@ -95,6 +95,12 @@ class ReserveMenuHandler:
         elif action == "IGNORE":
             context.bot.answer_callback_query(callback_query_id=query.id)
 
+    def reserve_next_week_food_based_on_user_priorities(self, update, context):
+        user_id = update.effective_user.id
+        week_number = 1
+        place_id = 21
+        self.dining.
+
     def reserve_next_week_food(self, update, context):
         update.message.reply_text(
             text=messages.still_under_struction,

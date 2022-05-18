@@ -46,6 +46,13 @@ class Dining:
         table = self.__load_food_table(place_id=place_id, week=week)
         return self.__parse_food_table_to_get_foods_list(table)
 
+    def get_reserve_table(self, place_id: int, week: int = 1) -> dict:
+        table = self.__load_food_table(place_id=place_id, week=week)
+        if table.status_code != http.HTTPStatus.OK:
+            logging.info("Something went wrong with status code: %s", table.status_code)
+            return {}
+        return self.__parse_reserve_table(table)
+
     def __login(self) -> None:
         logging.debug("Making session")
         self.session = requests.Session()
@@ -87,10 +94,9 @@ class Dining:
             'user_id': self.user_id,
         }
 
-        res = self.session.post(Dining.LOAD_FOOD_TABLE, data=data)
-        return res
+        return self.session.post(Dining.LOAD_FOOD_TABLE, data=data)
 
-    def __parse_food_table(self, reserve_table: requests.Response) -> dict:
+    def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
         content = bs(reserve_table.content, "html.parser")
         food_times = [static_data.food_times_to_en[time.text] for time in content.find("table").find_all("th")[1:-7]]
         foods = content.find("table").find_all("td")

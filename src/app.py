@@ -14,6 +14,8 @@ from src.static_data import (
     INPUT_FAKE_FORGET_CODE,
     INPUT_FOOD_NAME,
     INPUT_FORGET_CODE_EXCLUDE,
+    INPUT_PASSWORD,
+    INPUT_USERNAME,
     PLACES,
     INPUT_FORGET_CODE,
     MAIN_MENU_CHOICES,
@@ -26,6 +28,7 @@ from src.static_data import (
     RESERVE_MENU_REGEX,
     RESERVE_REGEX,
     SET_FAVORITES_REGEX,
+    SET_USERNAME_AND_PASSWORD_REGEX,
     TODAY_CODE_STATISTICS_REGEX,
 )
 from telegram import (
@@ -194,6 +197,22 @@ class DiningBot:
                     MessageHandler(
                         Filters.regex(RESERVE_REGEX),
                         self.reserve_handler.reserve_next_week_food
+                    ),
+                    MessageHandler(
+                        Filters.regex(SET_USERNAME_AND_PASSWORD_REGEX),
+                        self.reserve_handler.set_username_and_password_handler
+                    )
+                ],
+                INPUT_USERNAME: [
+                    MessageHandler(
+                        Filters.text & ~(Filters.command),
+                        self.reserve_handler.handle_username_input
+                    )
+                ],
+                INPUT_PASSWORD: [
+                    MessageHandler(
+                        Filters.text & ~(Filters.command),
+                        self.reserve_handler.handle_password_input
                     )
                 ],
                 FORGET_CODE_MENU_CHOOSING: [

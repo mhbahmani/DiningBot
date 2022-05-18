@@ -119,6 +119,24 @@ class ReserveMenuHandler:
                 print(day, meal, self.food_name_by_id[day_foods[choosed_food_index]])
                 # Reserve food
 
+    def set_username_and_password_handler(self, update, context):
+        update.message.reply_text(messages.get_username_message)
+        return static_data.INPUT_USERNAME
+
+    def handle_username_input(self, update, context):
+        username = update.message.text
+        update.message.reply_text(messages.get_password_message)
+        context.user_data['username'] = username
+        return static_data.INPUT_PASSWORD
+
+    def handle_password_input(self, update, context):
+        password = update.message.text
+        context.user_data['password'] = password
+        update.message.reply_text(messages.username_and_password_saved_message)
+        # Check if username and password are correct
+        self.send_reserve_menu(update, context)
+        return static_data.RESERVE_MENU_CHOOSING
+
     def reserve_next_week_food(self, update, context):
         update.message.reply_text(
             text=messages.still_under_struction,

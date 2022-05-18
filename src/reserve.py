@@ -131,9 +131,11 @@ class ReserveMenuHandler:
 
     def handle_password_input(self, update, context):
         password = update.message.text
-        context.user_data['password'] = password
         update.message.reply_text(messages.username_and_password_saved_message)
-        # Check if username and password are correct
+        if not Dining.check_username_and_password(context.user_data['username'], password):
+            update.message.reply_text(messages.username_or_password_incorrect_message)
+        else:
+            update.message.reply_text(messages.username_and_password_correct_message)
         self.send_reserve_menu(update, context)
         return static_data.RESERVE_MENU_CHOOSING
 

@@ -102,6 +102,26 @@ class Dining:
             "button", {"type": "button", "class": "btn btn-default navigation-link"}).get("onclick")
         self.user_id = re.match("load_diet_reserve_table.*\,(?P<user_id>\w+)\)", s).group("user_id")
 
+    def check_username_and_password(username: str, password: str) -> bool:
+        logging.debug("Making session")
+        session = requests.Session()
+        logging.debug("Get login page")
+        site = session.get(Dining.SIGN_IN_URL)
+        content = bs(site.content, "html.parser")
+        authenticity_token = content.find("input", {"name":"authenticity_token"}).get('value')
+        login_data = {
+            'authenticity_token': authenticity_token,
+            'student[student_identifier]': username,
+            'student[password]': password,
+            'commit': 'ورود به حساب کاربری'
+        }
+        response = session.post(Dining.SIGN_IN_URL, login_data)
+        if "اشتباه" in bs(response.content, "html.parser").find("div", {"class": "card-alert alert alert-warning mb-0"}).getText():
+            logging.info("Login failed with status code: %s", response.status_code)
+            return False
+        logging.info("Login successful")
+        return True
+
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
         data = {
             'id': '0',

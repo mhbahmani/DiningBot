@@ -27,6 +27,12 @@ class DB:
             projection={'_id': False, 'name': name, 'id': id}
             ).sort([('food_id', 1)])
 
+    def get_users_with_automatic_reserve(self):
+        return self.db.bot_users.find(
+            filter={'automatic_reserve': True},
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1}
+        )
+
     def set_user_food_priorities(self, user_id: str, priorities: list):
         self.db.users.update_one(
             {'user_id': user_id},

@@ -10,6 +10,12 @@ class DB:
     def add_user(self, user):
         self.db.users.insert_one(user)
 
+    def update_user_info(self, fields: dict):
+        self.db.users.update_one(
+            {'user_id': fields['user_id']},
+            {'$set': fields}, upsert=True
+        )
+
     def add_food(self, food):
         self.db.foods.insert_one(food)
 

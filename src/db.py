@@ -15,6 +15,14 @@ class DB:
             {'user_id': fields['user_id']},
             {'$set': fields}, upsert=True
         )
+    
+    def get_user_login_info(self, user_id: str) -> tuple:
+        out = self.db.users.find_one(
+            filter={'user_id': user_id},
+            projection={'_id': 0, 'student_number': 1, 'password': 1}
+        )
+        if not out: out = {}
+        return out
 
     def add_food(self, food):
         self.db.foods.insert_one(food)
@@ -43,6 +51,12 @@ class DB:
         self.db.users.update_one(
             {'user_id': user_id},
             {'$set': {'priorities': priorities}}
+        )
+    
+    def set_user_food_courts(self, user_id: str, food_courts: list):
+        self.db.users.update_one(
+            {'user_id': user_id},
+            {'$set': {'food_courts': food_courts}}
         )
 
     def get_user_food_priorities(self, user_id: str) -> list:

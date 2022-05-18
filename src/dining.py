@@ -116,7 +116,7 @@ class Dining:
             'commit': 'ورود به حساب کاربری'
         }
         response = session.post(Dining.SIGN_IN_URL, login_data)
-        if "اشتباه" in bs(response.content, "html.parser").find("div", {"class": "card-alert alert alert-warning mb-0"}).getText():
+        if bs(response.content, "html.parser").find("div", {"class": "card-alert alert alert-warning mb-0"}):
             logging.info("Login failed with status code: %s", response.status_code)
             return False
         logging.info("Login successful")

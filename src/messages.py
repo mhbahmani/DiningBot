@@ -139,3 +139,4 @@ fake_forget_code_taked_message = "حله. ممنونم که اطلاع دادی 
 you_already_have_forget_code_message = "ببین یه دونه کد دیگه امروز گرفتی، اگه اونو نمی‌خوای، دکمه‌ی زیرش رو بزن، بعد واسه کد جدید درخواست بده."
 
 update_foods_started_message = "🔍 آپدیت لیست غذاها آغاز شد"
+no_food_found_message = "هیچ غذایی تو جدول رزرو پیدا نکردم 🤔"

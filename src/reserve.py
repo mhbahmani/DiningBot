@@ -43,6 +43,11 @@ class ReserveMenuHandler:
         food_id = num_foods = len(self.foods)
         for place_id in static_data.PLACES.values():
             table = self.dining.get_foods_list(place_id, week_number)
+            if not table: 
+                context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=messages.no_food_found_message
+                )
             new_foods = list(set(table) - self.foods)
             for food_name in new_foods:
                 food_id += 1
@@ -94,12 +99,6 @@ class ReserveMenuHandler:
             return static_data.RESERVE_MENU_CHOOSING
         elif action == "IGNORE":
             context.bot.answer_callback_query(callback_query_id=query.id)
-
-    def reserve_next_week_food_based_on_user_priorities(self, update, context):
-        user_id = update.effective_user.id
-        week_number = 1
-        place_id = 21
-        self.dining.
 
     def reserve_next_week_food(self, update, context):
         update.message.reply_text(

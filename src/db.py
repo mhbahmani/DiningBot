@@ -33,6 +33,15 @@ class DB:
             {'$set': {'priorities': priorities}}
         )
 
+    def get_user_food_priorities(self, user_id: str) -> list:
+        out = self.db.users.find_one(
+            filter={'user_id': user_id},
+            projection={'_id': 0, 'priorities': 1}
+        )
+        if not out:
+            out = {}
+        return out.get('priorities', [])
+
     def set_automatic_reserve_status(self, user_id: str, status: bool):
         self.db.bot_users.update_one(
             {"user_id": user_id},

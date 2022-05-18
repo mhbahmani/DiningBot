@@ -1,6 +1,4 @@
-import threading
 from src.choose_food_courts_handler import FoodCourtSelectingHandler
-from src.dining import Dining
 from src.db import DB
 from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
@@ -59,7 +57,6 @@ class DiningBot:
 
         self.forget_code_handler = ForgetCodeMenuHandler(self.db)
         self.reserve_handler = ReserveMenuHandler(self.db, admin_sso_username, admin_sso_password)
-        # TODO: self.dining = Dining(student_number, password)
 
         logging.basicConfig(
             format='%(asctime)s - %(levelname)s - %(message)s',
@@ -103,6 +100,7 @@ class DiningBot:
         self.send_main_menu(update, context)
         return MAIN_MENU_CHOOSING
 
+    @check_admin
     def set(self, update, context):
         if not update.message.text: return # on edit
         args = update.message.text.split()[1:]
@@ -121,6 +119,11 @@ class DiningBot:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=messages.set_result_message.format(student_number, password))
+
+    @check_admin
+    def automatic_reserve_food(self, update, context):
+        if not update.message.text: return
+        self.reserve_handler.automatic_reserve(update, context)
 
     def help(self, update, context):
         if self.is_admin(update):
@@ -172,11 +175,15 @@ class DiningBot:
         help_handler = CommandHandler('help', self.help)
         self.dispatcher.add_handler(help_handler)
 
+        # TODO: use for admin
         set_handler = CommandHandler('set', self.set)
         self.dispatcher.add_handler(set_handler)
 
         update_food_list_handler = CommandHandler('update_foods', self.update_user_favorite_foods)
         self.dispatcher.add_handler(update_food_list_handler)
+
+        reserve_food_handler = CommandHandler('reserve', self.automatic_reserve_food)
+        self.dispatcher.add_handler(reserve_food_handler)
 
         inline_handler = CallbackQueryHandler(self.inline_keyboard_handler)
         self.dispatcher.add_handler(inline_handler)

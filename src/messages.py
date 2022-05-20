@@ -59,8 +59,8 @@ choosing_food_priorities_cancel_message = """
 لغو شد.
 """
 
-choose_self_message_to_get = "کدوم سلف می‌خوای غذا بخوری؟"
-choose_self_message_to_give = """دمت خیلی گرمه :))
+choose_food_court_message_to_get = "کدوم سلف می‌خوای غذا بخوری؟"
+choose_food_court_message_to_give = """دمت خیلی گرمه :))
 کد فراموشیت برای کدوم سلفه؟"""
 
 get_forget_code_from_user_message = "حالا لطفا کد فراموشیت رو برام بفرست"

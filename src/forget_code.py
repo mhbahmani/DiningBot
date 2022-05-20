@@ -19,33 +19,33 @@ class ForgetCodeMenuHandler:
         )
         return static_data.FORGET_CODE_MENU_CHOOSING
 
-    def send_choose_self_menu_to_get(self, update, context):
+    def send_choose_food_court_menu_to_get(self, update, context):
         if self.db.get_user_current_forget_code(update.effective_user.id):
             update.message.reply_text(
                 text=messages.you_already_have_forget_code_message,
             )
             return static_data.MAIN_MENU_CHOOSING
         update.message.reply_text(
-            text=messages.choose_self_message_to_get,
+            text=messages.choose_food_court_message_to_get,
             reply_markup=self.markup,
         )
         return static_data.CHOOSING_SELF_TO_GET
 
-    def send_choose_self_menu_to_give(self, update, context):
+    def send_choose_food_court_menu_to_give(self, update, context):
         update.message.reply_text(
-            text=messages.choose_self_message_to_give,
+            text=messages.choose_food_court_message_to_give,
             reply_markup=self.markup,
         )
         return static_data.CHOOSING_SELF_TO_GIVE
 
-    def handle_choosed_self_to_get(self, update, context):
+    def handle_choosed_food_court_to_get(self, update, context):
         choosed_food_court = update.message.text
         forget_codes = list(self.db.find_forget_code(get_food_court_id_by_name(choosed_food_court)))
         if not forget_codes:
             update.message.reply_text(
                 text=messages.no_code_for_this_food_court_message
             )
-            return self.send_choose_self_menu_to_get(update, context)
+            return self.send_choose_food_court_menu_to_get(update, context)
         # Assign random code to user
         forget_code = forget_codes[randint(0, len(forget_codes) - 1)]
         update.message.reply_text(
@@ -61,7 +61,7 @@ class ForgetCodeMenuHandler:
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
 
-    def handle_choosed_self_to_give(self, update, context):
+    def handle_choosed_food_court_to_give(self, update, context):
         choosed_food_court = update.message.text
         context.user_data['food_court'] = choosed_food_court
         update.message.reply_text(

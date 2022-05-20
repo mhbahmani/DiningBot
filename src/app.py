@@ -234,11 +234,11 @@ class DiningBot:
                 FORGET_CODE_MENU_CHOOSING: [
                     MessageHandler(
                         Filters.regex(GET_FORGET_CODE_REGEX),
-                        self.forget_code_handler.send_choose_self_menu_to_get
+                        self.forget_code_handler.send_choose_food_court_menu_to_get
                     ),
                     MessageHandler(
                         Filters.regex(GIVE_FORGET_CODE_REGEX),
-                        self.forget_code_handler.send_choose_self_menu_to_give
+                        self.forget_code_handler.send_choose_food_court_menu_to_give
                     ),
                     MessageHandler(
                         Filters.regex(RANKING_FORGET_CODE_REGEX),
@@ -256,13 +256,13 @@ class DiningBot:
                 CHOOSING_SELF_TO_GET: [
                     MessageHandler(
                         Filters.regex(FOOD_COURTS_REGEX),
-                        self.forget_code_handler.handle_choosed_self_to_get
+                        self.forget_code_handler.handle_choosed_food_court_to_get
                     )
                 ],
                 CHOOSING_SELF_TO_GIVE: [
                     MessageHandler(
                         Filters.regex(FOOD_COURTS_REGEX),
-                        self.forget_code_handler.handle_choosed_self_to_give
+                        self.forget_code_handler.handle_choosed_food_court_to_give
                     )
                 ],
                 INPUT_FOOD_NAME: [

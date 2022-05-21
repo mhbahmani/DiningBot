@@ -107,14 +107,14 @@ class ReserveMenuHandler:
             )
         elif action == "DONE":
             self.db.set_user_food_priorities(update.effective_chat.id, context.user_data.get('priorities'))
-            context.user_data['priorities'].clear()
+            if context.user_data: context.user_data.clear()
             context.bot.edit_message_text(
                 text=messages.choosing_food_priorities_done_message,
                 chat_id=query.message.chat_id,
                 message_id=query.message.message_id)
             return static_data.RESERVE_MENU_CHOOSING
         elif action == "CANCEL":
-            context.user_data['priorities'].clear()
+            if context.user_data: context.user_data.clear()
             context.bot.edit_message_text(
                 text=messages.choosing_food_priorities_cancel_message,
                 chat_id=query.message.chat_id,
@@ -222,7 +222,7 @@ class ReserveMenuHandler:
                 message_id=query.message.message_id)
             return static_data.RESERVE_MENU_CHOOSING
         elif action == "CANCEL":
-            context.user_data['priorities'].clear()
+            if context.user_data: context.user_data.clear()
             context.bot.edit_message_text(
                 text=messages.choosing_food_courts_cancel_message,
                 chat_id=query.message.chat_id,

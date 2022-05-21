@@ -156,8 +156,10 @@ class DiningBot:
 
     def unknown_command(self, update, context):
         update.message.reply_text(
-            text=messages.restart_bot_message
+            text=messages.restart_bot_message,
+            reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES),
         )
+        return MAIN_MENU_CHOOSING
     
     @check_admin
     def update_user_favorite_foods(self, update, context):
@@ -189,7 +191,7 @@ class DiningBot:
         self.dispatcher.add_handler(inline_handler)
 
         menue_handler = ConversationHandler(
-            entry_points=[CommandHandler('start', self.start)],
+            entry_points=[CommandHandler('start', self.start), MessageHandler(Filters.text & (~Filters.command), self.unknown_command)],
             states={
                 MAIN_MENU_CHOOSING: [
                     MessageHandler(
@@ -287,9 +289,6 @@ class DiningBot:
             fallbacks=[MessageHandler(Filters.regex(BACK_TO_MAIN_MENU_REGEX), self.send_main_menu)],
         )
         self.dispatcher.add_handler(menue_handler)
-
-        unknown_handler = MessageHandler(Filters.text & (~Filters.command), self.unknown_command)
-        self.dispatcher.add_handler(unknown_handler)
 
 
     def run(self):

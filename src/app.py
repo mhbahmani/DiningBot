@@ -3,37 +3,8 @@ from src.db import DB
 from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
-from src.static_data import (
-    ACTIVATE_AUTOMATIC_RESERVE_REGEX,
-    BACK_TO_MAIN_MENU_REGEX,
-    FAKE_FORGET_CODE_REGEX,
-    FOOD_COURTS_REGEX,
-    FORGET_CODE_MENU_REGEX,
-    GET_FORGET_CODE_REGEX,
-    GIVE_FORGET_CODE_REGEX,
-    INPUT_FAKE_FORGET_CODE,
-    INPUT_FOOD_NAME,
-    INPUT_FORGET_CODE_EXCLUDE,
-    INPUT_PASSWORD,
-    INPUT_USERNAME,
-    INPUT_FORGET_CODE,
-    INPUT_USERNAME_AND_PASSWORD_EXCLUDE,
-    MAIN_MENU_CHOICES,
-    MAIN_MENU_CHOOSING,
-    CHOOSING_SELF_TO_GET,
-    CHOOSING_SELF_TO_GIVE,
-    RANKING_FORGET_CODE_REGEX,
-    RESERVE_MENU_CHOOSING,
-    FORGET_CODE_MENU_CHOOSING,
-    RESERVE_MENU_REGEX,
-    RESERVE_REGEX,
-    SET_FAVORITES_REGEX,
-    SET_USERNAME_AND_PASSWORD_REGEX,
-    TODAY_CODE_STATISTICS_REGEX,
-)
-from telegram import (
-    ReplyKeyboardMarkup
-)
+from src.static_data import *
+from telegram import ReplyKeyboardMarkup
 from telegram.ext import (
     Updater,
     Filters,
@@ -68,7 +39,7 @@ class DiningBot:
 
     def check_admin(func):
         def wrapper(self, *args, **kwargs):
-            update, context = args[0], args[1]
+            update, _ = args[0], args[1]
             user_id = update.message.chat.id
             if user_id not in self.admin_ids:
                 msg = messages.you_are_not_admin_message
@@ -177,7 +148,6 @@ class DiningBot:
         help_handler = CommandHandler('help', self.help)
         self.dispatcher.add_handler(help_handler)
 
-        # TODO: use for admin
         set_handler = CommandHandler('set', self.set)
         self.dispatcher.add_handler(set_handler)
 

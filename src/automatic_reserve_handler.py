@@ -6,12 +6,21 @@ from telegram.ext import Updater
 
 
 class AutomaticReserveHandler:
-    def __init__(self, token="TOKEN", db=None) -> None:
+    def __init__(self, token="TOKEN", admin_ids=set(), log_level=logging.INFO, db=None) -> None:
         self.db = db
         self.token = token
+        self.admin_ids = admin_ids
+        logging.basicConfig(
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            level={
+                'INFO': logging.INFO,
+                'DEBUG': logging.DEBUG,
+                'ERROR': logging.ERROR,
+            }[log_level])  
 
     def automatic_reserve(self, context=None):
         if not context:
+            if not self.token: return
             bot = Updater(token=self.token, use_context=True).bot
         else: bot = context.bot
         logging.info("Automatic reserve started")

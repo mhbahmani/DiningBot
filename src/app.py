@@ -4,6 +4,7 @@ from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import *
+from src.utils import update_environment_variable
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import (
     Updater,
@@ -17,7 +18,6 @@ from telegram.ext import (
 import src.messages as messages
 import logging
 
-from utils import update_environment_variable
 
 
 class DiningBot:

@@ -17,6 +17,8 @@ from telegram.ext import (
 import src.messages as messages
 import logging
 
+from utils import update_environment_variable
+
 
 class DiningBot:
     def __init__(self, token, admin_ids=set(), log_level='INFO', db: DB = None, admin_sso_username: str = None, admin_sso_password: str = None):
@@ -81,12 +83,8 @@ class DiningBot:
                 text=messages.set_wrong_args_message)
             return
         student_number, password = args
-        logging.info("Add user: {} {} to db".format(student_number, password))
-        self.db.add_user({
-            "user_id": update.message.chat.id,
-            "username": update.effective_user.username,
-            "student_number": student_number,
-            "password": password})
+        update_environment_variable("ADMIN_SHARIF_SSO_USERNAME", student_number)
+        update_environment_variable("ADMIN_SHARIF_SSO_PASSWORD", password)
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=messages.set_result_message.format(student_number, password))

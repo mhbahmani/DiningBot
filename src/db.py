@@ -10,6 +10,20 @@ class DB:
     def add_user(self, user):
         self.db.users.insert_one(user)
 
+    def update_user_info(self, fields: dict):
+        self.db.users.update_one(
+            {'user_id': fields['user_id']},
+            {'$set': fields}, upsert=True
+        )
+    
+    def get_user_login_info(self, user_id: str) -> tuple:
+        out = self.db.users.find_one(
+            filter={'user_id': user_id},
+            projection={'_id': 0, 'student_number': 1, 'password': 1}
+        )
+        if not out: out = {}
+        return out
+
     def add_food(self, food):
         self.db.foods.insert_one(food)
 
@@ -27,10 +41,52 @@ class DB:
             projection={'_id': False, 'name': name, 'id': id}
             ).sort([('food_id', 1)])
 
+    def get_users_with_automatic_reserve(self):
+        return self.db.users.find(
+            filter={'automatic_reserve': True, 'next_week_reserve': False},
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
+        )
+    
+    def get_user_reserve_info(self, user_id):
+        return self.db.users.find_one(
+            filter={'user_id': user_id, 'next_week_reserve': False},
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
+        )
+
+    def set_user_next_week_reserve_status(self, user_id: str, status: bool):
+        self.db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {"next_week_reserve": status}}
+        )
+
     def set_user_food_priorities(self, user_id: str, priorities: list):
         self.db.users.update_one(
             {'user_id': user_id},
             {'$set': {'priorities': priorities}}
+        )
+    
+    def set_user_food_courts(self, user_id: str, food_courts: list):
+        self.db.users.update_one(
+            {'user_id': user_id},
+            {'$set': {'food_courts': food_courts, 'automatic_reserve': True, 'next_week_reserve': False}}
+        )
+
+    def set_all_users_next_week_reserve_status(self, status: bool):
+        self.db.users.update_many({"automatic_reserve": True}, {"$set": {"next_week_reserve": status}})
+
+    def get_user_food_priorities(self, user_id: str) -> list:
+        out = self.db.users.find_one(
+            filter={'user_id': user_id},
+            projection={'_id': 0, 'priorities': 1}
+        )
+        if not out:
+            out = {}
+        return out.get('priorities', [])
+
+    def set_automatic_reserve_status(self, user_id: str, status: bool):
+        self.db.bot_users.update_one(
+            {"user_id": user_id},
+            {"$set": {"automatic_reserve": status}}
         )
 
     def find_forget_code(self, food_court_id: int = None):

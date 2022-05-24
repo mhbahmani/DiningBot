@@ -1,6 +1,6 @@
 from random import randint
 from src.utils import get_food_court_id_by_name, make_forget_code_statistics_message
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 import src.messages as messages
 import src.static_data as static_data
 
@@ -19,34 +19,34 @@ class ForgetCodeMenuHandler:
         )
         return static_data.FORGET_CODE_MENU_CHOOSING
 
-    def send_choose_self_menu_to_get(self, update, context):
+    def send_choose_food_court_menu_to_get(self, update, context):
         if self.db.get_user_current_forget_code(update.effective_user.id):
             update.message.reply_text(
                 text=messages.you_already_have_forget_code_message,
             )
             return static_data.FORGET_CODE_MENU_CHOOSING
         update.message.reply_text(
-            text=messages.choose_self_message_to_get,
+            text=messages.choose_food_court_message_to_get,
             reply_markup=self.markup,
         )
         return static_data.CHOOSING_SELF_TO_GET
 
-    def send_choose_self_menu_to_give(self, update, context):
+    def send_choose_food_court_menu_to_give(self, update, context):
         update.message.reply_text(
-            text=messages.choose_self_message_to_give,
+            text=messages.choose_food_court_message_to_give,
             reply_markup=self.markup,
         )
         return static_data.CHOOSING_SELF_TO_GIVE
 
-    def handle_choosed_self_to_get(self, update, context):
+    def handle_choosed_food_court_to_get(self, update, context):
         choosed_food_court = update.message.text
         forget_codes = list(self.db.find_forget_code(get_food_court_id_by_name(choosed_food_court)))
         if not forget_codes:
             update.message.reply_text(
                 text=messages.no_code_for_this_food_court_message
             )
-            return self.send_choose_self_menu_to_get(update, context)
-        # Assign random code to user
+            return self.send_choose_food_court_menu_to_get(update, context)
+        # Assign a random code to user
         forget_code = forget_codes[randint(0, len(forget_codes) - 1)]
         update.message.reply_text(
             text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name"), forget_code.get("username")),
@@ -61,7 +61,7 @@ class ForgetCodeMenuHandler:
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
 
-    def handle_choosed_self_to_give(self, update, context):
+    def handle_choosed_food_court_to_give(self, update, context):
         choosed_food_court = update.message.text
         context.user_data['food_court'] = choosed_food_court
         update.message.reply_text(
@@ -139,7 +139,7 @@ class ForgetCodeMenuHandler:
             reply_markup=ReplyKeyboardMarkup(static_data.MAIN_MENU_CHOICES),
         )
     
-    def return_forget_code(self, update, context, forget_code: int):
+    def inline_return_forget_code_handler(self, update, context, forget_code: int):
         self.db.update_forget_code_assignment_status(forget_code, False)
         context.bot.edit_message_text(
             text=messages.forget_taked_back_message,
@@ -175,7 +175,7 @@ class ForgetCodeMenuHandler:
             )
             return static_data.INPUT_FAKE_FORGET_CODE
         forget_code = self.db.get_forget_code_info(fake_forget_code)
-        # TODO
+        # TODO: handle fake forget code some how :)
         update.message.reply_text(
             text=messages.fake_forget_code_taked_message,
         )

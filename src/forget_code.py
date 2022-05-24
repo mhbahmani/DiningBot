@@ -1,6 +1,6 @@
 from random import randint
 from src.utils import get_food_court_id_by_name, make_forget_code_statistics_message
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 import src.messages as messages
 import src.static_data as static_data
 

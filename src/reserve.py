@@ -33,6 +33,7 @@ class ReserveMenuHandler:
         AutomaticReserveHandler(self, db=self.db).automatic_reserve(context)
 
     def load_foods(self):
+        # Load foods to cache
         for food in self.db.get_all_foods(name=True, id=True):
             self.foods.add(food['name'])
             self.foods_with_id.append((food['id'], food['name']))

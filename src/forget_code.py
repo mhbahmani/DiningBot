@@ -46,7 +46,7 @@ class ForgetCodeMenuHandler:
                 text=messages.no_code_for_this_food_court_message
             )
             return self.send_choose_food_court_menu_to_get(update, context)
-        # Assign random code to user
+        # Assign a random code to user
         forget_code = forget_codes[randint(0, len(forget_codes) - 1)]
         update.message.reply_text(
             text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name"), forget_code.get("username")),
@@ -175,7 +175,7 @@ class ForgetCodeMenuHandler:
             )
             return static_data.INPUT_FAKE_FORGET_CODE
         forget_code = self.db.get_forget_code_info(fake_forget_code)
-        # TODO
+        # TODO: handle fake forget code some how :)
         update.message.reply_text(
             text=messages.fake_forget_code_taked_message,
         )

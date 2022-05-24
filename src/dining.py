@@ -136,7 +136,8 @@ class Dining:
 
     def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
         content = bs(reserve_table.content, "html.parser")
-        self.meals = [static_data.food_times_to_en[time.text] for time in content.find("table").find_all("th")[1:-7]]
+        self.meals = [static_data.MEAL_FA_TO_EN[time.text] for time in content.find("table").find_all("th")[1:-7]]
+        self.meals.reverse() # TOF MALI :)
         foods = content.find("table").find_all("td")
         days = content.find("table").find_all("th")[-7:]
         res = {}

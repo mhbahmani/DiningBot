@@ -48,11 +48,18 @@ FOOD_COURT_IDS = {
     'درویش‌وند': 15
 }
 
-food_times_to_en = {
+MEAL_FA_TO_EN = {
     "ناهار": "lunch",
     "شام": "dinner",
     "سحری": "sahari",
     "افطار": "eftari"
+}
+
+MEAL_EN_TO_FA = {
+    "lunch": "ناهار",
+    "dinner": "شام",
+    "sahari": "سحری",
+    "eftari": "افطار"
 }
 
 # Stages

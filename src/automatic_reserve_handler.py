@@ -82,16 +82,15 @@ class AutomaticReserveHandler:
                 choosed_food_id = foods[day][meal][food_index_in_foods_list]['food_id']
                 reserve_success, balance = dining.reserve_food(int(place_id), int(choosed_food_id))
                 reserve_successes.append(reserve_success)
-                food_names.append((foods[day][meal][food_index_in_foods_list].get('food'), day))
+                food_names.append((foods[day][meal][food_index_in_foods_list].get('food'), day, meal))
         return reserve_successes, food_names
 
     def beautify_reserved_foods_output(self, food_names: list) -> str:
         food_names.reverse()
-        
         return "\n".join(list(
             map(
                 lambda x: messages.list_reserved_foods_message.format(
-                    re.sub("\d+\/\d+\/\d+ ", "", x[1]), x[0]), food_names)))
+                    re.sub("\d+\/\d+\/\d+ ", "", x[1]), static_data.MEAL_EN_TO_FA.get(x[2], ""), x[0]), food_names)))
 
 
     def notify_users(self):

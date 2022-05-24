@@ -24,6 +24,12 @@ class DB:
         if not out: out = {}
         return out
 
+    def get_user_id_by_username(self, username: str) -> str:
+        return self.db.users.find_one(
+            filter={'username': username},
+            projection={'_id': 0, 'user_id': 1}
+        ).get("user_id")
+
     def add_food(self, food):
         self.db.foods.insert_one(food)
 

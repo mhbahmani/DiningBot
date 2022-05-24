@@ -134,7 +134,18 @@ class DiningBot:
             reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES),
         )
         return MAIN_MENU_CHOOSING
-    
+
+    @check_admin
+    def send_to_all(self, update, context):
+        import re
+        msg = re.sub("/sendtoall ", "", update.message.text)
+        users = self.db.get_all_bot_users()
+        for user in users:
+            context.bot.send_message(
+                chat_id=user["user_id"],
+                text=msg
+            )
+
     @check_admin
     def update_user_favorite_foods(self, update, context):
         update.message.reply_text(
@@ -153,6 +164,9 @@ class DiningBot:
 
         set_handler = CommandHandler('set', self.set)
         self.dispatcher.add_handler(set_handler)
+
+        sendtoall_handler = CommandHandler('sendtoall', self.send_to_all)
+        self.dispatcher.add_handler(sendtoall_handler)
 
         update_food_list_handler = CommandHandler('update_foods', self.update_user_favorite_foods)
         self.dispatcher.add_handler(update_food_list_handler)

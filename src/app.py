@@ -5,7 +5,7 @@ from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import *
 from src.utils import update_environment_variable
-from telegram import ReplyKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, error
 from telegram.ext import (
     Updater,
     Filters,
@@ -141,10 +141,13 @@ class DiningBot:
         msg = re.sub("/sendtoall ", "", update.message.text)
         users = self.db.get_all_bot_users()
         for user in users:
-            context.bot.send_message(
-                chat_id=user["user_id"],
-                text=msg
-            )
+            try:
+                context.bot.send_message(
+                    chat_id=user["user_id"],
+                    text=msg
+                )
+            except error.Unauthorized:
+                continue
 
     @check_admin
     def update_user_favorite_foods(self, update, context):

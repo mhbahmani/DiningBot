@@ -10,13 +10,23 @@ class AutomaticReserveHandler:
         self.db = db
         self.token = token
         self.admin_ids = admin_ids
+
+        self.food_id_by_name = {}
+
         logging.basicConfig(
             format='%(asctime)s - %(levelname)s - %(message)s',
             level={
                 'INFO': logging.INFO,
                 'DEBUG': logging.DEBUG,
                 'ERROR': logging.ERROR,
-            }[log_level])  
+            }[log_level])
+
+        self.load_foods()
+    
+    def load_foods(self):
+        for food in self.db.get_all_foods(name=True, id=True):
+            self.food_id_by_name[food['name']] = food['id']
+        logging.info(f"Loaded {len(self.food_id_by_name)} foods")
 
     def automatic_reserve(self, context=None):
         if not context:
@@ -39,7 +49,7 @@ class AutomaticReserveHandler:
         logging.info("Automatic reserve finished")
 
     def reserve_next_week_food_based_on_user_priorities(self, user_id: str, place_id, user_priorities: list, username, password):
-        logging.debug("Reserving food for user {}".format(user_id))
+        logging.debug("Reserving food for user {} at {}".format(user_id, static_data.PLACES_NAME_BY_ID[place_id]))
         dining = Dining(username, password)
         foods = dining.get_reserve_table_foods(place_id, week=1)
         res = []
@@ -51,8 +61,9 @@ class AutomaticReserveHandler:
                 if not day_foods: continue
                 if len(day_foods) > 1:
                     choosed_food_index = min(map(lambda x: user_priorities.index(x) if x in user_priorities else 100, day_foods))
-                    choosed_food_id = foods[day][meal][day_foods.index(user_priorities[choosed_food_index])]['food_id']
                     if choosed_food_index == 100:
                         choosed_food_id = foods[day][meal][randint(0, len(day_foods) - 1)]['food_id']
+                    else:
+                        choosed_food_id = foods[day][meal][day_foods.index(user_priorities[choosed_food_index])]['food_id']
                 res.append(dining.reserve_food(int(place_id), int(choosed_food_id)))
         return res

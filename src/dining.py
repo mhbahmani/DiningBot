@@ -37,7 +37,8 @@ class Dining:
         response = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
         if response.json().get("success"):
             return True, response.json().get("balance")
-        return False
+        return False, 0
+        # TODO: Handle balance on failure
 
     def cancel_food(self, user_id: int, food_id: int):
         params = {'user_id': user_id,}

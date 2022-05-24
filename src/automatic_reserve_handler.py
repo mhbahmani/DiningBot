@@ -47,7 +47,7 @@ class AutomaticReserveHandler:
         for user in list(users):
             successfull_reserve = True
             for place_id in user['food_courts']:
-                reserve_successes, foods = self.reserve_next_week_food_based_on_user_priorities(user['user_id'], place_id, user['priorities'], user['student_number'], user['password'])
+                reserve_successes, foods = self.reserve_next_week_food_based_on_user_priorities(user['user_id'], place_id, user.get('priorities', []), user['student_number'], user['password'])
                 if reserve_successes and all(reserve_successes):
                     bot.send_message(
                         chat_id=user['user_id'],
@@ -87,6 +87,7 @@ class AutomaticReserveHandler:
 
     def beautify_reserved_foods_output(self, food_names: list) -> str:
         food_names.reverse()
+        
         return "\n".join(list(
             map(
                 lambda x: messages.list_reserved_foods_message.format(

@@ -1,4 +1,5 @@
 from random import randint
+import threading
 from src import messages, static_data
 from src.dining import Dining
 from telegram.ext import Updater
@@ -40,6 +41,7 @@ class AutomaticReserveHandler:
         logging.info("Automatic reserve started")
         users = self.db.get_user_reserve_info(user_id) if user_id else self.db.get_users_with_automatic_reserve()
         for user in list(users):
+            successfull_reserve = True
             for place_id in user['food_courts']:
                 reserve_successes, foods = self.reserve_next_week_food_based_on_user_priorities(user['user_id'], place_id, user['priorities'], user['student_number'], user['password'])
                 if reserve_successes and all(reserve_successes):
@@ -51,6 +53,9 @@ class AutomaticReserveHandler:
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                    successfull_reserve = False
+            if successfull_reserve:
+                threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
         logging.info("Automatic reserve finished")
 
     def reserve_next_week_food_based_on_user_priorities(self, user_id: str, place_id, user_priorities: list, username, password):

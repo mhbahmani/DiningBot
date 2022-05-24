@@ -43,14 +43,20 @@ class DB:
 
     def get_users_with_automatic_reserve(self):
         return self.db.users.find(
-            filter={'automatic_reserve': True},
+            filter={'automatic_reserve': True, 'next_week_reserve': False},
             projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
         )
     
     def get_user_reserve_info(self, user_id):
         return self.db.users.find_one(
-            filter={'user_id': user_id},
+            filter={'user_id': user_id, 'next_week_reserve': False},
             projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
+        )
+
+    def set_user_next_week_reserve_status(self, user_id: str, status: bool):
+        self.db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {"next_week_reserve": status}}
         )
 
     def set_user_food_priorities(self, user_id: str, priorities: list):
@@ -62,7 +68,7 @@ class DB:
     def set_user_food_courts(self, user_id: str, food_courts: list):
         self.db.users.update_one(
             {'user_id': user_id},
-            {'$set': {'food_courts': food_courts, 'automatic_reserve': True}}
+            {'$set': {'food_courts': food_courts, 'automatic_reserve': True, 'next_week_reserve': False}}
         )
 
     def get_user_food_priorities(self, user_id: str) -> list:

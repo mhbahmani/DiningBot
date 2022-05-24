@@ -24,7 +24,7 @@ class ForgetCodeMenuHandler:
             update.message.reply_text(
                 text=messages.you_already_have_forget_code_message,
             )
-            return static_data.MAIN_MENU_CHOOSING
+            return static_data.FORGET_CODE_MENU_CHOOSING
         update.message.reply_text(
             text=messages.choose_food_court_message_to_get,
             reply_markup=self.markup,
@@ -72,7 +72,7 @@ class ForgetCodeMenuHandler:
 
     def handle_forget_code_input(self, update, context):
         forget_code = update.message.text
-        if len(forget_code) < ForgetCodeMenuHandler.FORGET_CODE_LENGTH:
+        if len(forget_code) != ForgetCodeMenuHandler.FORGET_CODE_LENGTH:
             update.message.reply_text(
                 text=messages.not_enough_number_error_message
             )

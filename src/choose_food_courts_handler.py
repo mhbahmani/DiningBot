@@ -10,6 +10,7 @@ class FoodCourtSelectingHandler:
     def create_food_courts_keyboard(food_courts: dict) -> InlineKeyboardMarkup:
         keyboard = []
         food_courts = list(food_courts.items())
+        food_courts.reverse()
 
         while food_courts:
             row = []

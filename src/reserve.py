@@ -29,8 +29,8 @@ class ReserveMenuHandler:
                 foods=self.foods_with_id, page=1)
         )
 
-    def automatic_reserve(self, context):
-        AutomaticReserveHandler(self, db=self.db).automatic_reserve(context)
+    def automatic_reserve(self, context, user_id: str = None):
+        AutomaticReserveHandler(self, db=self.db).automatic_reserve(context, user_id)
 
     def load_foods(self):
         # Load foods to cache

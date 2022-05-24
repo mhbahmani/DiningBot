@@ -92,7 +92,11 @@ class DiningBot:
     @check_admin
     def automatic_reserve_food(self, update, context):
         if not update.message.text: return
-        self.reserve_handler.automatic_reserve(context)
+        splited_text = update.message.text.split()
+        user_id = None
+        if len(splited_text) == 2:
+            user_id = splited_text[-1]
+        self.reserve_handler.automatic_reserve(context, user_id)
 
     def help(self, update, context):
         if self.is_admin(update):

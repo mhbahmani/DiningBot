@@ -46,6 +46,12 @@ class DB:
             filter={'automatic_reserve': True},
             projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
         )
+    
+    def get_user_reserve_info(self, user_id):
+        return self.db.users.find_one(
+            filter={'user_id': user_id},
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
+        )
 
     def set_user_food_priorities(self, user_id: str, priorities: list):
         self.db.users.update_one(

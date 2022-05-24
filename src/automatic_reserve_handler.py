@@ -11,6 +11,7 @@ class AutomaticReserveHandler:
         self.token = token
         self.admin_ids = admin_ids
 
+        self.food_name_by_id = {}
         self.food_id_by_name = {}
 
         logging.basicConfig(
@@ -25,23 +26,25 @@ class AutomaticReserveHandler:
     
     def load_foods(self):
         for food in self.db.get_all_foods(name=True, id=True):
+            self.food_name_by_id[food['id']] = food['name']
             self.food_id_by_name[food['name']] = food['id']
         logging.info(f"Loaded {len(self.food_id_by_name)} foods")
 
-    def automatic_reserve(self, context=None):
+    def automatic_reserve(self, context=None, user_id: str = None):
         if not context:
             if not self.token: return
             bot = Updater(token=self.token, use_context=True).bot
         else: bot = context.bot
         logging.info("Automatic reserve started")
-        users = self.db.get_users_with_automatic_reserve()
+        users = self.db.get_user_reserve_info(user_id) if user_id else self.db.get_users_with_automatic_reserve()
         for user in list(users):
+            if user['user_id'] != 68662360: continue
             for place_id in user['food_courts']:
-                res = self.reserve_next_week_food_based_on_user_priorities(user['user_id'], place_id, user['priorities'], user['student_number'], user['password'])
-                if res and all(res):
+                reserve_successes, foods = self.reserve_next_week_food_based_on_user_priorities(user['user_id'], place_id, user['priorities'], user['student_number'], user['password'])
+                if reserve_successes and all(reserve_successes):
                     bot.send_message(
                         chat_id=user['user_id'],
-                        text=messages.reserve_was_secceeded_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                        text=messages.reserve_was_secceeded_message.format(static_data.PLACES_NAME_BY_ID[place_id], foods))
                 else:
                     bot.send_message(
                         chat_id=user['user_id'],
@@ -49,21 +52,28 @@ class AutomaticReserveHandler:
         logging.info("Automatic reserve finished")
 
     def reserve_next_week_food_based_on_user_priorities(self, user_id: str, place_id, user_priorities: list, username, password):
+        if place_id != "19": return [], []
         logging.debug("Reserving food for user {} at {}".format(user_id, static_data.PLACES_NAME_BY_ID[place_id]))
         dining = Dining(username, password)
         foods = dining.get_reserve_table_foods(place_id, week=1)
-        res = []
+        reserve_successes = []
+        food_names = []
         for day in foods:
             for meal in dining.meals:
                 if not foods[day][meal]: continue
                 day_foods = list(map(lambda food: self.food_id_by_name.get(food.get("food")), foods[day][meal]))
-                choosed_food_id = foods[day][meal][0].get("food_id")
                 if not day_foods: continue
+                choosed_food_id = foods[day][meal][0].get("food_id")
+                food_index_in_foods_list = 0
                 if len(day_foods) > 1:
                     choosed_food_index = min(map(lambda x: user_priorities.index(x) if x in user_priorities else 100, day_foods))
-                    if choosed_food_index == 100:
-                        choosed_food_id = foods[day][meal][randint(0, len(day_foods) - 1)]['food_id']
-                    else:
-                        choosed_food_id = foods[day][meal][day_foods.index(user_priorities[choosed_food_index])]['food_id']
-                res.append(dining.reserve_food(int(place_id), int(choosed_food_id)))
-        return res
+                    if choosed_food_index == 100: food_index_in_foods_list = randint(0, len(day_foods) - 1)
+                    else: food_index_in_foods_list = day_foods.index(user_priorities[choosed_food_index])
+                choosed_food_id = foods[day][meal][food_index_in_foods_list]['food_id']
+                reserve_success, balance = dining.reserve_food(int(place_id), int(choosed_food_id))
+                reserve_successes.append(reserve_success)
+                food_names.append(foods[day][meal][food_index_in_foods_list].get('food'))
+        return reserve_successes, food_names
+
+    def beautify_reserve_food_output(food_names: list) -> str:
+        return "\n".join(food_names)

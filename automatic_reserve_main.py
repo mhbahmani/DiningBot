@@ -29,4 +29,4 @@ if __name__ == '__main__':
     automatic_reserve_handler.automatic_reserve()
     while True:
         schedule.run_pending()
-        time.sleep(60 * 60 * 24)
+        time.sleep(60 * 60)

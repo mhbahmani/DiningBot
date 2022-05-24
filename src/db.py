@@ -71,6 +71,9 @@ class DB:
             {'$set': {'food_courts': food_courts, 'automatic_reserve': True, 'next_week_reserve': False}}
         )
 
+    def set_all_users_next_week_reserve_status(self, status: bool):
+        self.db.users.update_many({"automatic_reserve": True}, {"$set": {"next_week_reserve": status}})
+
     def get_user_food_priorities(self, user_id: str) -> list:
         out = self.db.users.find_one(
             filter={'user_id': user_id},

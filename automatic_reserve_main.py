@@ -18,9 +18,10 @@ if __name__ == '__main__':
             ),
         )
 
-    schedule.every(7).days.at("18:00").do(automatic_reserve_handler.automatic_reserve)
+    schedule.every(7).days.at("16:00").do(automatic_reserve_handler.notify_users)
+    schedule.every(7).days.at("18:00").do(automatic_reserve_handler.handle_automatic_reserve)
 
-    automatic_reserve_handler.automatic_reserve()
+    automatic_reserve_handler.handle_automatic_reserve()
     while True:
         schedule.run_pending()
         time.sleep(60 * 60 * 24)

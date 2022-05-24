@@ -33,6 +33,10 @@ class AutomaticReserveHandler:
             self.food_id_by_name[food['name']] = food['id']
         logging.info(f"Loaded {len(self.food_id_by_name)} foods")
 
+    def handle_automatic_reserve(self):
+        self.db.set_all_users_next_week_reserve_status(False)
+        self.automatic_reserve()
+
     def automatic_reserve(self, context=None, user_id: str = None):
         if not context:
             if not self.token: return
@@ -87,3 +91,13 @@ class AutomaticReserveHandler:
             map(
                 lambda x: messages.list_reserved_foods_message.format(
                     re.sub("\d+\/\d+\/\d+ ", "", x[1]), x[0]), food_names)))
+
+
+    def notify_users(self):
+        users = self.db.get_users_with_automatic_reserve()
+        bot = Updater(token=self.token, use_context=True).bot
+        for user in users:
+            bot.send_message(
+                chat_id=user['user_id'],
+                text=messages.automatic_reserve_notification_message
+            )

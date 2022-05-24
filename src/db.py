@@ -24,6 +24,12 @@ class DB:
         if not out: out = {}
         return out
 
+    def get_user_id_by_username(self, username: str) -> str:
+        return self.db.users.find_one(
+            filter={'username': username},
+            projection={'_id': 0, 'user_id': 1}
+        ).get("user_id")
+
     def add_food(self, food):
         self.db.foods.insert_one(food)
 
@@ -152,6 +158,12 @@ class DB:
             return True
         except DuplicateKeyError:
             return False
+    
+    def get_all_bot_users(self) -> list:
+        return self.db.bot_users.find(
+            filter={},
+            projection={'_id': 0, 'user_id': 1, 'username': 1}
+        )
 
     def get_forget_code_info(self, forget_code: str) -> dict:
         out = self.db.forget_codes.find_one(

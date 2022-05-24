@@ -18,9 +18,14 @@ if __name__ == '__main__':
             ),
         )
 
-    schedule.every(7).days.at("16:00").do(automatic_reserve_handler.notify_users)
-    schedule.every(7).days.at("18:00").do(automatic_reserve_handler.handle_automatic_reserve)
+    schedule.every().monday.at("16:00").do(automatic_reserve_handler.notify_users)
+    schedule.every().monday.at("18:00").do(automatic_reserve_handler.handle_automatic_reserve)
+    schedule.every().tuesday.at("16:00").do(automatic_reserve_handler.notify_users)
+    schedule.every().tuesday.at("18:00").do(automatic_reserve_handler.handle_automatic_reserve)
+    schedule.every().wednesday.at("16:00").do(automatic_reserve_handler.notify_users)
+    schedule.every().wednesday.at("18:00").do(automatic_reserve_handler.handle_automatic_reserve)
 
+    automatic_reserve_handler.notify_users()
     automatic_reserve_handler.automatic_reserve()
     while True:
         schedule.run_pending()

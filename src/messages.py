@@ -1,3 +1,5 @@
+# TODO: Store messages in a database!
+
 start_message = """
 🍕 غذا می‌قولی؟!
 

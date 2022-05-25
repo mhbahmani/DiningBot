@@ -1,11 +1,13 @@
-from random import randint
 import threading
 from telegram import ReplyKeyboardMarkup
 from src.automatic_reserve_handler import AutomaticReserveHandler
-from src.automatic_reserve_already_activated_handler import AutomaticReserveAlreadyActivatedHandler
-from src.choose_food_courts_handler import FoodCourtSelectingHandler
+from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (
+    AutomaticReserveAlreadyActivatedHandler)
+from src.inline_keyboards_handlers.choose_food_courts_handler import (
+    FoodCourtSelectingHandler)
+from src.inline_keyboards_handlers.food_priorities_handler import (
+    FoodPrioritiesHandler)
 from src.dining import Dining
-from src.food_priorities_handler import FoodPrioritiesHandler
 import src.messages as messages
 import src.static_data as static_data
 import logging

@@ -1,7 +1,10 @@
-from src.automatic_reserve_already_activated_handler import AutomaticReserveAlreadyActivatedHandler
-from src.choose_food_courts_handler import FoodCourtSelectingHandler
+from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (
+    AutomaticReserveAlreadyActivatedHandler)
+from src.inline_keyboards_handlers.choose_food_courts_handler import (
+    FoodCourtSelectingHandler)
+from src.inline_keyboards_handlers.food_priorities_handler import (
+    FoodPrioritiesHandler)
 from src.db import DB
-from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import *

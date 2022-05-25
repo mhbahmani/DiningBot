@@ -3,6 +3,7 @@ import threading
 from src import messages, static_data
 from src.dining import Dining
 from telegram.ext import Updater
+from telegram import error
 
 import logging
 import re
@@ -105,3 +106,15 @@ class AutomaticReserveHandler:
                 chat_id=user['user_id'],
                 text=messages.automatic_reserve_notification_message
             )
+    
+    def notify_users_about_reservation_status(self):
+        users = self.db.get_users_with_automatic_reserve()
+        bot = Updater(token=self.token, use_context=True).bot
+        for user in users:
+            try:
+                bot.send_message(
+                    chat_id=user["user_id"],
+                    text=messages.you_dont_have_food_for_next_week_message
+                )
+            except error.Unauthorized:
+                continue

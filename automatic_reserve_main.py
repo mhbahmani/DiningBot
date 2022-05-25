@@ -27,7 +27,7 @@ if __name__ == '__main__':
     schedule.every().wednesday.at("18:30").do(automatic_reserve_handler.notify_users_about_reservation_status)
 
     automatic_reserve_handler.notify_users()
-    time.sleep(60 * 2)
+    time.sleep(60 * 60 * 2)
     automatic_reserve_handler.automatic_reserve()
     while True:
         schedule.run_pending()

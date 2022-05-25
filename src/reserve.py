@@ -1,4 +1,5 @@
 import threading
+from xml.etree.ElementTree import QName
 from telegram import ReplyKeyboardMarkup
 from src.automatic_reserve_handler import AutomaticReserveHandler
 from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (
@@ -222,11 +223,14 @@ class ReserveMenuHandler:
                 message_id=query.message.message_id
             )
         elif action == "CHANGE_FOOD_COURTS":
-            update.message.reply_text(messages.activate_automatic_reserve_started_message)
+            context.bot.send_message(
+                text=messages.activate_automatic_reserve_started_message,
+                chat_id=query.message.chat_id)
             user_login_info = self.db.get_user_login_info(update.effective_chat.id)
             if not user_login_info:
-                update.message.reply_text(
+                context.bot.send_message(
                     text=messages.no_user_info_message,
+                    chat_id=query.message.chat_id,
                 )
                 return static_data.RESERVE_MENU_CHOOSING
             dining = Dining(user_login_info['student_number'], user_login_info['password'])

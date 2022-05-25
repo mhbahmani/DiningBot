@@ -96,10 +96,11 @@ class DB:
         )
 
     def get_automatic_reserve_status(self, user_id: str):
-        return self.db.users.find_one(
+        res = self.db.users.find_one(
             filter={"user_id": user_id},
             projection={"_id": 0, "automatic_reserve": 1}
-        ).get("automatic_reserve", False)
+        )
+        return res.get("automatic_reserve", False) if res else False
 
     def find_forget_code(self, food_court_id: int = None):
         return self.db.forget_codes.find(

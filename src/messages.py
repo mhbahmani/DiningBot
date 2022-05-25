@@ -173,6 +173,7 @@ choosing_food_courts_cancel_message = "لغو شد"
 
 get_username_message = "لطفا شماره دانشجوییت رو بهم بگو"
 get_password_message = "لطفا رمز عبورت رو هم بهم بگو"
+login_info_already_set_message = "نام کاربری و رمز عبورت رو قبلا تنظیم کردی. اگه می‌خوای عوضشون کنی، ادامه بده."
 username_and_password_saved_message = "رواله. بذار یه چک بکنم ببینم اطلاعاتی که دادی درسته یا نه. الان خبرت می‌کنم."
 username_or_password_incorrect_message = "❌ با این مشخصاتی که دادی نتونستم وارد سایت بشم. یه چک بکن چیزایی که وارد کردی رو و دوباره روی گزینه‌ی تنظیم مشخصات کلیک کن."
 username_and_password_correct_message = "✅ اطلاعاتت درست بود و تونستم وارد سایت بشم"

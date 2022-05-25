@@ -111,6 +111,11 @@ class ReserveMenuHandler:
             context.bot.answer_callback_query(callback_query_id=query.id)
 
     def set_username_and_password_handler(self, update, context):
+        if self.db.get_user_login_info(update.message.chat.id).get('password'):
+            update.message.reply_text(
+                text=messages.login_info_already_set_message,
+                reply_markup=ReplyKeyboardMarkup(static_data.BACK_TO_MAIN_MENU_CHOICES)
+            )
         update.message.reply_text(
             text=messages.get_username_message,
             reply_markup=ReplyKeyboardMarkup(static_data.BACK_TO_MAIN_MENU_CHOICES)

@@ -2,6 +2,7 @@ from random import randint
 import threading
 from telegram import ReplyKeyboardMarkup
 from src.automatic_reserve_handler import AutomaticReserveHandler
+from src.automatic_reserve_already_activated_handler import AutomaticReserveAlreadyActivatedHandler
 from src.choose_food_courts_handler import FoodCourtSelectingHandler
 from src.dining import Dining
 from src.food_priorities_handler import FoodPrioritiesHandler
@@ -148,6 +149,12 @@ class ReserveMenuHandler:
 
     def activate_automatic_reserve_handler(self, update, context):
         update.message.reply_text(messages.activate_automatic_reserve_started_message)
+        if self.db.get_automatic_reserve_status(update.message.chat.id):
+            update.message.reply_text(
+                text=messages.automatic_reserve_already_activated_message,
+                reply_markup=AutomaticReserveAlreadyActivatedHandler.create_keyboard()
+            )
+            return
         user_login_info = self.db.get_user_login_info(update.effective_chat.id)
         if not user_login_info:
             update.message.reply_text(
@@ -194,6 +201,40 @@ class ReserveMenuHandler:
                 chat_id=query.message.chat_id,
                 message_id=query.message.message_id)
             return static_data.RESERVE_MENU_CHOOSING
+        elif action == "CANCEL":
+            if context.user_data: context.user_data.clear()
+            context.bot.edit_message_text(
+                text=messages.choosing_food_courts_cancel_message,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id)     
+            return static_data.RESERVE_MENU_CHOOSING
+
+    def inline_already_activated_handler(self, update, context, action):
+        query = update.callback_query
+        logging.debug("Process choosed action: {}".format(action))
+        if action == "DEACTIVATE":
+            self.db.set_automatic_reserve_status(update.effective_chat.id, False)
+            context.bot.edit_message_text(
+                text=messages.automatic_reserve_deactivated_message,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id
+            )
+        elif action == "CHANGE_FOOD_COURTS":
+            update.message.reply_text(messages.activate_automatic_reserve_started_message)
+            user_login_info = self.db.get_user_login_info(update.effective_chat.id)
+            if not user_login_info:
+                update.message.reply_text(
+                    text=messages.no_user_info_message,
+                )
+                return static_data.RESERVE_MENU_CHOOSING
+            dining = Dining(user_login_info['student_number'], user_login_info['password'])
+            context.user_data['food_courts'] = []
+            context.bot.edit_message_text(
+                text=messages.choose_food_courts_to_automatic_reserve_message,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+                reply_markup=FoodCourtSelectingHandler.create_food_courts_keyboard(dining.get_user_food_courts())
+            )
         elif action == "CANCEL":
             if context.user_data: context.user_data.clear()
             context.bot.edit_message_text(

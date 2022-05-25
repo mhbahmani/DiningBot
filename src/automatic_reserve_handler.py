@@ -48,7 +48,11 @@ class AutomaticReserveHandler:
             successfull_reserve = True
             for place_id in user['food_courts']:
                 reserve_successes, foods = self.reserve_next_week_food_based_on_user_priorities(user['user_id'], place_id, user.get('priorities', []), user['student_number'], user['password'])
-                if reserve_successes and all(reserve_successes):
+                if not reserve_successes:
+                    bot.send_message(
+                        chat_id=user['user_id'],
+                        text=messages.no_food_for_reserve_message.format(static_data.PLACES_NAME_BY_ID[place_id]))     
+                elif all(reserve_successes):
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_secceeded_message.format(

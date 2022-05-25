@@ -90,10 +90,16 @@ class DB:
         return out.get('priorities', [])
 
     def set_automatic_reserve_status(self, user_id: str, status: bool):
-        self.db.bot_users.update_one(
+        self.db.users.update_one(
             {"user_id": user_id},
             {"$set": {"automatic_reserve": status}}
         )
+
+    def get_automatic_reserve_status(self, user_id: str):
+        return self.db.users.find_one(
+            filter={"user_id": user_id},
+            projection={"_id": 0, "automatic_reserve": 1}
+        ).get("automatic_reserve", False)
 
     def find_forget_code(self, food_court_id: int = None):
         return self.db.forget_codes.find(

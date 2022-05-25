@@ -1,6 +1,10 @@
-from src.choose_food_courts_handler import FoodCourtSelectingHandler
+from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (
+    AutomaticReserveAlreadyActivatedHandler)
+from src.inline_keyboards_handlers.choose_food_courts_handler import (
+    FoodCourtSelectingHandler)
+from src.inline_keyboards_handlers.food_priorities_handler import (
+    FoodPrioritiesHandler)
 from src.db import DB
-from src.food_priorities_handler import FoodPrioritiesHandler
 from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import *
@@ -119,6 +123,9 @@ class DiningBot:
         elif type == "FORGETCODE":
             _, forget_code = ForgetCodeMenuHandler.separate_callback_data(update.callback_query.data)
             self.forget_code_handler.inline_return_forget_code_handler(update, context, int(forget_code))
+        elif type == "AUTOMATIC_RESERVE":
+            _, action = AutomaticReserveAlreadyActivatedHandler.separate_callback_data(update.callback_query.data)
+            self.reserve_handler.inline_already_activated_handler(update, context, action)
 
     def send_main_menu(self, update, context):
         if context.user_data: context.user_data.clear()

@@ -114,6 +114,7 @@ class AutomaticReserveHandler:
             try:
                 bot.send_message(
                     chat_id=user["user_id"],
+                    parse_mode="MarkdownV2",
                     text=messages.you_dont_have_food_for_next_week_message
                 )
             except error.Unauthorized:

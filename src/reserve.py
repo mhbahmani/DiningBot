@@ -1,5 +1,4 @@
 import threading
-from xml.etree.ElementTree import QName
 from telegram import ReplyKeyboardMarkup
 from src.automatic_reserve_handler import AutomaticReserveHandler
 from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (

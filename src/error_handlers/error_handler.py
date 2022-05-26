@@ -6,8 +6,12 @@ import sentry_sdk
 
 from telegram import Update
 
+import src.messages as messages
+
 
 class ErrorHandler:
+    NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR = "User is not allowed to access reservation page"
+
     def __init__(self, admin_ids=set(), sentry_dsn: str = None, environment: str = "development") -> None:
         self.admin_ids = admin_ids
         sentry_sdk.init(
@@ -19,6 +23,8 @@ class ErrorHandler:
 
     def handle_error(self, update, context) -> None:
         """Log the error and send a telegram message to notify the developer."""
+        self.send_error_message_to_user(update, context)
+
         logging.error(msg="Exception while handling an update", exc_info=context.error)
 
         # traceback.format_exception returns the usual python message about an exception, but as a
@@ -30,7 +36,7 @@ class ErrorHandler:
         
         message = (
             f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}</pre>\n"
-            f"<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>"
+            f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>"
         )
         # send the message to admin
         for admin_id in self.admin_ids:
@@ -49,4 +55,13 @@ class ErrorHandler:
                 chat_id=admin_id,
                 text=message,
                 parse_mode="HTML"
+            )
+
+    def send_error_message_to_user(self, update, context) -> None:
+        """Send a telegram message to notify the user that an error occurred."""
+
+        if context.error.args[0] == ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR:
+            context.bot.send_message(
+                text=messages.not_allowed_to_reserve_message,
+                chat_id=update.callback_query.message.chat_id
             )

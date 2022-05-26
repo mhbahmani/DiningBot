@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup as bs
+from src.error_handlers import ErrorHandler
 import src.static_data as static_data
 import http
 import logging
@@ -25,7 +26,8 @@ class Dining:
 
         self.meals = []
         self.user_id = None
-        self.__login()
+        if self.__login() != http.HTTPStatus.FORBIDDEN:
+            raise(Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
     def reserve_food(self, place_id: int, food_id: int) -> bool:
         logging.debug("Reserving food %s", food_id)
@@ -71,7 +73,7 @@ class Dining:
             return {}
         return self.__parse_reserve_table(table)
 
-    def __login(self) -> None:
+    def __login(self) -> http.HTTPStatus:
         logging.debug("Making session")
         self.session = requests.Session()
         logging.debug("Get login page")
@@ -100,9 +102,13 @@ class Dining:
             f"PHPSESSID={list(self.session.cookies)[0].value}; _csrf={list(self.session.cookies)[1].value}"
 
         response = self.session.get(Dining.RESERVE_PAGE_URL)
+        if response.status_code == http.HTTPStatus.FORBIDDEN:
+            logging.error("User {} is not allowed to access this page".format(self.student_id))
+            return http.HTTPStatus.FORBIDDEN
         s = bs(response.content, "html.parser").find(
             "button", {"type": "button", "class": "btn btn-default navigation-link"}).get("onclick")
         self.user_id = re.match("load_diet_reserve_table.*\,(?P<user_id>\w+)\)", s).group("user_id")
+        return http.HTTPStatus.OK
 
     def check_username_and_password(username: str, password: str) -> bool:
         logging.debug("Making session")

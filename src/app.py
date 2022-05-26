@@ -1,3 +1,5 @@
+import threading
+import time
 from src.error_handlers import ErrorHandler
 from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (
     AutomaticReserveAlreadyActivatedHandler)
@@ -155,6 +157,9 @@ class DiningBot:
     def send_to_all(self, update, context):
         import re
         msg = re.sub("/sendtoall ", "", update.message.text)
+        threading.Thread(target=self.send_message_to_all_handler, args=(context, msg,)).start()
+
+    def send_message_to_all_handler(self, context, msg):
         users = self.db.get_all_bot_users()
         for user in users:
             try:
@@ -164,6 +169,7 @@ class DiningBot:
                 )
             except error.Unauthorized:
                 continue
+        self.send_msg_to_admins(context, messages.send_to_all_done_message)
 
     @check_admin
     def update_user_favorite_foods(self, update, context):

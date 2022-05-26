@@ -27,14 +27,22 @@ class ErrorHandler:
         tb_string = "".join(tb_list)
 
         update_str = update.to_dict() if isinstance(update, Update) else str(update)
+        
         message = (
-            f"An exception was raised while handling an update\n"
             f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
-            "</pre>\n\n"
-            f"<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>\n\n"
+        )
+        # send the message to admin
+        for admin_id in self.admin_ids:
+            context.bot.send_message(
+                chat_id=admin_id,
+                text=message,
+                parse_mode="HTML"
+            )
+
+        message = (
+            f"<pre>context.chat_data =Q {html.escape(str(context.chat_data))}</pre>\n\n"
             f"<pre>{html.escape(tb_string)}</pre>"
         )
-
         # send the message to admin
         for admin_id in self.admin_ids:
             context.bot.send_message(

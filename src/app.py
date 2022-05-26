@@ -1,3 +1,4 @@
+from src.error_handlers import ErrorHandler
 from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (
     AutomaticReserveAlreadyActivatedHandler)
 from src.inline_keyboards_handlers.choose_food_courts_handler import (
@@ -32,6 +33,7 @@ class DiningBot:
 
         self.db = db
 
+        self.error_handler = ErrorHandler(admin_ids)
         self.forget_code_handler = ForgetCodeMenuHandler(self.db)
         self.reserve_handler = ReserveMenuHandler(self.db, admin_sso_username, admin_sso_password)
 
@@ -286,6 +288,8 @@ class DiningBot:
             fallbacks=[MessageHandler(Filters.regex(BACK_TO_MAIN_MENU_REGEX), self.send_main_menu)],
         )
         self.dispatcher.add_handler(menue_handler)
+
+        self.dispatcher.add_error_handler(self.error_handler.handle_error)
 
 
     def run(self):

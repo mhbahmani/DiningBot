@@ -194,7 +194,7 @@ class ReserveMenuHandler:
         if action == "SELECT":
             context.user_data.get('food_courts').append(choosed)
             context.bot.send_message(
-                text=static_data.PLACES_NAME_BY_ID[choosed],
+                text=static_data.PLACES_NAME_BY_ID.get(choosed, messages.food_court_not_found_message),
                 chat_id=update.effective_chat.id
             )
         elif action == "DONE":

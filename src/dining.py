@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup as bs
+from src.error_handlers import ErrorHandler
 import src.static_data as static_data
 import http
 import logging
@@ -25,7 +26,8 @@ class Dining:
 
         self.meals = []
         self.user_id = None
-        self.__login()
+        if self.__login() != http.HTTPStatus.OK:
+            raise(Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
     def reserve_food(self, place_id: int, food_id: int) -> bool:
         logging.debug("Reserving food %s", food_id)
@@ -50,7 +52,7 @@ class Dining:
     def get_foods_list(self, place_id: int, week: int = 1) -> list:
         table = self.__load_food_table(place_id=place_id, week=week)
         if table.status_code != http.HTTPStatus.OK:
-            logging.info("Something went wrong with status code: %s", table.status_code)
+            logging.debug("Something went wrong with status code: %s", table.status_code)
             return []
         return self.__parse_food_table_to_get_foods_list(table)
 
@@ -67,11 +69,11 @@ class Dining:
         """
         table = self.__load_food_table(place_id=place_id, week=week)
         if table.status_code != http.HTTPStatus.OK:
-            logging.info("Something went wrong with status code: %s", table.status_code)
+            logging.debug("Something went wrong with status code: %s", table.status_code)
             return {}
         return self.__parse_reserve_table(table)
 
-    def __login(self) -> None:
+    def __login(self) -> http.HTTPStatus:
         logging.debug("Making session")
         self.session = requests.Session()
         logging.debug("Get login page")
@@ -89,7 +91,7 @@ class Dining:
             return False
         res = self.session.get(Dining.DINING_BASE_URL)
         if res.status_code != http.HTTPStatus.OK:
-            logging.info("Something went wrong with status code: %s", res.status_code)
+            logging.debug("Something went wrong with status code: %s", res.status_code)
             return
         logging.debug("Logged in as %s", self.student_id)
         logging.debug("Update session cookies and headers")
@@ -100,9 +102,13 @@ class Dining:
             f"PHPSESSID={list(self.session.cookies)[0].value}; _csrf={list(self.session.cookies)[1].value}"
 
         response = self.session.get(Dining.RESERVE_PAGE_URL)
+        if response.status_code == http.HTTPStatus.FORBIDDEN:
+            logging.error("User {} is not allowed to access this page".format(self.student_id))
+            return http.HTTPStatus.FORBIDDEN
         s = bs(response.content, "html.parser").find(
             "button", {"type": "button", "class": "btn btn-default navigation-link"}).get("onclick")
         self.user_id = re.match("load_diet_reserve_table.*\,(?P<user_id>\w+)\)", s).group("user_id")
+        return http.HTTPStatus.OK
 
     def check_username_and_password(username: str, password: str) -> bool:
         logging.debug("Making session")
@@ -119,9 +125,9 @@ class Dining:
         }
         response = session.post(Dining.SIGN_IN_URL, login_data)
         if bs(response.content, "html.parser").find("div", {"class": "card-alert alert alert-warning mb-0"}):
-            logging.info("Login failed with status code: %s", response.status_code)
+            logging.debug("Login failed")
             return False
-        logging.info("Login successful")
+        logging.debug("Login successful")
         return True
 
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:

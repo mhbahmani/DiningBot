@@ -30,6 +30,7 @@ class DiningBot:
         self,
         token, admin_ids=set(),
         sentry_dsn: str = None,
+        environment: str = "development",
         log_level='INFO', db: DB = None,
         admin_sso_username: str = None, admin_sso_password: str = None):
 
@@ -39,7 +40,7 @@ class DiningBot:
 
         self.db = db
 
-        self.error_handler = ErrorHandler(admin_ids, sentry_dsn)
+        self.error_handler = ErrorHandler(admin_ids, sentry_dsn, environment)
         self.forget_code_handler = ForgetCodeMenuHandler(self.db)
         self.reserve_handler = ReserveMenuHandler(self.db, admin_sso_username, admin_sso_password)
 

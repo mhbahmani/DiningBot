@@ -8,11 +8,12 @@ from telegram import Update
 
 
 class ErrorHandler:
-    def __init__(self, admin_ids=set(), sentry_dsn: str = None) -> None:
+    def __init__(self, admin_ids=set(), sentry_dsn: str = None, environment: str = "development") -> None:
         self.admin_ids = admin_ids
         sentry_sdk.init(
             sentry_dsn,
-            traces_sample_rate=1.0
+            traces_sample_rate=1.0,
+            environment=environment
         )
 
 

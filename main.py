@@ -14,5 +14,6 @@ DiningBot(
     ),
     admin_sso_username=config('ADMIN_SHARIF_SSO_USERNAME'),
     admin_sso_password=config('ADMIN_SHARIF_SSO_PASSWORD'),
-    sentry_dsn=config('SENTRY_DSN', default=None)
+    sentry_dsn=config('SENTRY_DSN', default=None),
+    environment=config('ENVIRONMENT', default='development'),
 ).run()

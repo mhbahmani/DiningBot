@@ -29,7 +29,8 @@ class ErrorHandler:
         update_str = update.to_dict() if isinstance(update, Update) else str(update)
         
         message = (
-            f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
+            f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}</pre>\n"
+            f"<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>"
         )
         # send the message to admin
         for admin_id in self.admin_ids:
@@ -40,7 +41,6 @@ class ErrorHandler:
             )
 
         message = (
-            f"<pre>context.chat_data =Q {html.escape(str(context.chat_data))}</pre>\n\n"
             f"<pre>{html.escape(tb_string)}</pre>"
         )
         # send the message to admin

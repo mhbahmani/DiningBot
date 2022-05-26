@@ -13,5 +13,6 @@ DiningBot(
         port=config('DB_PORT', default='27017')
     ),
     admin_sso_username=config('ADMIN_SHARIF_SSO_USERNAME'),
-    admin_sso_password=config('ADMIN_SHARIF_SSO_PASSWORD')
+    admin_sso_password=config('ADMIN_SHARIF_SSO_PASSWORD'),
+    sentry_dsn=config('SENTRY_DSN', default=None)
 ).run()

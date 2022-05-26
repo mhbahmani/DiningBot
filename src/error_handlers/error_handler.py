@@ -2,17 +2,23 @@ import html
 import json
 import logging
 import traceback
+import sentry_sdk
 
 from telegram import Update
 
 
 class ErrorHandler:
-    def __init__(self, admin_ids=set()) -> None:
+    def __init__(self, admin_ids=set(), sentry_dsn: str = None) -> None:
         self.admin_ids = admin_ids
+        sentry_sdk.init(
+            sentry_dsn,
+            traces_sample_rate=1.0
+        )
+
 
     def handle_error(self, update, context) -> None:
         """Log the error and send a telegram message to notify the developer."""
-        logging.error(msg="Exception while handling an update")
+        logging.error(msg="Exception while handling an update", exc_info=context.error)
 
         # traceback.format_exception returns the usual python message about an exception, but as a
         # list of strings rather than a single string, so we have to join them together.

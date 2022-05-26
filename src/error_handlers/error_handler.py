@@ -12,7 +12,6 @@ class ErrorHandler:
 
     def handle_error(self, update, context) -> None:
         """Log the error and send a telegram message to notify the developer."""
-        # Log the error before we do anything else, so we can see it even if something breaks.
         logging.error(msg="Exception while handling an update")
 
         # traceback.format_exception returns the usual python message about an exception, but as a
@@ -20,8 +19,6 @@ class ErrorHandler:
         tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
         tb_string = "".join(tb_list)
 
-        # Build the message with some markup and additional information about what happened.
-        # You might need to add some logic to deal with messages longer than the 4096 character limit.
         update_str = update.to_dict() if isinstance(update, Update) else str(update)
         message = (
             f"An exception was raised while handling an update\n"

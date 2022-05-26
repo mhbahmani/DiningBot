@@ -50,7 +50,7 @@ class Dining:
     def get_foods_list(self, place_id: int, week: int = 1) -> list:
         table = self.__load_food_table(place_id=place_id, week=week)
         if table.status_code != http.HTTPStatus.OK:
-            logging.info("Something went wrong with status code: %s", table.status_code)
+            logging.debug("Something went wrong with status code: %s", table.status_code)
             return []
         return self.__parse_food_table_to_get_foods_list(table)
 
@@ -67,7 +67,7 @@ class Dining:
         """
         table = self.__load_food_table(place_id=place_id, week=week)
         if table.status_code != http.HTTPStatus.OK:
-            logging.info("Something went wrong with status code: %s", table.status_code)
+            logging.debug("Something went wrong with status code: %s", table.status_code)
             return {}
         return self.__parse_reserve_table(table)
 
@@ -89,7 +89,7 @@ class Dining:
             return False
         res = self.session.get(Dining.DINING_BASE_URL)
         if res.status_code != http.HTTPStatus.OK:
-            logging.info("Something went wrong with status code: %s", res.status_code)
+            logging.debug("Something went wrong with status code: %s", res.status_code)
             return
         logging.debug("Logged in as %s", self.student_id)
         logging.debug("Update session cookies and headers")
@@ -119,9 +119,9 @@ class Dining:
         }
         response = session.post(Dining.SIGN_IN_URL, login_data)
         if bs(response.content, "html.parser").find("div", {"class": "card-alert alert alert-warning mb-0"}):
-            logging.info("Login failed with status code: %s", response.status_code)
+            logging.debug("Login failed")
             return False
-        logging.info("Login successful")
+        logging.debug("Login successful")
         return True
 
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:

@@ -26,7 +26,7 @@ class Dining:
 
         self.meals = []
         self.user_id = None
-        if self.__login() != http.HTTPStatus.FORBIDDEN:
+        if self.__login() != http.HTTPStatus.OK:
             raise(Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
     def reserve_food(self, place_id: int, food_id: int) -> bool:

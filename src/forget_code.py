@@ -103,8 +103,8 @@ class ForgetCodeMenuHandler:
             "food_name": update.message.text,
             "food_court_id": get_food_court_id_by_name(context.user_data['food_court']),
             "assigned": False,
-            "assigned_to_user_id": update.effective_user.id,
-            "asssigned_to_username": update.effective_user.username
+            "assigned_to_user_id": None,
+            "asssigned_to_username": None
         })
         update.message.reply_text(
             text=messages.forget_code_added_message

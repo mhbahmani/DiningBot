@@ -128,7 +128,7 @@ class DB:
 
     def update_forget_code_assignment_status(self, forget_code: int, assigened: bool):
         self.db.forget_codes.update_one(
-            {'forget_code': forget_code},
+            {'forget_code': int(forget_code)},
             {'$set': {'assigned': assigened}}
         )
     
@@ -172,19 +172,21 @@ class DB:
             projection={'_id': 0, 'user_id': 1, 'username': 1}
         )
 
-    def get_forget_code_info(self, forget_code: str) -> dict:
+    def get_forget_code_info(self, forget_code: int) -> dict:
+        # Make sure forget code is int
         out = self.db.forget_codes.find_one(
-            filter={'forget_code': forget_code},
+            filter={'forget_code': int(forget_code)},
             projection={'_id': 0, 'username': 1, 'user_id': 1}
         )
         if not out:
             out = {}
         return out
 
-    def set_forget_code_for_user(self, user_id: str, forget_code: str):
+    def set_forget_code_for_user(self, user_id: str, forget_code: int):
+        # Make sure forget code is int
         self.db.bot_users.update_one(
             {"user_id": user_id},
-            {"$set": {"forget_code": forget_code}}
+            {"$set": {"forget_code": int(forget_code)}}
         )
 
     def get_user_current_forget_code(self, user_id: str) -> str:

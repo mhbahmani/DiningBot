@@ -126,7 +126,7 @@ class DB:
             projection={'_id': 0, 'count': 1}
         )
 
-    def update_forget_code_assignment_status(self, forget_code: str, assigened: bool):
+    def update_forget_code_assignment_status(self, forget_code: int, assigened: bool):
         self.db.forget_codes.update_one(
             {'forget_code': forget_code},
             {'$set': {'assigned': assigened}}

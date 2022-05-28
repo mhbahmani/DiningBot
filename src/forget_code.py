@@ -57,7 +57,7 @@ class ForgetCodeMenuHandler:
             text=messages.someone_took_your_code_message
         )
         self.db.set_forget_code_for_user(update.effective_user.id, forget_code.get("forget_code"))
-        self.db.update_forget_code_assignment_status(forget_code.get("forget_code"), True)
+        self.db.update_forget_code_assignment_status(int(forget_code.get("forget_code")), True)
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
 

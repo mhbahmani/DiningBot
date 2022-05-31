@@ -34,8 +34,10 @@ class AutomaticReserveHandler:
             self.food_id_by_name[food['name']] = food['id']
         logging.info(f"Loaded {len(self.food_id_by_name)} foods")
 
-    def handle_automatic_reserve(self):
+    def clean_reservation_status(self):
         self.db.set_all_users_next_week_reserve_status(False)
+
+    def handle_automatic_reserve(self):
         self.automatic_reserve()
 
     def automatic_reserve(self, context=None, user_id: str = None):

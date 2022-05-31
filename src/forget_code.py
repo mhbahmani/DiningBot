@@ -176,6 +176,7 @@ class ForgetCodeMenuHandler:
             return static_data.INPUT_FAKE_FORGET_CODE
         forget_code = self.db.get_forget_code_info(fake_forget_code)
         # TODO: handle fake forget code some how :)
+        self.db.set_forget_code_for_user(update.effective_user.id, forget_code)
         update.message.reply_text(
             text=messages.fake_forget_code_taked_message,
         )

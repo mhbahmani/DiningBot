@@ -71,7 +71,10 @@ class AutomaticReserveHandler:
 
     def reserve_next_week_food_based_on_user_priorities(self, user_id: str, place_id, user_priorities: list, username, password):
         logging.debug("Reserving food for user {} at {}".format(user_id, static_data.PLACES_NAME_BY_ID[place_id]))
-        dining = Dining(username, password)
+        try:
+            dining = Dining(username, password)
+        except Exception as e:
+            return [False], []
         foods = dining.get_reserve_table_foods(place_id, week=1)
         reserve_successes = []
         food_names = []

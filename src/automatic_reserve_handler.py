@@ -55,15 +55,18 @@ class AutomaticReserveHandler:
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.no_food_for_reserve_message.format(static_data.PLACES_NAME_BY_ID[place_id]))     
+                    logging.info("No food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                 elif all(reserve_successes):
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_secceeded_message.format(
                             static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(foods)))
+                    logging.info("Reserve was successfull for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                 else:
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                    logging.info("Something went wrong for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                     successfull_reserve = False
             if successfull_reserve:
                 threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()

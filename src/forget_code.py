@@ -12,6 +12,8 @@ class ForgetCodeMenuHandler:
         self.db = db_client
         self.markup = ReplyKeyboardMarkup(static_data.SELFS)
 
+        self.today_forget_codes = set()
+
     def send_forget_code_menu(self, update, context):
         update.message.reply_text(
             text=messages.forget_code_menu_message,
@@ -52,10 +54,13 @@ class ForgetCodeMenuHandler:
             text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name"), forget_code.get("username")),
             reply_markup=self.make_return_forget_code_button(forget_code.get("forget_code"))
         )
-        context.bot.send_message(
-            chat_id=forget_code.get("user_id"),
-            text=messages.someone_took_your_code_message
-        )
+        # If forget code is in today_forget_codes, it means bot should notify the code owner
+        if forget_code.get("forget_code") in self.today_forget_codes:    
+            context.bot.send_message(
+                chat_id=forget_code.get("user_id"),
+                text=messages.someone_took_your_code_message
+            )
+            self.today_forget_codes.remove(forget_code.get("forget_code"))
         self.db.set_forget_code_for_user(update.effective_user.id, forget_code.get("forget_code"))
         self.db.update_forget_code_assignment_status(int(forget_code.get("forget_code")), True, update.effective_user.id, update.effective_user.username)
         self.back_to_main_menu(update)
@@ -109,6 +114,9 @@ class ForgetCodeMenuHandler:
         update.message.reply_text(
             text=messages.forget_code_added_message
         )
+        # TODO: Change this to a more elegant way
+        # Adding forget code to today_forget_codes to notify the user if someone took it
+        self.today_forget_codes.add(context.user_data['forget_code'])
         if context.user_data: context.user_data.clear()
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING

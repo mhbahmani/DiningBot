@@ -57,7 +57,7 @@ class ForgetCodeMenuHandler:
             text=messages.someone_took_your_code_message
         )
         self.db.set_forget_code_for_user(update.effective_user.id, forget_code.get("forget_code"))
-        self.db.update_forget_code_assignment_status(int(forget_code.get("forget_code")), True)
+        self.db.update_forget_code_assignment_status(int(forget_code.get("forget_code")), True, update.effective_user.id, update.effective_user.username)
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
 
@@ -140,7 +140,7 @@ class ForgetCodeMenuHandler:
         )
     
     def inline_return_forget_code_handler(self, update, context, forget_code: int):
-        self.db.update_forget_code_assignment_status(forget_code, False)
+        self.db.update_forget_code_assignment_status(forget_code)
         context.bot.edit_message_text(
             text=messages.forget_taked_back_message,
             chat_id=update.callback_query.message.chat_id,

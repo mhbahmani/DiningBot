@@ -15,7 +15,7 @@ class DB:
             {'user_id': fields['user_id']},
             {'$set': fields}, upsert=True
         )
-    
+
     def get_user_login_info(self, user_id: int) -> tuple:
         out = self.db.users.find_one(
             filter={'user_id': int(user_id)},
@@ -52,7 +52,7 @@ class DB:
             filter={'automatic_reserve': True, 'next_week_reserve': False},
             projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
         )
-    
+
     def get_user_reserve_info(self, user_id):
         return self.db.users.find_one(
             filter={'user_id': user_id, 'next_week_reserve': False},
@@ -70,7 +70,7 @@ class DB:
             {'user_id': int(user_id)},
             {'$set': {'priorities': priorities}}
         )
-    
+
     def set_user_food_courts(self, user_id: int, food_courts: list):
         self.db.users.update_one(
             {'user_id': int(user_id)},
@@ -119,19 +119,19 @@ class DB:
             {},
             projection={'_id': 0, 'username': 1, 'count': 1, 'user_id': 1}
         ).sort([('count', -1)])
-    
+
     def get_user_forget_code_counts(self, user_id: int):
         return self.db.user_forget_code_counts.find_one(
             filter={'user_id': int(user_id)},
             projection={'_id': 0, 'count': 1}
         )
 
-    def update_forget_code_assignment_status(self, forget_code: int, assigened: bool):
+    def update_forget_code_assignment_status(self, forget_code: int, assigened: bool=False, assigen_user_id: int=None, assigned_username: str=None):
         self.db.forget_codes.update_one(
             {'forget_code': int(forget_code)},
-            {'$set': {'assigned': assigened}}
+            {'$set': {'assigned': assigened, 'assigned_to_user_id': assigen_user_id, 'asssigned_to_username': assigned_username}}
         )
-    
+
     def increase_users(self):
         self.db.users_count.update({}, {"$inc": {"num_users": 1}}, upsert=True)
 
@@ -165,7 +165,7 @@ class DB:
             return True
         except DuplicateKeyError:
             return False
-    
+
     def get_all_bot_users(self) -> list:
         return self.db.bot_users.find(
             filter={},
@@ -197,7 +197,7 @@ class DB:
         if not out:
             out = {}
         return out.get('forget_code', None)
-    
+
     def get_forget_codes_by_food_court_id(self) -> tuple:
         return self.db.forget_codes.aggregate([
             {'$group': {'_id': '$food_court_id', 'count': {'$sum': 1}}}

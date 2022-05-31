@@ -186,7 +186,7 @@ class DB:
         # Make sure forget code is int
         self.db.bot_users.update_one(
             {"user_id": int(user_id)},
-            {"$set": {"forget_code": int(forget_code)}}
+            {"$set": {"forget_code": forget_code}}
         )
 
     def get_user_current_forget_code(self, user_id: int) -> str:

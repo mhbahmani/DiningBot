@@ -101,6 +101,7 @@ class ForgetCodeMenuHandler:
         return static_data.INPUT_FOOD_NAME
     
     def handle_forget_code_food_name_input(self, update, context):
+        # TODO: Handle duplicate forget code
         self.db.add_forget_code({
             "username": update.effective_user.username,
             "user_id": update.message.chat.id,

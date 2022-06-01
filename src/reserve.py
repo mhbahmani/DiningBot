@@ -1,5 +1,4 @@
 import threading
-from xml.etree.ElementTree import QName
 from telegram import ReplyKeyboardMarkup
 from src.automatic_reserve_handler import AutomaticReserveHandler
 from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (
@@ -192,7 +191,9 @@ class ReserveMenuHandler:
         query = update.callback_query
         logging.debug("Process choosed action or food: {} {}".format(action, choosed))
         if action == "SELECT":
-            context.user_data.get('food_courts').append(choosed)
+            if not context.user_data.get('food_courts'):
+                context.user_data['food_courts'] = []
+            context.user_data['food_courts'].append(choosed)
             context.bot.send_message(
                 text=static_data.PLACES_NAME_BY_ID.get(choosed, messages.food_court_not_found_message),
                 chat_id=update.effective_chat.id

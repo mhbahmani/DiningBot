@@ -15,10 +15,10 @@ class DB:
             {'user_id': fields['user_id']},
             {'$set': fields}, upsert=True
         )
-    
-    def get_user_login_info(self, user_id: str) -> tuple:
+
+    def get_user_login_info(self, user_id: int) -> tuple:
         out = self.db.users.find_one(
-            filter={'user_id': user_id},
+            filter={'user_id': int(user_id)},
             projection={'_id': 0, 'student_number': 1, 'password': 1}
         )
         if not out: out = {}
@@ -36,9 +36,9 @@ class DB:
     def add_forget_code(self, forget_code: dict):
         self.db.forget_codes.insert_one(forget_code)
 
-    def update_user_forget_code_counts(self, username: str, user_id: str, count: int):
+    def update_user_forget_code_counts(self, username: str, user_id: int, count: int):
         self.db.user_forget_code_counts.update(
-            {'user_id': user_id},
+            {'user_id': int(user_id)},
             {'$set': {'count': count, 'username': username}}, upsert=True
         )
 
@@ -52,52 +52,52 @@ class DB:
             filter={'automatic_reserve': True, 'next_week_reserve': False},
             projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
         )
-    
+
     def get_user_reserve_info(self, user_id):
         return self.db.users.find_one(
             filter={'user_id': user_id, 'next_week_reserve': False},
             projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
         )
 
-    def set_user_next_week_reserve_status(self, user_id: str, status: bool):
+    def set_user_next_week_reserve_status(self, user_id: int, status: bool):
         self.db.users.update_one(
-            {"user_id": user_id},
+            {"user_id": int(user_id)},
             {"$set": {"next_week_reserve": status}}
         )
 
-    def set_user_food_priorities(self, user_id: str, priorities: list):
+    def set_user_food_priorities(self, user_id: int, priorities: list):
         self.db.users.update_one(
-            {'user_id': user_id},
+            {'user_id': int(user_id)},
             {'$set': {'priorities': priorities}}
         )
-    
-    def set_user_food_courts(self, user_id: str, food_courts: list):
+
+    def set_user_food_courts(self, user_id: int, food_courts: list):
         self.db.users.update_one(
-            {'user_id': user_id},
+            {'user_id': int(user_id)},
             {'$set': {'food_courts': food_courts, 'automatic_reserve': True, 'next_week_reserve': False}}
         )
 
     def set_all_users_next_week_reserve_status(self, status: bool):
         self.db.users.update_many({"automatic_reserve": True}, {"$set": {"next_week_reserve": status}})
 
-    def get_user_food_priorities(self, user_id: str) -> list:
+    def get_user_food_priorities(self, user_id: int) -> list:
         out = self.db.users.find_one(
-            filter={'user_id': user_id},
+            filter={'user_id': int(user_id)},
             projection={'_id': 0, 'priorities': 1}
         )
         if not out:
             out = {}
         return out.get('priorities', [])
 
-    def set_automatic_reserve_status(self, user_id: str, status: bool):
+    def set_automatic_reserve_status(self, user_id: int, status: bool):
         self.db.users.update_one(
-            {"user_id": user_id},
+            {"user_id": int(user_id)},
             {"$set": {"automatic_reserve": status}}
         )
 
-    def get_automatic_reserve_status(self, user_id: str):
+    def get_automatic_reserve_status(self, user_id: int):
         res = self.db.users.find_one(
-            filter={"user_id": user_id},
+            filter={"user_id": int(user_id)},
             projection={"_id": 0, "automatic_reserve": 1}
         )
         return res.get("automatic_reserve", False) if res else False
@@ -119,19 +119,19 @@ class DB:
             {},
             projection={'_id': 0, 'username': 1, 'count': 1, 'user_id': 1}
         ).sort([('count', -1)])
-    
-    def get_user_forget_code_counts(self, user_id: str):
+
+    def get_user_forget_code_counts(self, user_id: int):
         return self.db.user_forget_code_counts.find_one(
-            filter={'user_id': user_id},
+            filter={'user_id': int(user_id)},
             projection={'_id': 0, 'count': 1}
         )
 
-    def update_forget_code_assignment_status(self, forget_code: str, assigened: bool):
+    def update_forget_code_assignment_status(self, forget_code: int, assigened: bool=False, assigen_user_id: int=None, assigned_username: str=None):
         self.db.forget_codes.update_one(
-            {'forget_code': forget_code},
-            {'$set': {'assigned': assigened}}
+            {'forget_code': int(forget_code)},
+            {'$set': {'assigned': assigened, 'assigned_to_user_id': assigen_user_id, 'asssigned_to_username': assigned_username}}
         )
-    
+
     def increase_users(self):
         self.db.users_count.update({}, {"$inc": {"num_users": 1}}, upsert=True)
 
@@ -144,15 +144,15 @@ class DB:
             {"$set": {"forget_code": None}}
         )
 
-    def update_user_rank(self, user_id: str, rank: int):
+    def update_user_rank(self, user_id: int, rank: int):
         self.db.user_forget_code_counts.update_one(
-            {'user_id': user_id},
+            {'user_id': int(user_id)},
             {'$set': {'rank': rank}}
         )
 
-    def get_user_rank(self, user_id: str):
+    def get_user_rank(self, user_id: int):
         out = self.db.user_forget_code_counts.find_one(
-            filter={'user_id': user_id},
+            filter={'user_id': int(user_id)},
             projection={'_id': 0, 'rank': 1}
         )
         if not out:
@@ -165,37 +165,39 @@ class DB:
             return True
         except DuplicateKeyError:
             return False
-    
+
     def get_all_bot_users(self) -> list:
         return self.db.bot_users.find(
             filter={},
             projection={'_id': 0, 'user_id': 1, 'username': 1}
         )
 
-    def get_forget_code_info(self, forget_code: str) -> dict:
+    def get_forget_code_info(self, forget_code: int) -> dict:
+        # Make sure forget code is int
         out = self.db.forget_codes.find_one(
-            filter={'forget_code': forget_code},
+            filter={'forget_code': int(forget_code)},
             projection={'_id': 0, 'username': 1, 'user_id': 1}
         )
         if not out:
             out = {}
         return out
 
-    def set_forget_code_for_user(self, user_id: str, forget_code: str):
+    def set_forget_code_for_user(self, user_id: int, forget_code: int):
+        # Make sure forget code is int
         self.db.bot_users.update_one(
-            {"user_id": user_id},
+            {"user_id": int(user_id)},
             {"$set": {"forget_code": forget_code}}
         )
 
-    def get_user_current_forget_code(self, user_id: str) -> str:
+    def get_user_current_forget_code(self, user_id: int) -> str:
         out = self.db.bot_users.find_one(
-            filter={'user_id': user_id},
+            filter={'user_id': int(user_id)},
             projection={'_id': 0, 'forget_code': 1}
         )
         if not out:
             out = {}
         return out.get('forget_code', None)
-    
+
     def get_forget_codes_by_food_court_id(self) -> tuple:
         return self.db.forget_codes.aggregate([
             {'$group': {'_id': '$food_court_id', 'count': {'$sum': 1}}}

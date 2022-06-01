@@ -59,9 +59,12 @@ class ErrorHandler:
 
     def send_error_message_to_user(self, update, context) -> None:
         """Send a telegram message to notify the user that an error occurred."""
-
+        if not context.error.args: return
+        chat_id = None
+        if update.callback_query: chat_id = update.callback_query.message.chat_id
+        elif update.message: chat_id = update.message.chat_id
         if context.error.args[0] == ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR:
             context.bot.send_message(
                 text=messages.not_allowed_to_reserve_message,
-                chat_id=update.callback_query.message.chat_id
+                chat_id=chat_id
             )

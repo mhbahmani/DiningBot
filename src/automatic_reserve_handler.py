@@ -34,8 +34,10 @@ class AutomaticReserveHandler:
             self.food_id_by_name[food['name']] = food['id']
         logging.info(f"Loaded {len(self.food_id_by_name)} foods")
 
-    def handle_automatic_reserve(self):
+    def clean_reservation_status(self):
         self.db.set_all_users_next_week_reserve_status(False)
+
+    def handle_automatic_reserve(self):
         self.automatic_reserve()
 
     def automatic_reserve(self, context=None, user_id: str = None):
@@ -53,15 +55,18 @@ class AutomaticReserveHandler:
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.no_food_for_reserve_message.format(static_data.PLACES_NAME_BY_ID[place_id]))     
+                    logging.info("No food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                 elif all(reserve_successes):
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_secceeded_message.format(
                             static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(foods)))
+                    logging.info("Reserve was successfull for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                 else:
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                    logging.info("Something went wrong for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                     successfull_reserve = False
             if successfull_reserve:
                 threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
@@ -69,7 +74,10 @@ class AutomaticReserveHandler:
 
     def reserve_next_week_food_based_on_user_priorities(self, user_id: str, place_id, user_priorities: list, username, password):
         logging.debug("Reserving food for user {} at {}".format(user_id, static_data.PLACES_NAME_BY_ID[place_id]))
-        dining = Dining(username, password)
+        try:
+            dining = Dining(username, password)
+        except Exception as e:
+            return [False], []
         foods = dining.get_reserve_table_foods(place_id, week=1)
         reserve_successes = []
         food_names = []

@@ -12,6 +12,8 @@ class ForgetCodeMenuHandler:
         self.db = db_client
         self.markup = ReplyKeyboardMarkup(static_data.SELFS)
 
+        self.today_forget_codes = set()
+
     def send_forget_code_menu(self, update, context):
         update.message.reply_text(
             text=messages.forget_code_menu_message,
@@ -52,12 +54,15 @@ class ForgetCodeMenuHandler:
             text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name"), forget_code.get("username")),
             reply_markup=self.make_return_forget_code_button(forget_code.get("forget_code"))
         )
-        context.bot.send_message(
-            chat_id=forget_code.get("user_id"),
-            text=messages.someone_took_your_code_message
-        )
+        # If forget code is in today_forget_codes, it means bot should notify the code owner
+        if forget_code.get("forget_code") in self.today_forget_codes:    
+            context.bot.send_message(
+                chat_id=forget_code.get("user_id"),
+                text=messages.someone_took_your_code_message
+            )
+            self.today_forget_codes.remove(forget_code.get("forget_code"))
         self.db.set_forget_code_for_user(update.effective_user.id, forget_code.get("forget_code"))
-        self.db.update_forget_code_assignment_status(forget_code.get("forget_code"), True)
+        self.db.update_forget_code_assignment_status(int(forget_code.get("forget_code")), True, update.effective_user.id, update.effective_user.username)
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
 
@@ -96,6 +101,7 @@ class ForgetCodeMenuHandler:
         return static_data.INPUT_FOOD_NAME
     
     def handle_forget_code_food_name_input(self, update, context):
+        # TODO: Handle duplicate forget code
         self.db.add_forget_code({
             "username": update.effective_user.username,
             "user_id": update.message.chat.id,
@@ -103,12 +109,15 @@ class ForgetCodeMenuHandler:
             "food_name": update.message.text,
             "food_court_id": get_food_court_id_by_name(context.user_data['food_court']),
             "assigned": False,
-            "assigned_to_user_id": update.effective_user.id,
-            "asssigned_to_username": update.effective_user.username
+            "assigned_to_user_id": None,
+            "asssigned_to_username": None
         })
         update.message.reply_text(
             text=messages.forget_code_added_message
         )
+        # TODO: Change this to a more elegant way
+        # Adding forget code to today_forget_codes to notify the user if someone took it
+        self.today_forget_codes.add(context.user_data['forget_code'])
         if context.user_data: context.user_data.clear()
         self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
@@ -140,7 +149,7 @@ class ForgetCodeMenuHandler:
         )
     
     def inline_return_forget_code_handler(self, update, context, forget_code: int):
-        self.db.update_forget_code_assignment_status(forget_code, False)
+        self.db.update_forget_code_assignment_status(forget_code)
         context.bot.edit_message_text(
             text=messages.forget_taked_back_message,
             chat_id=update.callback_query.message.chat_id,
@@ -176,6 +185,7 @@ class ForgetCodeMenuHandler:
             return static_data.INPUT_FAKE_FORGET_CODE
         forget_code = self.db.get_forget_code_info(fake_forget_code)
         # TODO: handle fake forget code some how :)
+        self.db.set_forget_code_for_user(update.effective_user.id, forget_code)
         update.message.reply_text(
             text=messages.fake_forget_code_taked_message,
         )

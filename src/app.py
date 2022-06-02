@@ -131,6 +131,9 @@ class DiningBot:
         elif type == "FOODCOURT":
             _, action, choosed = FoodCourtSelectingHandler.separate_callback_data(update.callback_query.data)
             return self.reserve_handler.inline_food_court_choosing_handler(update, context, action, choosed)
+        elif type == "FOODCOURTDAYS":
+            _, action, choosed = FoodCourtSelectingHandler.separate_callback_data(update.callback_query.data)
+            return self.reserve_handler.inline_food_court_days_choosing_handler(update, context, action, choosed)
         elif type == "FORGETCODE":
             _, forget_code = ForgetCodeMenuHandler.separate_callback_data(update.callback_query.data)
             self.forget_code_handler.inline_return_forget_code_handler(update, context, int(forget_code))
@@ -231,6 +234,10 @@ class DiningBot:
                     MessageHandler(
                         Filters.regex(ACTIVATE_AUTOMATIC_RESERVE_REGEX),
                         self.reserve_handler.activate_automatic_reserve_handler
+                    ),
+                    MessageHandler(
+                        Filters.regex(CHOOSE_WEEK_DAYS_REGEX),
+                        self.reserve_handler.choosing_week_days_handler
                     )
                 ],
                 INPUT_USERNAME: [

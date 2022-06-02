@@ -199,6 +199,12 @@ class ReserveMenuHandler:
                 chat_id=update.effective_chat.id
             )
         elif action == "DONE":
+            if not context.user_data.get('food_courts'):
+                context.bot.send_message(
+                    text=messages.no_food_court_choosed_message,
+                    chat_id=update.effective_chat.id
+                )
+                return
             self.db.set_user_food_courts(update.effective_chat.id, context.user_data.get('food_courts', []))
             context.bot.edit_message_text(
                 text=messages.choosing_food_courts_done_message,

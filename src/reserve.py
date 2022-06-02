@@ -108,7 +108,7 @@ class ReserveMenuHandler:
             context.bot.edit_message_text(
                 text=messages.choosing_food_priorities_cancel_message,
                 chat_id=query.message.chat_id,
-                message_id=query.message.message_id)     
+                message_id=query.message.message_id)
             return static_data.RESERVE_MENU_CHOOSING
         elif action == "IGNORE":
             context.bot.answer_callback_query(callback_query_id=query.id)

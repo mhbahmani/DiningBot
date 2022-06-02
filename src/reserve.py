@@ -255,3 +255,15 @@ class ReserveMenuHandler:
                 chat_id=query.message.chat_id,
                 message_id=query.message.message_id)     
             return static_data.RESERVE_MENU_CHOOSING
+
+    def inline_food_court_days_choosing_handler(self, update, context, action, choosed):
+        pass
+
+    def choosing_week_days_handler(self, update, context):
+        user_food_courts = dict(
+            [(static_data.PLACES_NAME_BY_ID.get(food_court_id), food_court_id) for food_court_id in self.db.get_user_food_coutts(update.effective_chat.id)])
+        context.user_data['food_court_days'] = {}
+        update.message.reply_text(
+            text=messages.choose_food_courts_to_automatic_reserve_message,
+            reply_markup=FoodCourtSelectingHandler.create_food_courts_keyboard(user_food_courts, "FOODCOURTDAYS")
+        )

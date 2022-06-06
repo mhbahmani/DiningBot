@@ -18,19 +18,14 @@ if __name__ == '__main__':
             ),
         )
 
-    schedule.every().monday.at("10:00").do(automatic_reserve_handler.clean_reservation_status)
+    schedule.every().tuesday.at("10:00").do(automatic_reserve_handler.clean_reservation_status)
 
-    schedule.every().monday.at("16:00").do(automatic_reserve_handler.notify_users)
-    schedule.every().monday.at("18:00").do(automatic_reserve_handler.handle_automatic_reserve)
-    schedule.every().tuesday.at("16:00").do(automatic_reserve_handler.notify_users)
-    schedule.every().tuesday.at("18:00").do(automatic_reserve_handler.handle_automatic_reserve)
-    schedule.every().wednesday.at("16:00").do(automatic_reserve_handler.notify_users)
-    schedule.every().wednesday.at("18:00").do(automatic_reserve_handler.handle_automatic_reserve)
-    schedule.every().wednesday.at("18:30").do(automatic_reserve_handler.notify_users_about_reservation_status)
+    schedule.every().tuesday.at("13:00").do(automatic_reserve_handler.notify_users)
+    schedule.every().tuesday.at("15:00").do(automatic_reserve_handler.handle_automatic_reserve)
+    schedule.every().wednesday.at("13:00").do(automatic_reserve_handler.notify_users)
+    schedule.every().wednesday.at("15:00").do(automatic_reserve_handler.handle_automatic_reserve)
+    schedule.every().wednesday.at("16:30").do(automatic_reserve_handler.notify_users_about_reservation_status)
 
-    automatic_reserve_handler.notify_users()
-    time.sleep(60 * 60 * 2)
-    automatic_reserve_handler.automatic_reserve()
     while True:
         schedule.run_pending()
         time.sleep(60 * 60)

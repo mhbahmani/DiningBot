@@ -34,21 +34,26 @@ class ErrorHandler:
 
         update_str = update.to_dict() if isinstance(update, Update) else str(update)
         
+        # message = (
+        #     f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}</pre>\n"
+        #     f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>"
+        # )
         message = (
-            f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}</pre>\n"
+            f"<pre>text: {update.message.text}</pre>\n"
+            f"<pre>username: {update.message.chat.username}</pre>\n"
             f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>"
         )
         # send the message to admin
-        # for admin_id in self.admin_ids:
-        #     context.bot.send_message(
-        #         chat_id=admin_id,
-        #         text=message,
-        #         parse_mode="HTML"
-        #     )
+        for admin_id in self.admin_ids:
+            context.bot.send_message(
+                chat_id=admin_id,
+                text=message,
+                parse_mode="HTML"
+            )
 
-        message = (
-            f"<pre>{html.escape(tb_string)}</pre>"
-        )
+        # message = (
+        #     f"<pre>{html.escape(tb_string)}</pre>"
+        # )
         # send the message to admin
         # for admin_id in self.admin_ids:
         #     context.bot.send_message(

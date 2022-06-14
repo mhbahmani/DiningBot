@@ -39,12 +39,12 @@ class ErrorHandler:
             f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>"
         )
         # send the message to admin
-        for admin_id in self.admin_ids:
-            context.bot.send_message(
-                chat_id=admin_id,
-                text=message,
-                parse_mode="HTML"
-            )
+        # for admin_id in self.admin_ids:
+        #     context.bot.send_message(
+        #         chat_id=admin_id,
+        #         text=message,
+        #         parse_mode="HTML"
+        #     )
 
         message = (
             f"<pre>{html.escape(tb_string)}</pre>"

@@ -50,12 +50,12 @@ class ErrorHandler:
             f"<pre>{html.escape(tb_string)}</pre>"
         )
         # send the message to admin
-        for admin_id in self.admin_ids:
-            context.bot.send_message(
-                chat_id=admin_id,
-                text=message,
-                parse_mode="HTML"
-            )
+        # for admin_id in self.admin_ids:
+        #     context.bot.send_message(
+        #         chat_id=admin_id,
+        #         text=message,
+        #         parse_mode="HTML"
+        #     )
 
     def send_error_message_to_user(self, update, context) -> None:
         """Send a telegram message to notify the user that an error occurred."""

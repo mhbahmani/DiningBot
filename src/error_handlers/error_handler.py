@@ -23,6 +23,10 @@ class ErrorHandler:
 
     def handle_error(self, update, context) -> None:
         """Log the error and send a telegram message to notify the developer."""
+        if not update:
+            logging.error("Update object is None")
+            return
+
         self.send_error_message_to_user(update, context)
 
         logging.error(msg="Exception while handling an update", exc_info=context.error)

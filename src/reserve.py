@@ -90,6 +90,8 @@ class ReserveMenuHandler:
                 message_id=query.message.message_id,
                 reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(foods=self.foods_with_id, page=page - 1))
         elif action == "SELECT":
+            if not context.user_data.get('priorities'):
+                context.user_date['priorities'] = []
             context.user_data.get('priorities').append(choosed)
             context.bot.send_message(
                 text=self.food_name_by_id[choosed],

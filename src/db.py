@@ -39,7 +39,7 @@ class DB:
     def update_user_forget_code_counts(self, username: str, user_id: int, count: int):
         self.db.user_forget_code_counts.update(
             {'user_id': int(user_id)},
-            {'$set': {'count': count, 'username': username}}, upsert=True
+            {'$set': {'username': username}, '$inc': {'count': count}}, upsert=True
         )
 
     def get_all_foods(self, name: bool = False, id: bool = False):
@@ -109,7 +109,14 @@ class DB:
 
     def get_all_forget_codes(self):
         return self.db.forget_codes.find(
+            filter={'counted': False},
             projection={'_id': 0, "forget_code": 1, "username": 1, "user_id": 1, "food_name": 1})
+
+    def set_forget_codes_counted(self, forget_codes: list):
+        self.db.forget_codes.update_many(
+            {"forget_code": {"$in": forget_codes}},
+            {"$set": {"counted": True}}
+        )
 
     def clear_forget_codes(self):
         self.db.forget_codes.delete_many({})

@@ -268,9 +268,10 @@ class ReserveMenuHandler:
             return static_data.RESERVE_MENU_CHOOSING
         elif action == "DONE":
             if not context.user_data.get('food_court_days'):
-                context.bot.send_message(
+                context.bot.edit_message_text(
                     text=messages.no_day_choosed_for_any_food_court_messsage,
-                    chat_id=update.effective_chat.id
+                    chat_id=update.effective_chat.id,
+                    message_id=update.callback_query.message_id
                 )
                 return
             

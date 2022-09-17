@@ -271,7 +271,7 @@ class ReserveMenuHandler:
                 context.bot.edit_message_text(
                     text=messages.no_day_choosed_for_any_food_court_messsage,
                     chat_id=update.effective_chat.id,
-                    message_id=update.callback_query.message_id
+                    message_id=update.callback_query.message.message_id
                 )
                 return
             
@@ -279,7 +279,7 @@ class ReserveMenuHandler:
             context.bot.edit_message_text(
                 text="حله",
                 chat_id=update.callback_query.message.chat_id,
-                message_id=update.callback_query.message_id)
+                message_id=update.callback_query.message.message_id)
             return static_data.RESERVE_MENU_CHOOSING
         else:
             context.bot.send_message(

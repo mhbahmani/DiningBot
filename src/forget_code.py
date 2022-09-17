@@ -102,7 +102,7 @@ class ForgetCodeMenuHandler:
     
     def handle_forget_code_food_name_input(self, update, context):
         # TODO: Handle duplicate forget code
-        self.db.add_forget_code({
+        res = self.db.add_forget_code({
             "username": update.effective_user.username,
             "user_id": update.message.chat.id,
             "forget_code": context.user_data['forget_code'],
@@ -112,6 +112,11 @@ class ForgetCodeMenuHandler:
             "assigned_to_user_id": None,
             "asssigned_to_username": None
         })
+        if not res:
+            update.message.reply_text(
+                text=messages.duplicate_forget_code_message
+            )
+            return static_data.MAIN_MENU_CHOOSING
         update.message.reply_text(
             text=messages.forget_code_added_message
         )

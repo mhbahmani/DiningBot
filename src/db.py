@@ -33,8 +33,13 @@ class DB:
     def add_food(self, food):
         self.db.foods.insert_one(food)
 
-    def add_forget_code(self, forget_code: dict):
-        self.db.forget_codes.insert_one(forget_code)
+    def add_forget_code(self, forget_code: dict) -> bool:
+        try:
+            self.db.forget_codes.insert_one(forget_code)
+            return True
+        except DuplicateKeyError:
+            return False
+
 
     def update_user_forget_code_counts(self, username: str, user_id: int, count: int):
         self.db.user_forget_code_counts.update(

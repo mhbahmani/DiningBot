@@ -1,5 +1,6 @@
 import threading
 from telegram import ReplyKeyboardMarkup
+from src.inline_keyboards_handlers.week_days_handler import WeekDaysHandler
 from src.automatic_reserve_handler import AutomaticReserveHandler
 from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (
     AutomaticReserveAlreadyActivatedHandler)
@@ -256,12 +257,43 @@ class ReserveMenuHandler:
                 message_id=query.message.message_id)     
             return static_data.RESERVE_MENU_CHOOSING
 
+    def inline_food_courts_choosing_days_handler(self, update, context, action, choosed):
+        print("inline_food_courts_choosing_days_handler", update.message, action, choosed)
+        if action == "CANCEL":
+            if context.user_data: context.user_data.clear()
+            context.bot.edit_message_text(
+                text=messages.choosing_food_courts_cancel_message,
+                chat_id=update.effective_chat.id,
+                message_id=update.callback_query.message.message_id)     
+            return static_data.RESERVE_MENU_CHOOSING
+        elif action == "DONE":
+            if not context.user_data.get('food_court_days'):
+                context.bot.send_message(
+                    text=messages.no_day_choosed_for_any_food_court_messsage,
+                    chat_id=update.effective_chat.id
+                )
+                return
+            
+            # TODO: set days for each food court
+            context.bot.edit_message_text(
+                text="حله",
+                chat_id=update.callback_query.message.chat_id,
+                message_id=update.callback_query.message_id)
+            return static_data.RESERVE_MENU_CHOOSING
+        else:
+            context.bot.send_message(
+                text="choose days you want food",
+                chat_id=update.effective_chat.id,
+                reply_markup=WeekDaysHandler.create_week_days_keyboard()
+            )
+
     def inline_food_court_days_choosing_handler(self, update, context, action, choosed):
         pass
 
     def choosing_week_days_handler(self, update, context):
         user_food_courts = dict(
             [(static_data.PLACES_NAME_BY_ID.get(food_court_id), food_court_id) for food_court_id in self.db.get_user_food_coutts(update.effective_chat.id)])
+        print(user_food_courts)
         context.user_data['food_court_days'] = {}
         update.message.reply_text(
             text=messages.choose_food_courts_to_automatic_reserve_message,

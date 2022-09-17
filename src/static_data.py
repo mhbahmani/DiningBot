@@ -68,6 +68,14 @@ MEAL_EN_TO_FA = {
     "eftari": "افطار"
 }
 
+WEEK_DAYS = {
+    "شنبه": 0,
+    "یه شنبه": 1,
+    "دو شنبه": 2,
+    "سه‌شنبه": 3,
+    "چهارشنبه": 4
+}
+
 # Stages
 MAIN_MENU_CHOOSING, FORGET_CODE_MENU_CHOOSING, RESERVE_MENU_CHOOSING, CHOOSING_SELF_TO_GET, CHOOSING_SELF_TO_GIVE, INPUT_FOOD_NAME, INPUT_FORGET_CODE, INPUT_FAKE_FORGET_CODE, INPUT_USERNAME, INPUT_PASSWORD, CHOOSING_FOOD_DAYS = range(11)
 

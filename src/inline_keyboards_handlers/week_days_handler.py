@@ -7,7 +7,7 @@ from src.static_data import WEEK_DAYS
 
 class WeekDaysHandler:
     @staticmethod
-    def create_keyboard() -> InlineKeyboardMarkup:
+    def create_week_days_keyboard() -> InlineKeyboardMarkup:
         keyboard = []
         for day in WEEK_DAYS:
             keyboard.append([

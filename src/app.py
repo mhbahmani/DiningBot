@@ -1,5 +1,4 @@
 import threading
-import time
 from src.error_handlers import ErrorHandler
 from src.inline_keyboards_handlers.automatic_reserve_already_activated_handler import (
     AutomaticReserveAlreadyActivatedHandler)

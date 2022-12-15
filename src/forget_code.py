@@ -77,11 +77,12 @@ class ForgetCodeMenuHandler:
 
     def handle_forget_code_input(self, update, context):
         forget_code = update.message.text
-        if len(forget_code) != ForgetCodeMenuHandler.FORGET_CODE_LENGTH:
-            update.message.reply_text(
-                text=messages.not_enough_number_error_message
-            )
-            return static_data.INPUT_FORGET_CODE
+        # Check forget code length
+        # if len(forget_code) != ForgetCodeMenuHandler.FORGET_CODE_LENGTH:
+        #     update.message.reply_text(
+        #         text=messages.not_enough_number_error_message
+        #     )
+        #     return static_data.INPUT_FORGET_CODE
         try:
             forget_code = int(forget_code)
         except ValueError:

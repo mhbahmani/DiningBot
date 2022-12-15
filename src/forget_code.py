@@ -6,7 +6,8 @@ import src.static_data as static_data
 
 
 class ForgetCodeMenuHandler:
-    FORGET_CODE_LENGTH = 7
+    FORGET_CODE_MINIMUM_LENGTH = 6
+    FORGET_CODE_MAXIMUM_LENGTH = 7
 
     def __init__(self, db_client) -> None:
         self.db = db_client
@@ -77,12 +78,6 @@ class ForgetCodeMenuHandler:
 
     def handle_forget_code_input(self, update, context):
         forget_code = update.message.text
-        # Check forget code length
-        # if len(forget_code) != ForgetCodeMenuHandler.FORGET_CODE_LENGTH:
-        #     update.message.reply_text(
-        #         text=messages.not_enough_number_error_message
-        #     )
-        #     return static_data.INPUT_FORGET_CODE
         try:
             forget_code = int(forget_code)
         except ValueError:
@@ -178,7 +173,8 @@ class ForgetCodeMenuHandler:
 
     def handle_fake_forget_code_input(self, update, context):
         fake_forget_code = update.message.text
-        if len(fake_forget_code) < ForgetCodeMenuHandler.FORGET_CODE_LENGTH:
+        if len(fake_forget_code) < ForgetCodeMenuHandler.FORGET_CODE_MINIMUM_LENGTH \
+            or len(fake_forget_code) > ForgetCodeMenuHandler.FORGET_CODE_MAXIMUM_LENGTH:
             update.message.reply_text(
                 text=messages.not_enough_number_error_message
             )

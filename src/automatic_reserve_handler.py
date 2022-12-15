@@ -110,10 +110,13 @@ class AutomaticReserveHandler:
         users = self.db.get_users_with_automatic_reserve()
         bot = Updater(token=self.token, use_context=True).bot
         for user in users:
-            bot.send_message(
-                chat_id=user['user_id'],
-                text=messages.automatic_reserve_notification_message
-            )
+            try:
+                bot.send_message(
+                    chat_id=user['user_id'],
+                    text=messages.automatic_reserve_notification_message
+                )
+            except error.Unauthorized:
+                continue
     
     def notify_users_about_reservation_status(self):
         users = self.db.get_users_with_automatic_reserve()

@@ -23,6 +23,10 @@ class ErrorHandler:
 
     def handle_error(self, update, context) -> None:
         """Log the error and send a telegram message to notify the developer."""
+        if not update:
+            logging.error("Update object is None")
+            return
+
         self.send_error_message_to_user(update, context)
 
         logging.error(msg="Exception while handling an update", exc_info=context.error)
@@ -34,8 +38,13 @@ class ErrorHandler:
 
         update_str = update.to_dict() if isinstance(update, Update) else str(update)
         
+        # message = (
+        #     f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}</pre>\n"
+        #     f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>"
+        # )
         message = (
-            f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}</pre>\n"
+            f"<pre>text: {update.message.text}</pre>\n"
+            f"<pre>username: {update.message.chat.username}</pre>\n"
             f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>"
         )
         # send the message to admin
@@ -46,16 +55,16 @@ class ErrorHandler:
                 parse_mode="HTML"
             )
 
-        message = (
-            f"<pre>{html.escape(tb_string)}</pre>"
-        )
+        # message = (
+        #     f"<pre>{html.escape(tb_string)}</pre>"
+        # )
         # send the message to admin
-        for admin_id in self.admin_ids:
-            context.bot.send_message(
-                chat_id=admin_id,
-                text=message,
-                parse_mode="HTML"
-            )
+        # for admin_id in self.admin_ids:
+        #     context.bot.send_message(
+        #         chat_id=admin_id,
+        #         text=message,
+        #         parse_mode="HTML"
+        #     )
 
     def send_error_message_to_user(self, update, context) -> None:
         """Send a telegram message to notify the user that an error occurred."""

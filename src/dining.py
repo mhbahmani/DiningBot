@@ -26,7 +26,9 @@ class Dining:
 
         self.meals = []
         self.user_id = None
-        if self.__login() != http.HTTPStatus.OK:
+        login_res = self.__login()
+        logging.info("Login result for user %s: %s", self.student_id, login_res)
+        if login_res != http.HTTPStatus.OK:
             raise(Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
     def reserve_food(self, place_id: int, food_id: int) -> bool:
@@ -92,7 +94,7 @@ class Dining:
         res = self.session.get(Dining.DINING_BASE_URL)
         if res.status_code != http.HTTPStatus.OK:
             logging.debug("Something went wrong with status code: %s", res.status_code)
-            return
+            return res.status_code
         logging.debug("Logged in as %s", self.student_id)
         logging.debug("Update session cookies and headers")
         csrf_token = bs(response.content, "html.parser").find("meta", {"name": "csrf-token"}).get('content')

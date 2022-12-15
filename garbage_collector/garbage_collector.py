@@ -29,14 +29,17 @@ class GarbageCollector:
 
     def update_user_records(self):
         forget_codes = self.db.get_all_forget_codes()
+        codes = []
         users = {}
         for forget_code in forget_codes:
+            codes.append(forget_code.get('forget_code'))
             users[forget_code['user_id']] = {
                 'count': users.get(forget_code['user_id'], {'count': 0})['count'] + 1,
                 'username': forget_code['username']
             }
         for user_id in users:
             self.db.update_user_forget_code_counts(users[user_id]['username'], user_id, users[user_id]['count'])
+        self.db.set_forget_codes_counted(codes)
         logging.info("User records updated")
 
     def update_ranks(self):

@@ -60,6 +60,7 @@ class DiningBot:
             user_id = update.message.chat.id
             if user_id not in self.admin_ids:
                 msg = messages.you_are_not_admin_message
+                logging.info(f"{update.effective_user.username} is trying to run an admin command")
                 update.message.reply_text(text=msg)
                 return
             return func(self, *args, **kwargs)
@@ -156,7 +157,7 @@ class DiningBot:
     @check_admin
     def send_to_all(self, update, context):
         import re
-        msg = re.sub("/sendtoall ", "", update.message.text)
+        msg = re.sub("/sendmsgtoall", "", update.message.text)
         threading.Thread(target=self.send_message_to_all_handler, args=(context, msg,)).start()
 
     def send_message_to_all_handler(self, context, msg):
@@ -190,7 +191,7 @@ class DiningBot:
         set_handler = CommandHandler('set', self.set)
         self.dispatcher.add_handler(set_handler)
 
-        sendtoall_handler = CommandHandler('sendtoall', self.send_to_all)
+        sendtoall_handler = CommandHandler('sendmsgtoall', self.send_to_all)
         self.dispatcher.add_handler(sendtoall_handler)
 
         update_food_list_handler = CommandHandler('update_foods', self.update_user_favorite_foods)

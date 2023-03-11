@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup as bs
+from http import HTTPStatus
 from src.error_handlers import ErrorHandler
 import src.static_data as static_data
-import http
 import logging
 import requests
 import re
@@ -9,10 +9,15 @@ import re
 
 class Dining:
     SSO_BASE_URL = "https://sso.stu.sharif.ir"
-    DINING_BASE_URL = "https://dining.sharif.ir/admin"
+    DINING_BASE_URL = "https://setad.dining.sharif.edu"
     SIGN_IN_URL = SSO_BASE_URL + "/students/sign_in"
-    RESERVE_FOOD_URL = DINING_BASE_URL + "/food/food-reserve/do-reserve-from-diet"
-    RESERVE_PAGE_URL = DINING_BASE_URL + "/food/food-reserve/reserve"
+    SHARIF_AUTHORIZATION_ADDRESS = 'https://setad.dining.sharif.edu/oauth2/authorization/sharif?' \
+                                   'client_id=4097ab763c951ae4dafd7fb645cacb9462e81ba8b7d98eb3a269ebdcef33b523&' \
+                                   'amp;redirect_uri=https://setad.dining.sharif.edu:443/oauth2/authorization/sharif&' \
+                                   'amp;response_type=code&amp;scope=read&amp;state=IBuwSV'
+    SETAD_OAUTH_REDIRECT = 'https://setad.dining.sharif.edu/index.rose?sharifOauthRedirect=true'
+    RESERVE_FOOD_URL = DINING_BASE_URL + "/nurture/user/multi/reserve/reserve.rose"
+    RESERVE_PAGE_URL = DINING_BASE_URL + "/nurture/user/multi/reserve/reserve.rose"
     CANCEL_FOOD_URL = DINING_BASE_URL + "/food/food-reserve/cancel-reserve"
     LOAD_FOOD_TABLE = DINING_BASE_URL + "/food/food-reserve/load-reserve-table"
 
@@ -26,9 +31,8 @@ class Dining:
 
         self.meals = []
         self.user_id = None
-        login_res = self.__login()
-        logging.info("Login result for user %s: %s", self.student_id, login_res)
-        if login_res != http.HTTPStatus.OK:
+
+        if not self.__login():
             raise(Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
     def reserve_food(self, place_id: int, food_id: int) -> bool:
@@ -53,7 +57,7 @@ class Dining:
 
     def get_foods_list(self, place_id: int, week: int = 1) -> list:
         table = self.__load_food_table(place_id=place_id, week=week)
-        if table.status_code != http.HTTPStatus.OK:
+        if table.status_code != HTTPStatus.OK:
             logging.debug("Something went wrong with status code: %s", table.status_code)
             return []
         return self.__parse_food_table_to_get_foods_list(table)
@@ -65,17 +69,17 @@ class Dining:
                 <food_time>: {
                     food: <food_name>,
                     price: <price>,
-                    food_id: <food_reserve_id>    
+                    food_id: <food_reserve_id>
                 }
             }
         """
         table = self.__load_food_table(place_id=place_id, week=week)
-        if table.status_code != http.HTTPStatus.OK:
+        if table.status_code != HTTPStatus.OK:
             logging.debug("Something went wrong with status code: %s", table.status_code)
             return {}
         return self.__parse_reserve_table(table)
 
-    def __login(self) -> http.HTTPStatus:
+    def __login(self) -> bool:
         logging.debug("Making session")
         self.session = requests.Session()
         logging.debug("Get login page")
@@ -91,26 +95,15 @@ class Dining:
         response = self.session.post(Dining.SIGN_IN_URL, login_data)
         if response.status_code != 200:
             return False
-        res = self.session.get(Dining.DINING_BASE_URL)
-        if res.status_code != http.HTTPStatus.OK:
-            logging.debug("Something went wrong with status code: %s", res.status_code)
-            return res.status_code
+        self.session.get(Dining.SETAD_OAUTH_REDIRECT)
+        self.session.get(Dining.SHARIF_AUTHORIZATION_ADDRESS)
         logging.debug("Logged in as %s", self.student_id)
         logging.debug("Update session cookies and headers")
-        csrf_token = bs(response.content, "html.parser").find("meta", {"name": "csrf-token"}).get('content')
-        self.session.headers['X-CSRF-Token'] = csrf_token
-        self.session.headers['X-Requested-With'] = "XMLHttpRequest"
-        self.session.headers['Cookie'] = \
-            f"PHPSESSID={list(self.session.cookies)[0].value}; _csrf={list(self.session.cookies)[1].value}"
-
-        response = self.session.get(Dining.RESERVE_PAGE_URL)
-        if response.status_code == http.HTTPStatus.FORBIDDEN:
-            logging.error("User {} is not allowed to access this page".format(self.student_id))
-            return http.HTTPStatus.FORBIDDEN
-        s = bs(response.content, "html.parser").find(
-            "button", {"type": "button", "class": "btn btn-default navigation-link"}).get("onclick")
-        self.user_id = re.match("load_diet_reserve_table.*\,(?P<user_id>\w+)\)", s).group("user_id")
-        return http.HTTPStatus.OK
+        reserve_page = self.session.get(Dining.RESERVE_PAGE_URL)
+        if str(reserve_page.text).find('ورود به سامانه سماد') != -1:
+            logging.debug("Login failed")
+            return False
+        return True
 
     def check_username_and_password(username: str, password: str) -> bool:
         logging.debug("Making session")

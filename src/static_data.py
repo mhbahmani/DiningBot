@@ -58,7 +58,7 @@ MEAL_FA_TO_EN = {
     "ناهار": "lunch",
     "شام": "dinner",
     "سحری": "sahari",
-    "افطار": "eftari",
+    "افطاری": "eftari",
     "صبحانه": "breakfast"
 }
 

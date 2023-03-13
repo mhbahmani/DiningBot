@@ -178,7 +178,7 @@ class Dining:
                         id = "foodPriceTooltip_" + food_id[1]
                         price = bs(reserve_table.content, "html.parser").find("div",
                                                                               {"id": id}).text.strip().split("\n")[0]
-                        food_name = food_reserve_function.find("label").text.split("\n")[1].strip()
+                        food_name = food_reserve_function.find("label").text.split("|")[1].strip()
                         res[time][self.meals[j]].append({
                             "food": food_name,
                             "price": price,

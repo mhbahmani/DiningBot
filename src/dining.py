@@ -40,10 +40,29 @@ class Dining:
         logging.debug("Reserving food %s", food_id)
         params = {'user_id': self.user_id, }
         data = {
-            'id': food_id,
-            'place_id': place_id,
+            'weekStartDateTime': '1680975736863',
+            'remainCredit': '',
+            'method%3AshowPanel': 'Submit',
+            'selfChangeReserveId': '',
+            'weekStartDateTimeAjx': '1680975736873',
+            'freeRestaurant': '',
+            'selectedSelfDefId': str(place_id),
         }
-        response = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
+        for i in range(len(self.foods)):
+            subData = {
+                f"userWeekReserves{i}.selected": "false",
+                f"userWeekReserves{i}.selectedCount": "1",
+                f"userWeekReserves{i}.id": "",
+                f"userWeekReserves{i}.programId": "37973",
+                f"userWeekReserves{i}.mealTypeId": "1",
+                f"userWeekReserves{i}.programDateTime": "1678480200000",
+                f"userWeekReserves{i}.selfId": place_id,
+                f"userWeekReserves{i}.foodTypeId": "644",
+                f"userWeekReserves{i}.foodId": "66",
+                f"userWeekReserves{i}.priorReserveDateStr": "null",
+                f"userWeekReserves{i}.freeFoodSelected": "false"
+            }
+            response = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
         if response.json().get("success"):
             return True, response.json().get("balance")
         return False, 0
@@ -184,7 +203,8 @@ class Dining:
                             "price": price,
                             "food_id": food_id,
                         })
-        return dict(reversed(list(res.items())))
+        self.foods = dict(reversed(list(res.items())))
+        return self.foods
 
     def __parse_food_table_to_get_foods_list(self, table: requests.Response) -> list:
         content = bs(table.content, "html.parser")

@@ -150,11 +150,11 @@ class Dining:
 
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
         data = {
-            'weekStartDateTime': '1678486276281',
+            'weekStartDateTime': '1680975736863',
             'remainCredit': '',
             'method%3AshowPanel': 'Submit',
             'selfChangeReserveId': '',
-            'weekStartDateTimeAjx': '1678486276289',
+            'weekStartDateTimeAjx': '1680975736873',
             'freeRestaurant': '',
             'selectedSelfDefId': str(place_id),
             '_csrf': self.csrf,
@@ -170,7 +170,7 @@ class Dining:
         self.meals.reverse()  # TOF MALI :)
         days = []
         foods = []
-        content = content.find_next("tr").find_next_siblings("tr")
+        content = content.find_all("tr", recursive=False)
         numberOfState = len(content[0].find_next("td").find_next_siblings("td"))
         for i in range(len(content)):
             food = content[i].find_next("td")
@@ -190,14 +190,13 @@ class Dining:
             for j in range(food_times):
                 res[time][self.meals[j]] = res[time].get(self.meals[j], [])
                 food = foods.pop()
-                for food_row in food.find_all_next("tr"):
+                foods_row = food.find_next("table").find_all("table")
+                for food_row in foods_row:
+                    food_name = food_row.find_next("span").text.split("|")[1]
+                    price = food_row.find_next("div", {"class", "xstooltip"}).text.strip().split("\n")[0]
                     food_reserve_function = food_row.find_next("span")
-                    food_id = food_reserve_function.get("id").split("_")
+                    food_id = food_reserve_function.get("id").split("_")[1]
                     if food_reserve_function:
-                        id = "foodPriceTooltip_" + food_id[1]
-                        price = bs(reserve_table.content, "html.parser").find("div",
-                                                                              {"id": id}).text.strip().split("\n")[0]
-                        food_name = food_reserve_function.find("label").text.split("|")[1].strip()
                         res[time][self.meals[j]].append({
                             "food": food_name,
                             "price": price,

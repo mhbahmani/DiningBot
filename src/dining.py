@@ -168,7 +168,6 @@ class Dining:
         self.meals = [static_data.MEAL_FA_TO_EN[time.text.split(("\n"))[1].strip()] for time in
                       content.findNext("tr").find_all("td")]
         content = content.find_all("tr", recursive=False)
-        numberOfState = len(content[0].find_all("td"))
         res = {}
         for i in range(1, len(content)):
             day, date = content[i].find_next("td").text.split("\n")[1].strip(), \

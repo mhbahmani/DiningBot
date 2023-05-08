@@ -150,11 +150,11 @@ class Dining:
 
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
         data = {
-            'weekStartDateTime': '1680975736863',
+            'weekStartDateTime': '1683366167008',
             'remainCredit': '',
             'method%3AshowPanel': 'Submit',
             'selfChangeReserveId': '',
-            'weekStartDateTimeAjx': '1680975736873',
+            'weekStartDateTimeAjx': '1683366167017',
             'freeRestaurant': '',
             'selectedSelfDefId': str(place_id),
             '_csrf': self.csrf,
@@ -167,41 +167,32 @@ class Dining:
             "table")
         self.meals = [static_data.MEAL_FA_TO_EN[time.text.split(("\n"))[1].strip()] for time in
                       content.findNext("tr").find_all("td")]
-        self.meals.reverse()  # TOF MALI :)
-        days = []
-        foods = []
         content = content.find_all("tr", recursive=False)
-        numberOfState = len(content[0].find_next("td").find_next_siblings("td"))
-        for i in range(len(content)):
-            food = content[i].find_next("td")
-            for j in range(numberOfState + 1):
-                if j == 0:
-                    days.append(food)
-                    food = food.find_next_siblings("td")
-                else:
-                    foods.append(food[j - 1])
-        days.reverse()
+        numberOfState = len(content[0].find_all("td"))
         res = {}
-        food_times = numberOfState
-        for i in range(len(days)):
-            day, date = days[i].text.split("\n")[1].strip(), days[i].find_next("div").text
+        for i in range(1, len(content)):
+            day, date = content[i].find_next("td").text.split("\n")[1].strip(), \
+                content[i].find_next("td").text.split("\n")[3]
             time = f"{date} {day}"
             res[time] = {}
-            for j in range(food_times):
+            content[i] = content[i].findNext("td")
+            for j in range(len(self.meals)):
                 res[time][self.meals[j]] = res[time].get(self.meals[j], [])
-                food = foods.pop()
-                foods_row = food.find_next("table").find_all("table")
-                for food_row in foods_row:
-                    food_name = food_row.find_next("span").text.split("|")[1]
-                    price = food_row.find_next("div", {"class", "xstooltip"}).text.strip().split("\n")[0]
-                    food_reserve_function = food_row.find_next("span")
-                    food_id = food_reserve_function.get("id").split("_")[1]
-                    if food_reserve_function:
+                if (len(content[i].findNext("td").findNext("table").find_all("tr", recursive=False)) != 0):
+                    foods = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)
+                    for k in range(len(foods)):
+                        price = foods[k].find_next("div", {"class": "xstooltip"}).text.split(
+                            "\n")[2].strip()
+                        food_name = foods[k].findNext("span").text.split("\n")[2]
+                        food_id = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)[
+                            1].find_next(
+                            "div", {"class": "xstooltip"}).get("id")
                         res[time][self.meals[j]].append({
                             "food": food_name,
                             "price": price,
                             "food_id": food_id,
                         })
+                content[i] = content[i].findNext("td")
         self.foods = dict(reversed(list(res.items())))
         return self.foods
 

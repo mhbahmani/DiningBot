@@ -38,27 +38,28 @@ PLACES_NAME_BY_ID = {
 
 FOOD_COURT_IDS = {
     "سلف پسرها": 1,
-    "سلف دخترها": 2,
-    "احمدی روشن": 3,
-    'طرشت ۲': 4,
-    'طرشت ۳': 5,
-    'مصلی نژاد': 6,
-    'آزادی': 7,
-    'شهید شوریده': 8,
-    'شهید وزوایی': 9,
-    'شهید حیدرتاش': 10,
-    'شهید صادقی': 11,
-    'شادمان': 12,
-    'ولیعصر': 13,
-    'شهرک': 14,
-    'درویش‌وند': 15
+    # "سلف دخترها": ?,
+    "احمدی روشن": 11,
+    # 'طرشت ۲': 4,
+    'طرشت ۳': 3,
+    'مصلی نژاد': 10,
+    'آزادی': 8,
+    # 'شهید شوریده': 8,
+    'شهید وزوایی': 13,
+    'شهید حیدرتاش': 9,
+    # 'شهید صادقی': 11,
+    'شادمان': 6,
+    'ولیعصر': 14,
+    # 'شهرک': 14,
+    # 'درویش‌وند': 15
 }
 
 MEAL_FA_TO_EN = {
     "ناهار": "lunch",
     "شام": "dinner",
     "سحری": "sahari",
-    "افطار": "eftari"
+    "افطاری": "eftari",
+    "صبحانه": "breakfast"
 }
 
 MEAL_EN_TO_FA = {
@@ -69,7 +70,8 @@ MEAL_EN_TO_FA = {
 }
 
 # Stages
-MAIN_MENU_CHOOSING, FORGET_CODE_MENU_CHOOSING, RESERVE_MENU_CHOOSING, CHOOSING_SELF_TO_GET, CHOOSING_SELF_TO_GIVE, INPUT_FOOD_NAME, INPUT_FORGET_CODE, INPUT_FAKE_FORGET_CODE, INPUT_USERNAME, INPUT_PASSWORD = range(10)
+MAIN_MENU_CHOOSING, FORGET_CODE_MENU_CHOOSING, RESERVE_MENU_CHOOSING, CHOOSING_SELF_TO_GET, CHOOSING_SELF_TO_GIVE, INPUT_FOOD_NAME, INPUT_FORGET_CODE, INPUT_FAKE_FORGET_CODE, INPUT_USERNAME, INPUT_PASSWORD = range(
+    10)
 
 FORGET_CODE_MENU_LABEL = 'کد فراموشی'
 FORGET_CODE_MENU_REGEX = '^{}$'.format(FORGET_CODE_MENU_LABEL)

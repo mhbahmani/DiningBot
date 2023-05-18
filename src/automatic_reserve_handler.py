@@ -27,7 +27,7 @@ class AutomaticReserveHandler:
             }[log_level])
 
         self.load_foods()
-    
+
     def load_foods(self):
         for food in self.db.get_all_foods(name=True, id=True):
             self.food_name_by_id[food['id']] = food['name']
@@ -44,35 +44,47 @@ class AutomaticReserveHandler:
         if not context:
             if not self.token: return
             bot = Updater(token=self.token, use_context=True).bot
-        else: bot = context.bot
+        else:
+            bot = context.bot
         logging.info("Automatic reserve started")
         users = self.db.get_user_reserve_info(user_id) if user_id else self.db.get_users_with_automatic_reserve()
         for user in list(users):
             successfull_reserve = True
             for place_id in user['food_courts']:
-                reserve_successes, foods = self.reserve_next_week_food_based_on_user_priorities(user['user_id'], place_id, user.get('priorities', []), user['student_number'], user['password'])
+                reserve_successes, foods = self.reserve_next_week_food_based_on_user_priorities(user['user_id'],
+                                                                                                place_id,
+                                                                                                user.get('priorities',
+                                                                                                         []),
+                                                                                                user['student_number'],
+                                                                                                user['password'])
                 if not reserve_successes:
                     bot.send_message(
                         chat_id=user['user_id'],
-                        text=messages.no_food_for_reserve_message.format(static_data.PLACES_NAME_BY_ID[place_id]))     
-                    logging.info("No food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
+                        text=messages.no_food_for_reserve_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                    logging.info(
+                        "No food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                 elif all(reserve_successes):
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_secceeded_message.format(
                             static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(foods)))
-                    logging.info("Reserve was successfull for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
+                    logging.info("Reserve was successfull for user {} at {}".format(user['user_id'],
+                                                                                    static_data.PLACES_NAME_BY_ID[
+                                                                                        place_id]))
                 else:
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
-                    logging.info("Something went wrong for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
+                    logging.info("Something went wrong for user {} at {}".format(user['user_id'],
+                                                                                 static_data.PLACES_NAME_BY_ID[
+                                                                                     place_id]))
                     successfull_reserve = False
             if successfull_reserve:
                 threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
         logging.info("Automatic reserve finished")
 
-    def reserve_next_week_food_based_on_user_priorities(self, user_id: str, place_id, user_priorities: list, username, password):
+    def reserve_next_week_food_based_on_user_priorities(self, user_id: str, place_id, user_priorities: list, username,
+                                                        password):
         logging.debug("Reserving food for user {} at {}".format(user_id, static_data.PLACES_NAME_BY_ID[place_id]))
         try:
             dining = Dining(username, password)
@@ -89,9 +101,12 @@ class AutomaticReserveHandler:
                 choosed_food_id = foods[day][meal][0].get("food_id")
                 food_index_in_foods_list = 0
                 if len(day_foods) > 1:
-                    choosed_food_index = min(map(lambda x: user_priorities.index(x) if x in user_priorities else 100, day_foods))
-                    if choosed_food_index == 100: food_index_in_foods_list = randint(0, len(day_foods) - 1)
-                    else: food_index_in_foods_list = day_foods.index(user_priorities[choosed_food_index])
+                    choosed_food_index = min(
+                        map(lambda x: user_priorities.index(x) if x in user_priorities else 100, day_foods))
+                    if choosed_food_index == 100:
+                        food_index_in_foods_list = randint(0, len(day_foods) - 1)
+                    else:
+                        food_index_in_foods_list = day_foods.index(user_priorities[choosed_food_index])
                 choosed_food_id = foods[day][meal][food_index_in_foods_list]['food_id']
                 reserve_success, balance = dining.reserve_food(int(place_id), int(choosed_food_id))
                 reserve_successes.append(reserve_success)
@@ -105,7 +120,6 @@ class AutomaticReserveHandler:
                 lambda x: messages.list_reserved_foods_message.format(
                     re.sub("\d+\/\d+\/\d+ ", "", x[1]), static_data.MEAL_EN_TO_FA.get(x[2], ""), x[0]), food_names)))
 
-
     def notify_users(self):
         users = self.db.get_users_with_automatic_reserve()
         bot = Updater(token=self.token, use_context=True).bot
@@ -117,7 +131,7 @@ class AutomaticReserveHandler:
                 )
             except error.Unauthorized:
                 continue
-    
+
     def notify_users_about_reservation_status(self):
         users = self.db.get_users_with_automatic_reserve()
         bot = Updater(token=self.token, use_context=True).bot

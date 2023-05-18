@@ -2,8 +2,9 @@ from bs4 import BeautifulSoup as bs
 from http import HTTPStatus
 from src.error_handlers import ErrorHandler
 import src.static_data as static_data
-import logging
+import datetime
 import requests
+import logging
 import re
 
 
@@ -31,26 +32,46 @@ class Dining:
 
         self.meals = []
         self.user_id = None
-
+        self.csrf = None
+        self.remainCredit = 0
         if not self.__login():
-            raise(Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
+            raise (Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
     def reserve_food(self, place_id: int, food_id: int) -> bool:
         logging.debug("Reserving food %s", food_id)
-        params = {'user_id': self.user_id,}
+        params = {'user_id': self.user_id, }
         data = {
-            'id': food_id,
-            'place_id': place_id,
+            'weekStartDateTime': '1680975736863',
+            'remainCredit': '',
+            'method%3AshowPanel': 'Submit',
+            'selfChangeReserveId': '',
+            'weekStartDateTimeAjx': '1680975736873',
+            'freeRestaurant': '',
+            'selectedSelfDefId': str(place_id),
         }
-        response = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
+        for i in range(len(self.foods)):
+            subData = {
+                f"userWeekReserves{i}.selected": "false",
+                f"userWeekReserves{i}.selectedCount": "1",
+                f"userWeekReserves{i}.id": "",
+                f"userWeekReserves{i}.programId": "37973",
+                f"userWeekReserves{i}.mealTypeId": "1",
+                f"userWeekReserves{i}.programDateTime": "1678480200000",
+                f"userWeekReserves{i}.selfId": place_id,
+                f"userWeekReserves{i}.foodTypeId": "644",
+                f"userWeekReserves{i}.foodId": "66",
+                f"userWeekReserves{i}.priorReserveDateStr": "null",
+                f"userWeekReserves{i}.freeFoodSelected": "false"
+            }
+            response = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
         if response.json().get("success"):
             return True, response.json().get("balance")
         return False, 0
         # TODO: Handle balance on failure
 
     def cancel_food(self, user_id: int, food_id: int):
-        params = {'user_id': user_id,}
-        data = {'id': food_id,}
+        params = {'user_id': user_id, }
+        data = {'id': food_id, }
         res = self.session.get(Dining.CANCEL_FOOD_URL, params=params, data=data)
         print(res.json())
         # TODO
@@ -74,6 +95,7 @@ class Dining:
             }
         """
         table = self.__load_food_table(place_id=place_id, week=week)
+        self.remainCredit = bs(table.content, "html.parser").find("span", {"id": "creditId"})
         if table.status_code != HTTPStatus.OK:
             logging.debug("Something went wrong with status code: %s", table.status_code)
             return {}
@@ -85,7 +107,7 @@ class Dining:
         logging.debug("Get login page")
         site = self.session.get(Dining.SIGN_IN_URL)
         content = bs(site.content, "html.parser")
-        authenticity_token = content.find("input", {"name":"authenticity_token"}).get('value')
+        authenticity_token = content.find("input", {"name": "authenticity_token"}).get('value')
         login_data = {
             'authenticity_token': authenticity_token,
             'student[student_identifier]': self.student_id,
@@ -100,6 +122,7 @@ class Dining:
         logging.debug("Logged in as %s", self.student_id)
         logging.debug("Update session cookies and headers")
         reserve_page = self.session.get(Dining.RESERVE_PAGE_URL)
+        self.csrf = bs(reserve_page.content, "html.parser").find("input", {"name": "_csrf"}).get("value")
         if str(reserve_page.text).find('ورود به سامانه سماد') != -1:
             logging.debug("Login failed")
             return False
@@ -111,7 +134,7 @@ class Dining:
         logging.debug("Get login page")
         site = session.get(Dining.SIGN_IN_URL)
         content = bs(site.content, "html.parser")
-        authenticity_token = content.find("input", {"name":"authenticity_token"}).get('value')
+        authenticity_token = content.find("input", {"name": "authenticity_token"}).get('value')
         login_data = {
             'authenticity_token': authenticity_token,
             'student[student_identifier]': username,
@@ -123,43 +146,60 @@ class Dining:
             logging.debug("Login failed")
             return False
         logging.debug("Login successful")
+
         return True
 
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
+        now = datetime.datetime.now()
+        start_of_week = now - datetime.timedelta(days=now.weekday() + 2)
+        epoch_start_of_week = int(start_of_week.timestamp()) * 1000
+        # print(epoch_start_of_week)
+
         data = {
-            'id': '0',
-            'parent_id': place_id,
-            'week': str(week),
-            'user_id': self.user_id,
+            'weekStartDateTime': epoch_start_of_week,
+            'remainCredit': '',
+            'method%3AshowPanel': 'Submit',
+            'selfChangeReserveId': '',
+            'weekStartDateTimeAjx': epoch_start_of_week,
+            'freeRestaurant': '',
+            'selectedSelfDefId': str(place_id),
+            '_csrf': self.csrf,
         }
 
-        return self.session.post(Dining.LOAD_FOOD_TABLE, data=data)
+        return self.session.post(Dining.RESERVE_FOOD_URL, data=data)
 
     def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
-        content = bs(reserve_table.content, "html.parser")
-        self.meals = [static_data.MEAL_FA_TO_EN[time.text] for time in content.find("table").find_all("th")[1:-7]]
-        self.meals.reverse() # TOF MALI :)
-        foods = content.find("table").find_all("td")
-        days = content.find("table").find_all("th")[-7:]
+        content = bs(reserve_table.content, "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext(
+            "table")
+        self.meals = [static_data.MEAL_FA_TO_EN[time.text.split(("\n"))[1].strip()] for time in
+                      content.findNext("tr").find_all("td")]
+        content = content.find_all("tr", recursive=False)
         res = {}
-        food_times = len(foods) // 7
-        for i in range(7):
-            day, date = re.match(Dining.DATE_REGEX, days.pop().text).groupdict().values()
+        for i in range(1, len(content)):
+            day, date = content[i].find_next("td").text.split("\n")[1].strip(), \
+                content[i].find_next("td").text.split("\n")[3]
             time = f"{date} {day}"
             res[time] = {}
-            for j in range(food_times):
+            content[i] = content[i].findNext("td")
+            for j in range(len(self.meals)):
                 res[time][self.meals[j]] = res[time].get(self.meals[j], [])
-                food = foods.pop()
-                for food_row in food.find_all("div", {"class": "food-reserve-diet-div"}):
-                    food_reserve_function = food_row.find("span", {"data-original-title": "رزرو"})
-                    if food_reserve_function:
-                        food_name, price = re.match(Dining.FOOD_NAME_AND_PRICE_REGEX, food_row.getText()).groups()
+                if (len(content[i].findNext("td").findNext("table").find_all("tr", recursive=False)) != 0):
+                    foods = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)
+                    for k in range(len(foods)):
+                        price = foods[k].find_next("div", {"class": "xstooltip"}).text.split(
+                            "\n")[2].strip()
+                        food_name = foods[k].findNext("span").text.split("\n")[2].strip().split("|")[1].strip()
+                        food_id = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)[
+                            1].find_next(
+                            "div", {"class": "xstooltip"}).get("id")
                         res[time][self.meals[j]].append({
-                            "food": re.sub(" \(.*\)", "" , food_name),
+                            "food": food_name,
                             "price": price,
-                            "food_id": re.match(Dining.FOOD_ID_REGEX, food_reserve_function.get("onclick")).group("food_id"),
+                            "food_id": food_id,
                         })
-        return res
+                content[i] = content[i].findNext("td")
+        self.foods = dict(reversed(list(res.items())))
+        return self.foods
 
     def __parse_food_table_to_get_foods_list(self, table: requests.Response) -> list:
         content = bs(table.content, "html.parser")
@@ -168,11 +208,11 @@ class Dining:
         for food in foods:
             if len(food.find_all("div")) != 1:
                 for day_food in food.find_all("div"):
-                    food_name = re.sub(" \(.*\)", "" , day_food.getText())
+                    food_name = re.sub(" \(.*\)", "", day_food.getText())
                     if food_name != "-":
                         result.append(food_name.strip())
                 continue
-            food_name = re.sub(" \(.*\)", "" , food.getText())
+            food_name = re.sub(" \(.*\)", "", food.getText())
             if food_name != "-":
                 result.append(food_name.strip())
         return result

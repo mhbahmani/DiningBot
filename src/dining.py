@@ -203,18 +203,14 @@ class Dining:
 
     def __parse_food_table_to_get_foods_list(self, table: requests.Response) -> list:
         content = bs(table.content, "html.parser")
-        foods = content.find("table").find_all("td")
+        print(content)
+        with open("content.html", "w") as file:
+            file.write(str(content))
+        foods = content.find("table").find_all("span")[2:]
         result = []
         for food in foods:
-            if len(food.find_all("div")) != 1:
-                for day_food in food.find_all("div"):
-                    food_name = re.sub(" \(.*\)", "", day_food.getText())
-                    if food_name != "-":
-                        result.append(food_name.strip())
-                continue
-            food_name = re.sub(" \(.*\)", "", food.getText())
-            if food_name != "-":
-                result.append(food_name.strip())
+            food_name = food.text.strip().split("|")[1].strip()
+            result.append(food_name.strip())
         return result
 
     def __parse_reserve_page_to_get_food_courts(self, reserve_page: requests.Response) -> dict:

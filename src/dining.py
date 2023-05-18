@@ -2,8 +2,9 @@ from bs4 import BeautifulSoup as bs
 from http import HTTPStatus
 from src.error_handlers import ErrorHandler
 import src.static_data as static_data
-import logging
+import datetime
 import requests
+import logging
 import re
 
 
@@ -149,12 +150,17 @@ class Dining:
         return True
 
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
+        now = datetime.datetime.now()
+        start_of_week = now - datetime.timedelta(days=now.weekday() + 2)
+        epoch_start_of_week = int(start_of_week.timestamp()) * 1000
+        # print(epoch_start_of_week)
+
         data = {
-            'weekStartDateTime': '1683366167008',
+            'weekStartDateTime': epoch_start_of_week,
             'remainCredit': '',
             'method%3AshowPanel': 'Submit',
             'selfChangeReserveId': '',
-            'weekStartDateTimeAjx': '1683366167017',
+            'weekStartDateTimeAjx': epoch_start_of_week,
             'freeRestaurant': '',
             'selectedSelfDefId': str(place_id),
             '_csrf': self.csrf,
@@ -182,7 +188,7 @@ class Dining:
                     for k in range(len(foods)):
                         price = foods[k].find_next("div", {"class": "xstooltip"}).text.split(
                             "\n")[2].strip()
-                        food_name = foods[k].findNext("span").text.split("\n")[2]
+                        food_name = foods[k].findNext("span").text.split("\n")[2].strip().split("|")[1].strip()
                         food_id = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)[
                             1].find_next(
                             "div", {"class": "xstooltip"}).get("id")

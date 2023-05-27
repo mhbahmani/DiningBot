@@ -26,7 +26,7 @@ class AutomaticReserveHandler:
                 'ERROR': logging.ERROR,
             }[log_level])
 
-        self.load_foods()
+        # self.load_foods()
 
     def load_foods(self):
         for food in self.db.get_all_foods(name=True, id=True):
@@ -108,9 +108,11 @@ class AutomaticReserveHandler:
                     else:
                         food_index_in_foods_list = day_foods.index(user_priorities[choosed_food_index])
                 choosed_food_id = foods[day][meal][food_index_in_foods_list]['food_id']
-                reserve_success, balance = dining.reserve_food(int(place_id), int(choosed_food_id))
-                reserve_successes.append(reserve_success)
+                # TODO: Add choosed_food_id to a list
                 food_names.append((foods[day][meal][food_index_in_foods_list].get('food'), day, meal))
+        # TODO: Reserver choosed foods list
+        reserve_success, balance = dining.reserve_food(int(place_id), int(choosed_food_id))
+        reserve_successes.append(reserve_success)
         return reserve_successes, food_names
 
     def beautify_reserved_foods_output(self, food_names: list) -> str:

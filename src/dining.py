@@ -37,29 +37,35 @@ class Dining:
         if not self.__login():
             raise (Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
-    def reserve_food(self, place_id: int, food_id: int) -> bool:
-        logging.debug("Reserving food %s", food_id)
+    def reserve_food(self, place_id: int, food_ids: list) -> bool:
+        logging.debug("Reserving food %s", food_ids)
+        
+        now = datetime.datetime.now()
+        start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7)
+        epoch_start_of_week = int(start_of_week.timestamp()) * 1000
+        # print(epoch_start_of_week)
+        
         params = {'user_id': self.user_id, }
         data = {
-            'weekStartDateTime': '1680975736863',
+            'weekStartDateTime': epoch_start_of_week,
             'remainCredit': '',
             'method%3AshowPanel': 'Submit',
             'selfChangeReserveId': '',
-            'weekStartDateTimeAjx': '1680975736873',
+            'weekStartDateTimeAjx': epoch_start_of_week,
             'freeRestaurant': '',
             'selectedSelfDefId': str(place_id),
         }
-        for i in range(len(self.foods)):
+        for i, food_id in enumerate(food_ids):
             subData = {
                 f"userWeekReserves{i}.selected": "false",
                 f"userWeekReserves{i}.selectedCount": "1",
                 f"userWeekReserves{i}.id": "",
                 f"userWeekReserves{i}.programId": "37973",
-                f"userWeekReserves{i}.mealTypeId": "1",
-                f"userWeekReserves{i}.programDateTime": "1678480200000",
+                f"userWeekReserves{i}.mealTypeId": "1", # TODO
+                f"userWeekReserves{i}.programDateTime": "1678480200000", # TODO
                 f"userWeekReserves{i}.selfId": place_id,
-                f"userWeekReserves{i}.foodTypeId": "644",
-                f"userWeekReserves{i}.foodId": "66",
+                f"userWeekReserves{i}.foodTypeId": "644", # TODO
+                f"userWeekReserves{i}.foodId": str(food_id), # TODO
                 f"userWeekReserves{i}.priorReserveDateStr": "null",
                 f"userWeekReserves{i}.freeFoodSelected": "false"
             }
@@ -151,7 +157,7 @@ class Dining:
 
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
         now = datetime.datetime.now()
-        start_of_week = now - datetime.timedelta(days=now.weekday() + 2)
+        start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7)
         epoch_start_of_week = int(start_of_week.timestamp()) * 1000
         # print(epoch_start_of_week)
 

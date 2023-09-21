@@ -34,11 +34,15 @@ class Dining:
         self.user_id = None
         self.csrf = None
         self.remainCredit = 0
-        if not self.__login():
+        if not self.__setad_login():
             raise (Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
     def reserve_food(self, place_id: int, food_id: int) -> bool:
         logging.debug("Reserving food %s", food_id)
+        now = datetime.datetime.now()
+        start_of_week = now - datetime.timedelta(days=now.weekday() + 2)
+        epoch_start_of_week = int(start_of_week.timestamp()) * 1000
+        
         params = {'user_id': self.user_id, }
         data = {
             'weekStartDateTime': '1680975736863',
@@ -95,11 +99,40 @@ class Dining:
             }
         """
         table = self.__load_food_table(place_id=place_id, week=week)
-        self.remainCredit = bs(table.content, "html.parser").find("span", {"id": "creditId"})
+        # Save page.text to file
+        with open("out.html", "w") as file:
+            file.write(bs(table.content, "html.parser").prettify())
+        self.remainCredit = int(bs(table.content, "html.parser").find("span", {"id": "creditId"}).text)
         if table.status_code != HTTPStatus.OK:
             logging.debug("Something went wrong with status code: %s", table.status_code)
             return {}
         return self.__parse_reserve_table(table)
+
+    def __setad_login(self) -> bool:
+        logging.debug("Making session")
+        self.session = requests.Session()
+        logging.debug("Get login page")
+
+        reserve_page = self.session.get(Dining.RESERVE_PAGE_URL)
+        self.csrf = bs(reserve_page.content, "html.parser").find("input", {"name": "_csrf"}).get("value")
+        data = {
+            '_csrf': self.csrf,
+            'username': self.student_id,
+            'password': self.password,
+            'login': 'ورود',
+        }
+
+        response = self.session.post('https://setad.dining.sharif.edu/j_security_check',  data=data)
+        # with open("out.html", "w") as file:
+        #     file.write(bs(response.content, "html.parser").prettify())
+
+        script = bs(response.content, "html.parser").find("script", {"type": "text/javascript"}).next.strip()
+        self.csrf = re.match(r".*X-CSRF-TOKEN' : '(?P<csrf>.*)'}.*", script).group("csrf")
+
+        if response.status_code != HTTPStatus.OK:
+            logging.debug("Login failed")
+            return False
+        return True
 
     def __login(self) -> bool:
         logging.debug("Making session")
@@ -155,18 +188,22 @@ class Dining:
         epoch_start_of_week = int(start_of_week.timestamp()) * 1000
         # print(epoch_start_of_week)
 
-        data = {
-            'weekStartDateTime': epoch_start_of_week,
-            'remainCredit': '',
-            'method%3AshowPanel': 'Submit',
-            'selfChangeReserveId': '',
-            'weekStartDateTimeAjx': epoch_start_of_week,
-            'freeRestaurant': '',
-            'selectedSelfDefId': str(place_id),
-            '_csrf': self.csrf,
-        }
+        data = [
+            ('weekStartDateTime', '1694874869301'),
+            ('remainCredit', '0'),
+            ('method:showNextWeek', 'Submit'),
+            ('_csrf', self.csrf),
+            ('selfChangeReserveId', ''),
+            ('weekStartDateTimeAjx', epoch_start_of_week),
+            ('freeRestaurant', 'false'),
+            ('selectedSelfDefId', '1'),
+            ('_csrf', self.csrf),
+        ]
 
         return self.session.post(Dining.RESERVE_FOOD_URL, data=data)
+        # Save response text to out.html
+        # with open("out.html", "w") as file:
+        #    file.write(bs(response.content, "html.parser").prettify())
 
     def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
         content = bs(reserve_table.content, "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext(
@@ -190,7 +227,7 @@ class Dining:
                             "\n")[2].strip()
                         food_name = foods[k].findNext("span").text.split("\n")[2].strip().split("|")[1].strip()
                         food_id = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)[
-                            1].find_next(
+                            0].find_next(
                             "div", {"class": "xstooltip"}).get("id")
                         res[time][self.meals[j]].append({
                             "food": food_name,
@@ -198,12 +235,11 @@ class Dining:
                             "food_id": food_id,
                         })
                 content[i] = content[i].findNext("td")
-        self.foods = dict(reversed(list(res.items())))
-        return self.foods
+        foods = dict(reversed(list(res.items())))
+        return foods
 
     def __parse_food_table_to_get_foods_list(self, table: requests.Response) -> list:
         content = bs(table.content, "html.parser")
-        print(content)
         with open("content.html", "w") as file:
             file.write(str(content))
         foods = content.find("table").find_all("span")[2:]

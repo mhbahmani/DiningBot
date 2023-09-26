@@ -37,39 +37,60 @@ class Dining:
         if not self.__setad_login():
             raise (Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
-    def reserve_food(self, place_id: int, food_id: int) -> bool:
+    def reserve_food(self, place_id: int, food_id: str, foods: dict, choosed_food_indices: dict) -> bool:
+        """
+        food: {
+            food: <food_name>,
+            price: <price>,
+            food_id: <food_reserve_id>,
+            program_id: <food_program_id>,
+            program_date: <food_program_date>
+        }
+        """
         logging.debug("Reserving food %s", food_id)
         now = datetime.datetime.now()
         start_of_week = now - datetime.timedelta(days=now.weekday() + 2)
         epoch_start_of_week = int(start_of_week.timestamp()) * 1000
-        
-        params = {'user_id': self.user_id, }
-        data = {
-            'weekStartDateTime': '1680975736863',
-            'remainCredit': '',
-            'method%3AshowPanel': 'Submit',
-            'selfChangeReserveId': '',
-            'weekStartDateTimeAjx': '1680975736873',
-            'freeRestaurant': '',
-            'selectedSelfDefId': str(place_id),
-        }
-        for i in range(len(self.foods)):
-            subData = {
-                f"userWeekReserves{i}.selected": "false",
-                f"userWeekReserves{i}.selectedCount": "1",
-                f"userWeekReserves{i}.id": "",
-                f"userWeekReserves{i}.programId": "37973",
-                f"userWeekReserves{i}.mealTypeId": "1",
-                f"userWeekReserves{i}.programDateTime": "1678480200000",
-                f"userWeekReserves{i}.selfId": place_id,
-                f"userWeekReserves{i}.foodTypeId": "644",
-                f"userWeekReserves{i}.foodId": "66",
-                f"userWeekReserves{i}.priorReserveDateStr": "null",
-                f"userWeekReserves{i}.freeFoodSelected": "false"
-            }
-            response = self.session.get(Dining.RESERVE_FOOD_URL, params=params, data=data)
-        if response.json().get("success"):
-            return True, response.json().get("balance")
+        epoch_end_of_week = int((start_of_week + datetime.timedelta(days=7)).timestamp()) * 1000
+
+        data = [
+            ('weekStartDateTime', '1695414600000'),
+            ('remainCredit', '-300000'),
+            ('method:doReserve', 'Submit'),
+            ('_csrf', self.csrf),
+            ('selfChangeReserveId', ''),
+            ('weekStartDateTimeAjx', epoch_start_of_week),
+            ('freeRestaurant', 'false'),
+            ('selectedSelfDefId', '1'),
+        ]
+
+        i = 0
+        for day in foods:
+            for meal in foods[day]:
+                for food_index, food in enumerate(foods[day][meal]):
+                    food_data = []
+                    if food_index == choosed_food_indices[day][meal]:
+                        food_data += [(f"userWeekReserves[{i}].selected", 'true')]
+                    food_data += [
+                        (f"userWeekReserves[{i}].selectedCount", '1'),
+                        (f"userWeekReserves[{i}].id", ''),
+                        (f"userWeekReserves[{i}].programId", food.get("program_id")),
+                        (f"userWeekReserves[{i}].mealTypeId", '1'),
+                        (f"userWeekReserves[{i}].programDateTime", '1695587400000'), # Food day
+                        (f"userWeekReserves[{i}].selfId", str(place_id)),
+                        (f"userWeekReserves[{i}].foodTypeId", '644'),
+                        (f"userWeekReserves[{i}].foodId", food.get("food_id")),
+                        (f"userWeekReserves[{i}].priorReserveDateStr", f'{food.get("program_date")} 08:00:00.0'),
+                        (f"userWeekReserves[{i}].freeFoodSelected", 'false'),
+                    ]
+                    data += food_data
+                    i += 1
+        response = self.session.post(Dining.RESERVE_FOOD_URL, data=data)
+        text = bs(response.content, "html.parser").prettify()
+        with open("out.html", "w") as file:
+            file.write(bs(response.content, "html.parser").prettify())
+        if "برنامه غذایی معادل پیدا نشد" in text:
+            return False, 0
         return False, 0
         # TODO: Handle balance on failure
 
@@ -96,7 +117,8 @@ class Dining:
                     price: <price>,
                     food_id: <food_reserve_id>
                 }
-            }
+            }'
+        }    
         """
         table = self.__load_food_table(place_id=place_id, week=week)
         # Save page.text to file
@@ -226,13 +248,18 @@ class Dining:
                         price = foods[k].find_next("div", {"class": "xstooltip"}).text.split(
                             "\n")[2].strip()
                         food_name = foods[k].findNext("span").text.split("\n")[2].strip().split("|")[1].strip()
-                        food_id = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)[
+                        food_program_id = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)[
                             0].find_next(
-                            "div", {"class": "xstooltip"}).get("id")
+                            "div", {"class": "xstooltip"}).get("id").split("_")[-1].strip()
+                        # <input foodid="30" foodtypeid="644" id="userWeekReserves.selected3" mealtypeid="1" name="userWeekReserves[3].selected" onclick="enableDisableNumber(this, 'userWeekReserves.selectedCount3', '100000', 'hiddenSelectedCount3', new Array( 'userWeekReserves.selected3'), new Array( 'userWeekReserves.selectedCount3'), '1', '1',null,null,1);" programdate="2023-09-27" type="checkbox" value="true"/>
+                        food_id =  content[i].findNext("td").find("input").attrs['foodid']
+                        food_program_date = content[i].findNext("td").find("input").attrs['programdate']
                         res[time][self.meals[j]].append({
                             "food": food_name,
                             "price": price,
+                            "program_id": food_program_id,
                             "food_id": food_id,
+                            "program_date": food_program_date
                         })
                 content[i] = content[i].findNext("td")
         foods = dict(reversed(list(res.items())))

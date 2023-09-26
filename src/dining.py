@@ -206,7 +206,7 @@ class Dining:
 
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
         now = datetime.datetime.now()
-        start_of_week = now - datetime.timedelta(days=now.weekday() + 2)
+        start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7)
         epoch_start_of_week = int(start_of_week.timestamp()) * 1000
         # print(epoch_start_of_week)
 

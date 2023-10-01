@@ -108,7 +108,6 @@ class AutomaticReserveHandler:
                         food_index_in_foods_list = randint(0, len(day_foods) - 1)
                     else:
                         food_index_in_foods_list = day_foods.index(user_priorities[choosed_food_index])
-<<<<<<< HEAD
                 choosed_food_indices[day] = choosed_food_indices.get(day, {})
                 choosed_food_indices[day][meal] = food_index_in_foods_list
 
@@ -118,14 +117,6 @@ class AutomaticReserveHandler:
                 # reserve_successes.append(reserve_success)
                 # food_names.append((foods[day][meal][food_index_in_foods_list].get('food'), day, meal))
         reserve_successes, _ = dining.reserve_food(int(place_id), int(choosed_food_id), foods, choosed_food_indices)
-=======
-                choosed_food_id = foods[day][meal][food_index_in_foods_list]['food_id']
-                # TODO: Add choosed_food_id to a list
-                food_names.append((foods[day][meal][food_index_in_foods_list].get('food'), day, meal))
-        # TODO: Reserver choosed foods list
-        reserve_success, balance = dining.reserve_food(int(place_id), int(choosed_food_id))
-        reserve_successes.append(reserve_success)
->>>>>>> 0b5b835669e636f147bcd55397ebeca05493a3a2
         return reserve_successes, food_names
 
     def beautify_reserved_foods_output(self, food_names: list) -> str:

@@ -1,6 +1,10 @@
 from bs4 import BeautifulSoup as bs
 from http import HTTPStatus
 from src.error_handlers import ErrorHandler
+from src.error_handlers import (
+    NotEnoughCreditToReserve,
+    NoSuchFoodSchedule
+)
 import src.static_data as static_data
 import datetime
 import requests
@@ -48,51 +52,80 @@ class Dining:
         }
         """
         logging.debug("Reserving food %s", food_id)
+        # Get epoch time of 8:30:00 PM of the first day of the next week
         now = datetime.datetime.now()
-        start_of_week = now - datetime.timedelta(days=now.weekday() + 2)
-        epoch_start_of_week = int(start_of_week.timestamp()) * 1000
-        epoch_end_of_week = int((start_of_week + datetime.timedelta(days=7)).timestamp()) * 1000
+        start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7)
+        epoch_start_of_the_week = str(int(start_of_week.timestamp()) * 1000)
+        epoch_start_of_the_next_week = str(int((now + datetime.timedelta(days=(7 - (now.weekday() + 2)))).replace(hour=0, minute=0, second=0).timestamp()) * 1000)
 
         data = [
-            ('weekStartDateTime', '1695414600000'),
-            ('remainCredit', '-300000'),
+            ('weekStartDateTime', f'{epoch_start_of_the_next_week}'),
+            # ('remainCredit', '-280000'),
             ('method:doReserve', 'Submit'),
             ('_csrf', self.csrf),
             ('selfChangeReserveId', ''),
-            ('weekStartDateTimeAjx', epoch_start_of_week),
+            # ('weekStartDateTimeAjx', f'{epoch_start_of_week}'),
+            ('weekStartDateTimeAjx', f"{epoch_start_of_the_week}"),
             ('freeRestaurant', 'false'),
             ('selectedSelfDefId', '1'),
         ]
 
+        # i = sum([ len(foods[day]['lunch']) for day in foods ]) - 1
         i = 0
-        for day in foods:
+        food_data = []
+        data_batch = []
+        keys = list(foods.keys())
+        keys.reverse()
+        total_food_prices = 0
+        for day in keys:
             for meal in foods[day]:
-                for food_index, food in enumerate(foods[day][meal]):
+                foods_list = foods[day][meal]
+                foods_list.reverse()
+                for food_index, food in enumerate(foods_list):
                     food_data = []
                     if food_index == choosed_food_indices[day][meal]:
-                        food_data += [(f"userWeekReserves[{i}].selected", 'true')]
+                    # if food.get("food") in ['شوید پلو با مرغ', 'چلو خورشت مسما بادمجان', 'رشته پلو با گوشت', 'چلو‌خورش بامیه', 'چلو با شامی کباب']:
+                        food_data += [
+                            (f"userWeekReserves[{i}].selected", 'true'),
+                            (f"userWeekReserves[{i}].selectedCount", '1')
+                        ]
+                        total_food_prices += int(food.get("price"))
+
+                    # Convert food['program_date'] to epoch
+                    program_date_epoch = str(int(
+                        datetime.datetime.strptime(food['program_date'], "%Y-%m-%d").timestamp()) * 1000)
+
                     food_data += [
-                        (f"userWeekReserves[{i}].selectedCount", '1'),
                         (f"userWeekReserves[{i}].id", ''),
                         (f"userWeekReserves[{i}].programId", food.get("program_id")),
                         (f"userWeekReserves[{i}].mealTypeId", '1'),
-                        (f"userWeekReserves[{i}].programDateTime", '1695587400000'), # Food day
+                        (f"userWeekReserves[{i}].programDateTime", program_date_epoch), # Food day
                         (f"userWeekReserves[{i}].selfId", str(place_id)),
-                        (f"userWeekReserves[{i}].foodTypeId", '644'),
+                        (f"userWeekReserves[{i}].foodTypeId", food.get("food_type_id")),
                         (f"userWeekReserves[{i}].foodId", food.get("food_id")),
-                        (f"userWeekReserves[{i}].priorReserveDateStr", f'{food.get("program_date")} 08:00:00.0'),
+                        (f"userWeekReserves[{i}].priorReserveDateStr", f'null'),
+                        # (f"userWeekReserves[{i}].priorReserveDateStr", f'{food.get("program_date")} 08:00:00.0'),
                         (f"userWeekReserves[{i}].freeFoodSelected", 'false'),
                     ]
-                    data += food_data
+                    data_batch.append(food_data)
                     i += 1
+        
+        data.insert(1,('remainCredit', str(self.remainCredit - total_food_prices)))
+        # data_batch.reverse()
+        for d in data_batch:
+            data += d
+
         response = self.session.post(Dining.RESERVE_FOOD_URL, data=data)
         text = bs(response.content, "html.parser").prettify()
         with open("out.html", "w") as file:
             file.write(bs(response.content, "html.parser").prettify())
-        if "برنامه غذایی معادل پیدا نشد" in text:
-            return False, 0
-        return False, 0
-        # TODO: Handle balance on failure
+        with open("food_data.txt", "w") as file:
+            file.writelines([f'{item}\n' for item in data])
+        if "برنامه غذایی معادل پیدا نشد" in text or "لطفا مقدار مناسب وارد کنید" in text:
+            raise(NoSuchFoodSchedule)
+        if "اعتبار شما کم است" in text:
+            raise(NotEnoughCreditToReserve)
+        self.remainCredit -= total_food_prices
 
     def cancel_food(self, user_id: int, food_id: int):
         params = {'user_id': user_id, }
@@ -207,11 +240,11 @@ class Dining:
     def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
         now = datetime.datetime.now()
         start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7)
-        epoch_start_of_week = int(start_of_week.timestamp()) * 1000
+        epoch_start_of_week = str(int(start_of_week.timestamp()) * 1000)
         # print(epoch_start_of_week)
 
         data = [
-            ('weekStartDateTime', '1694874869301'),
+            ('weekStartDateTime', epoch_start_of_week),
             ('remainCredit', '0'),
             ('method:showNextWeek', 'Submit'),
             ('_csrf', self.csrf),
@@ -240,6 +273,7 @@ class Dining:
             time = f"{date} {day}"
             res[time] = {}
             content[i] = content[i].findNext("td")
+            meal_food_counter = 0
             for j in range(len(self.meals)):
                 res[time][self.meals[j]] = res[time].get(self.meals[j], [])
                 if (len(content[i].findNext("td").findNext("table").find_all("tr", recursive=False)) != 0):
@@ -249,18 +283,25 @@ class Dining:
                             "\n")[2].strip()
                         food_name = foods[k].findNext("span").text.split("\n")[2].strip().split("|")[1].strip()
                         food_program_id = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)[
-                            0].find_next(
+                            meal_food_counter].find_next(
                             "div", {"class": "xstooltip"}).get("id").split("_")[-1].strip()
-                        # <input foodid="30" foodtypeid="644" id="userWeekReserves.selected3" mealtypeid="1" name="userWeekReserves[3].selected" onclick="enableDisableNumber(this, 'userWeekReserves.selectedCount3', '100000', 'hiddenSelectedCount3', new Array( 'userWeekReserves.selected3'), new Array( 'userWeekReserves.selectedCount3'), '1', '1',null,null,1);" programdate="2023-09-27" type="checkbox" value="true"/>
-                        food_id =  content[i].findNext("td").find("input").attrs['foodid']
-                        food_program_date = content[i].findNext("td").find("input").attrs['programdate']
+
+                        inputs = list(content[i].findNext("td").findAll("input"))
+                        if meal_food_counter == 0: inputs.reverse()
+                        for input in inputs:
+                            if input.attrs.get('type') == "checkbox":
+                                food_id =  input.attrs['foodid']
+                                food_program_date = input.attrs['programdate']
+                                food_type_id = input.attrs['foodtypeid']
                         res[time][self.meals[j]].append({
                             "food": food_name,
                             "price": price,
                             "program_id": food_program_id,
                             "food_id": food_id,
-                            "program_date": food_program_date
+                            "program_date": food_program_date,
+                            "food_type_id": food_type_id
                         })
+                        meal_food_counter += 1
                 content[i] = content[i].findNext("td")
         foods = dict(reversed(list(res.items())))
         return foods

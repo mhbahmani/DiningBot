@@ -172,7 +172,7 @@ class DiningBot:
         self.send_msg_to_admins(context, messages.send_to_all_done_message)
 
     @check_admin
-    def update_user_favorite_foods(self, update, context):
+    def update_foods_list_database(self, update, context):
         update.message.reply_text(
             text=messages.update_foods_started_message
         )
@@ -193,7 +193,7 @@ class DiningBot:
         sendtoall_handler = CommandHandler('sendmsgtoall', self.send_to_all)
         self.dispatcher.add_handler(sendtoall_handler)
 
-        update_food_list_handler = CommandHandler('update_foods', self.update_user_favorite_foods)
+        update_food_list_handler = CommandHandler('update_foods', self.update_foods_list_database)
         self.dispatcher.add_handler(update_food_list_handler)
 
         reserve_food_handler = CommandHandler('reserve', self.automatic_reserve_food)

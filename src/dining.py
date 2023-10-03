@@ -41,7 +41,7 @@ class Dining:
         if not self.__setad_login():
             raise (Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
 
-    def reserve_food(self, place_id: int, food_id: str, foods: dict, choosed_food_indices: dict) -> bool:
+    def reserve_food(self, place_id: int, foods: dict, choosed_food_indices: dict) -> bool:
         """
         food: {
             food: <food_name>,
@@ -51,7 +51,7 @@ class Dining:
             program_date: <food_program_date>
         }
         """
-        logging.debug("Reserving food %s", food_id)
+        logging.debug("Reserving foods %s")
         # Get epoch time of 8:30:00 PM of the first day of the next week
         now = datetime.datetime.now()
         start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7)
@@ -64,7 +64,6 @@ class Dining:
             ('method:doReserve', 'Submit'),
             ('_csrf', self.csrf),
             ('selfChangeReserveId', ''),
-            # ('weekStartDateTimeAjx', f'{epoch_start_of_week}'),
             ('weekStartDateTimeAjx', f"{epoch_start_of_the_week}"),
             ('freeRestaurant', 'false'),
             ('selectedSelfDefId', '1'),
@@ -126,6 +125,7 @@ class Dining:
         if "اعتبار شما کم است" in text:
             raise(NotEnoughCreditToReserve)
         self.remainCredit -= total_food_prices
+        return self.remainCredit
 
     def cancel_food(self, user_id: int, food_id: int):
         params = {'user_id': user_id, }
@@ -237,7 +237,7 @@ class Dining:
 
         return True
 
-    def __load_food_table(self, place_id: int, week: int = 1) -> requests.Response:
+    def __load_food_table(self, place_id: str, week: int = 1) -> requests.Response:
         now = datetime.datetime.now()
         start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7)
         epoch_start_of_week = str(int(start_of_week.timestamp()) * 1000)
@@ -251,7 +251,7 @@ class Dining:
             ('selfChangeReserveId', ''),
             ('weekStartDateTimeAjx', epoch_start_of_week),
             ('freeRestaurant', 'false'),
-            ('selectedSelfDefId', '1'),
+            ('selectedSelfDefId', str(place_id)),
             ('_csrf', self.csrf),
         ]
 

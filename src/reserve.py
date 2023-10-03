@@ -56,12 +56,17 @@ class ReserveMenuHandler:
         food_id = num_foods = len(self.foods)
         for place_id in static_data.PLACES.values():
             table = dining.get_foods_list(place_id, week_number)
+            new_foods = list(set(table) - self.foods)
             if not table: 
                 context.bot.send_message(
                     chat_id=update.effective_chat.id,
-                    text=messages.no_food_found_message
+                    text=messages.no_food_found_message.format(static_data.PLACES_NAME_BY_ID.get(str(place_id)))
                 )
-            new_foods = list(set(table) - self.foods)
+            else:
+                context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=messages.new_food_found.format(len(new_foods), static_data.PLACES_NAME_BY_ID.get(str(place_id)))
+                )
             for food_name in new_foods:
                 food_id += 1
                 self.db.add_food({"name": food_name, "id": str(food_id)})
@@ -91,7 +96,7 @@ class ReserveMenuHandler:
                 reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(foods=self.foods_with_id, page=page - 1))
         elif action == "SELECT":
             if not context.user_data.get('priorities'):
-                context.user_date['priorities'] = []
+                context.user_data['priorities'] = []
             context.user_data.get('priorities').append(choosed)
             context.bot.send_message(
                 text=self.food_name_by_id[choosed],

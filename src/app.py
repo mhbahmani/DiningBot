@@ -181,7 +181,7 @@ class DiningBot:
         week = 1
         if len(splited_text) == 2:
             week = splited_text[-1]
-        self.reserve_handler.update_food_list(update, context, week)
+        self.reserve_handler.update_food_list(update, context, int(week))
 
     def setup_handlers(self):
         help_handler = CommandHandler('help', self.help)

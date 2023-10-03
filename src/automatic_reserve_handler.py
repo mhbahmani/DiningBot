@@ -102,7 +102,7 @@ class AutomaticReserveHandler:
             dining = Dining(username, password)
         except Exception as e:
             return [False], []
-        foods = dining.get_reserve_table_foods(place_id, week=1)
+        foods = dining.get_reserve_table_foods(place_id)
         choosed_food_indices = {}
         food_names = []
         for day in foods:

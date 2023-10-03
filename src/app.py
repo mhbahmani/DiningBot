@@ -221,6 +221,10 @@ class DiningBot:
                         self.reserve_handler.update_user_favorite_foods
                     ),
                     MessageHandler(
+                        Filters.regex(SHOW_FAVORITES_REGEX),
+                        self.reserve_handler.show_favorite_foods
+                    ),
+                    MessageHandler(
                         Filters.regex(RESERVE_REGEX),
                         self.reserve_handler.reserve_next_week_food
                     ),

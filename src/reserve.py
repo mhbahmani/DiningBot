@@ -26,11 +26,26 @@ class ReserveMenuHandler:
 
     def update_user_favorite_foods(self, update, context):
         context.user_data['priorities'] = []
+        self.show_favorite_foods(update, context)
         update.message.reply_text(
             text=messages.choose_food_priorities_message,
             reply_markup=FoodPrioritiesHandler.create_food_list_keyboard(
                 foods=self.foods_with_id, page=1)
         )
+
+    def show_favorite_foods(self, update, context):
+        user_priorities = self.db.get_user_food_priorities(update.message.chat.id)
+        if user_priorities:
+            user_priorities = [self.food_name_by_id.get(food) for food in user_priorities]
+            context.bot.send_message(
+                update.message.chat.id,
+                messages.favorite_foods_list.format("🍕" + "\n🍕".join(user_priorities))
+            )
+        else:
+            context.bot.send_message(
+                update.message.chat.id,
+                messages.no_favorite_foods_list
+            ) 
 
     def automatic_reserve(self, context, user_id: str = None):
         AutomaticReserveHandler(self, db=self.db).automatic_reserve(context, user_id)

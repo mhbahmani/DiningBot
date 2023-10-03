@@ -116,10 +116,10 @@ class Dining:
 
         response = self.session.post(Dining.RESERVE_FOOD_URL, data=data)
         text = bs(response.content, "html.parser").prettify()
-        with open("out.html", "w") as file:
-            file.write(bs(response.content, "html.parser").prettify())
-        with open("food_data.txt", "w") as file:
-            file.writelines([f'{item}\n' for item in data])
+        # with open("out.html", "w") as file:
+        #     file.write(bs(response.content, "html.parser").prettify())
+        # with open("food_data.txt", "w") as file:
+        #     file.writelines([f'{item}\n' for item in data])
         if "برنامه غذایی معادل پیدا نشد" in text or "لطفا مقدار مناسب وارد کنید" in text:
             raise(NoSuchFoodSchedule)
         if "اعتبار شما کم است" in text:
@@ -141,7 +141,7 @@ class Dining:
             return []
         return self.__parse_food_table_to_get_foods_list(table)
 
-    def get_reserve_table_foods(self, place_id: int, week: int = 1) -> dict:
+    def get_reserve_table_foods(self, place_id: int) -> dict:
         """ output:
         {
             <date>: {
@@ -153,10 +153,10 @@ class Dining:
             }'
         }    
         """
-        table = self.__load_food_table(place_id=place_id, week=week)
+        table = self.__load_food_table(place_id=place_id)
         # Save page.text to file
-        with open("out.html", "w") as file:
-            file.write(bs(table.content, "html.parser").prettify())
+        # with open("out.html", "w") as file:
+        #     file.write(bs(table.content, "html.parser").prettify())
         self.remainCredit = int(bs(table.content, "html.parser").find("span", {"id": "creditId"}).text)
         if table.status_code != HTTPStatus.OK:
             logging.debug("Something went wrong with status code: %s", table.status_code)
@@ -237,9 +237,9 @@ class Dining:
 
         return True
 
-    def __load_food_table(self, place_id: str, week: int = 1) -> requests.Response:
+    def __load_food_table(self, place_id: str, week: int = 0) -> requests.Response:
         now = datetime.datetime.now()
-        start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7)
+        start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7) + datetime.timedelta(weeks=week)
         epoch_start_of_week = str(int(start_of_week.timestamp()) * 1000)
         # print(epoch_start_of_week)
 
@@ -308,8 +308,8 @@ class Dining:
 
     def __parse_food_table_to_get_foods_list(self, table: requests.Response) -> list:
         content = bs(table.content, "html.parser")
-        with open("content.html", "w") as file:
-            file.write(str(content))
+        # with open("content.html", "w") as file:
+        #     file.write(str(content))
         foods = content.find("table").find_all("span")[2:]
         result = []
         for food in foods:

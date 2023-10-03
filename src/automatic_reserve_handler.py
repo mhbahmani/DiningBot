@@ -1,6 +1,10 @@
 from random import randint
 import threading
 from src import messages, static_data
+from src.error_handlers import (
+    NotEnoughCreditToReserve,
+    NoSuchFoodSchedule
+)
 from src.dining import Dining
 from telegram.ext import Updater
 from telegram import error
@@ -49,37 +53,42 @@ class AutomaticReserveHandler:
         logging.info("Automatic reserve started")
         users = self.db.get_user_reserve_info(user_id) if user_id else self.db.get_users_with_automatic_reserve()
         for user in list(users):
-            successfull_reserve = True
             for place_id in user['food_courts']:
-                reserve_successes, foods = self.reserve_next_week_food_based_on_user_priorities(user['user_id'],
-                                                                                                place_id,
-                                                                                                user.get('priorities',
-                                                                                                         []),
-                                                                                                user['student_number'],
-                                                                                                user['password'])
-                if not reserve_successes:
-                    bot.send_message(
-                        chat_id=user['user_id'],
-                        text=messages.no_food_for_reserve_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
-                    logging.info(
-                        "No food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
-                elif all(reserve_successes):
-                    bot.send_message(
-                        chat_id=user['user_id'],
-                        text=messages.reserve_was_secceeded_message.format(
-                            static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(foods)))
-                    logging.info("Reserve was successfull for user {} at {}".format(user['user_id'],
+                try:
+                    reserve_success, reserved_foods = self.reserve_next_week_food_based_on_user_priorities(user['user_id'],
+                                                                                                    place_id,
+                                                                                                    user.get('priorities',
+                                                                                                            []),
+                                                                                                    user['student_number'],
+                                                                                                    user['password'])
+                    if reserve_success:
+                        bot.send_message(
+                            chat_id=user['user_id'],
+                            text=messages.reserve_was_secceeded_message.format(
+                                static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(reserved_foods)))
+                        logging.info("Reserve was successfull for user {} at {}".format(user['user_id'],
+                                                                                        static_data.PLACES_NAME_BY_ID[
+                                                                                            place_id]))
+                    else:
+                        bot.send_message(
+                            chat_id=user['user_id'],
+                            text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                        logging.info("Something went wrong for user {} at {}".format(user['user_id'],
                                                                                     static_data.PLACES_NAME_BY_ID[
                                                                                         place_id]))
-                else:
+                except NotEnoughCreditToReserve as e:
+                    logging.debug(e.message)
+                    bot.send_message(
+                        chat_id=user['user_id'],
+                        text=messages.not_enough_credit_to_reserve_message.format(
+                            static_data.PLACES_NAME_BY_ID[place_id]))
+                except NoSuchFoodSchedule as e:
+                    logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e.message))
                     bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
-                    logging.info("Something went wrong for user {} at {}".format(user['user_id'],
-                                                                                 static_data.PLACES_NAME_BY_ID[
-                                                                                     place_id]))
-                    successfull_reserve = False
-            if successfull_reserve:
+
+            if reserve_success:
                 threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
         logging.info("Automatic reserve finished")
 
@@ -108,6 +117,9 @@ class AutomaticReserveHandler:
                         food_index_in_foods_list = randint(0, len(day_foods) - 1)
                     else:
                         food_index_in_foods_list = day_foods.index(user_priorities[choosed_food_index])
+
+                # food_index_in_foods_list = 0 # TODO: Remove This line
+
                 choosed_food_indices[day] = choosed_food_indices.get(day, {})
                 choosed_food_indices[day][meal] = food_index_in_foods_list
 
@@ -115,9 +127,10 @@ class AutomaticReserveHandler:
                 # TODO: Fix Reserve and the rest
                 # reserve_success, balance = dining.reserve_food(int(place_id), int(choosed_food_id))
                 # reserve_successes.append(reserve_success)
-                # food_names.append((foods[day][meal][food_index_in_foods_list].get('food'), day, meal))
-        reserve_successes, _ = dining.reserve_food(int(place_id), int(choosed_food_id), foods, choosed_food_indices)
-        return reserve_successes, food_names
+
+                food_names.append((foods[day][meal][food_index_in_foods_list].get('food'), day, meal))
+        dining.reserve_food(int(place_id), int(choosed_food_id), foods, choosed_food_indices)
+        return True, food_names
 
     def beautify_reserved_foods_output(self, food_names: list) -> str:
         food_names.reverse()

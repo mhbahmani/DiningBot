@@ -52,6 +52,7 @@ class ReserveMenuHandler:
 
     def update_food_list(self, update, context, week_number: int):
         dining = Dining(self.admin_username, self.admin_password)
+        self.load_foods()
         new_foods = []
         food_id = num_foods = len(self.foods)
         for place_id in static_data.PLACES.values():

@@ -178,7 +178,7 @@ class DiningBot:
         )
         # /update_foods <week>
         splited_text = update.message.text.split()
-        week = 1
+        week = 0
         if len(splited_text) == 2:
             week = splited_text[-1]
         self.reserve_handler.update_food_list(update, context, int(week))

@@ -14,7 +14,7 @@ import re
 
 
 class AutomaticReserveHandler:
-    def __init__(self, token="TOKEN", admin_ids=set(), log_level=logging.INFO, db=None) -> None:
+    def __init__(self, token="TOKEN", admin_ids=set(), log_level='INFO', db=None) -> None:
         self.db = db
         self.token = token
         self.admin_ids = admin_ids
@@ -51,7 +51,8 @@ class AutomaticReserveHandler:
         else:
             bot = context.bot
         logging.info("Automatic reserve started")
-        users = self.db.get_user_reserve_info(user_id) if user_id else self.db.get_users_with_automatic_reserve()
+        users = [self.db.get_user_reserve_info(user_id)] if user_id else self.db.get_users_with_automatic_reserve()
+        reserve_success = False
         for user in list(users):
             for place_id in user['food_courts']:
                 try:

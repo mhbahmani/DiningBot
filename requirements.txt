@@ -1,8 +1,8 @@
+aioschedule==0.5.2
 bs4==0.0.1
 pymongo==3.7.1
 python-decouple==3.4
 python-dotenv==0.20.0
 python-telegram-bot==20.3
 requests==2.27.1
-schedule==1.1.0
 sentry-sdk==1.5.12

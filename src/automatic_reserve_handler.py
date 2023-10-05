@@ -6,7 +6,7 @@ from src.error_handlers import (
     NoSuchFoodSchedule
 )
 from src.dining import Dining
-from telegram.ext import Updater
+from telegram.ext import ApplicationBuilder
 from telegram import error
 
 import logging
@@ -47,7 +47,7 @@ class AutomaticReserveHandler:
     async def automatic_reserve(self, context=None, user_id: str = None):
         if not context:
             if not self.token: return
-            bot = Updater(token=self.token, use_context=True).bot
+            bot = ApplicationBuilder().token(self.token).build().bot
         else:
             bot = context.bot
         logging.info("Automatic reserve started")
@@ -141,24 +141,24 @@ class AutomaticReserveHandler:
                 lambda x: messages.list_reserved_foods_message.format(
                     re.sub("\d+\/\d+\/\d+ ", "", x[1]), static_data.MEAL_EN_TO_FA.get(x[2], ""), x[0]), food_names)))
 
-    def notify_users(self):
+    async def notify_users(self):
         users = self.db.get_users_with_automatic_reserve()
-        bot = Updater(token=self.token, use_context=True).bot
+        bot = ApplicationBuilder().token(self.token).build().bot
         for user in users:
             try:
-                bot.send_message(
+                await bot.send_message(
                     chat_id=user['user_id'],
                     text=messages.automatic_reserve_notification_message
                 )
             except error.Unauthorized:
                 continue
 
-    def notify_users_about_reservation_status(self):
+    async def notify_users_about_reservation_status(self):
         users = self.db.get_users_with_automatic_reserve()
-        bot = Updater(token=self.token, use_context=True).bot
+        bot = ApplicationBuilder().token(self.token).build().bot
         for user in users:
             try:
-                bot.send_message(
+                await bot.send_message(
                     chat_id=user["user_id"],
                     parse_mode="MarkdownV2",
                     text=messages.you_dont_have_food_for_next_week_message

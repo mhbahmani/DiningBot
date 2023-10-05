@@ -3,7 +3,11 @@ from decouple import config
 from src.automatic_reserve_handler import AutomaticReserveHandler
 from src.db import DB
 
-import schedule
+# import schedule
+import asyncio
+
+import asyncio
+import aioschedule as schedule
 import time
 
 
@@ -26,10 +30,7 @@ if __name__ == '__main__':
     schedule.every().wednesday.at("15:00").do(automatic_reserve_handler.handle_automatic_reserve)
     schedule.every().wednesday.at("16:30").do(automatic_reserve_handler.notify_users_about_reservation_status)
 
+    loop = asyncio.get_event_loop()
     while True:
-        # automatic_reserve_handler.clean_reservation_status()
-        # automatic_reserve_handler.notify_users()
-        # automatic_reserve_handler.handle_automatic_reserve()
-
-        schedule.run_pending()
-        time.sleep(60 * 60)
+        loop.run_until_complete(schedule.run_pending())
+        time.sleep(1)

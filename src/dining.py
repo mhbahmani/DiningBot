@@ -23,6 +23,7 @@ class Dining:
     SETAD_OAUTH_REDIRECT = 'https://setad.dining.sharif.edu/index.rose?sharifOauthRedirect=true'
     RESERVE_FOOD_URL = DINING_BASE_URL + "/nurture/user/multi/reserve/reserve.rose"
     RESERVE_PAGE_URL = DINING_BASE_URL + "/nurture/user/multi/reserve/reserve.rose"
+    SHOW_PANEL_URL = DINING_BASE_URL + "/nurture/user/multi/reserve/showPanel.rose"
     CANCEL_FOOD_URL = DINING_BASE_URL + "/food/food-reserve/cancel-reserve"
     LOAD_FOOD_TABLE = DINING_BASE_URL + "/food/food-reserve/load-reserve-table"
 
@@ -318,9 +319,20 @@ class Dining:
         return result
 
     def __parse_reserve_page_to_get_food_courts(self, reserve_page: requests.Response) -> dict:
+        """
+        output:
+        {
+            "food_court_name": <str>,
+            "food_coutn_id": <str>
+        }
+        """
         content = bs(reserve_page.content, "html.parser")
-        return dict(map(lambda x: (x.getText(), x.attrs["value"]), content.find_all("option")))
+        food_courts = {}
+        for option in content.find_all("option", recursive=True):
+            if option.attrs.get("value"):
+                food_courts[" - ".join([ part.strip() for part in option.text.split("-")[:-1] ])] = option.attrs.get("value")
+        return food_courts
 
     def get_user_food_courts(self):
-        response = self.session.get(Dining.RESERVE_PAGE_URL)
+        response = self.session.get(Dining.SHOW_PANEL_URL)
         return self.__parse_reserve_page_to_get_food_courts(response)

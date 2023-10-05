@@ -73,12 +73,6 @@ class DiningBot:
     def is_admin(self, update):
         return update.message.chat.id in self.admin_ids
 
-    @check_admin
-    async def echo(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Echo the user message."""
-        await self.send_msg_to_admins(context, update.message.text)
-        await update.message.reply_text(update.message.text)
-
     async def send_msg_to_admins(self, context, message):
         for admin_id in self.admin_ids:
             await context.bot.send_message(
@@ -195,9 +189,7 @@ class DiningBot:
             week = splited_text[-1]
         await self.reserve_handler.update_food_list(update, context, int(week))
 
-    def setup_handlers(self):
-        # self.dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo))
-        
+    def setup_handlers(self):        
         help_handler = CommandHandler('help', self.help, block=False)
         self.dispatcher.add_handler(help_handler)
 

@@ -22,13 +22,13 @@ class ErrorHandler:
         )
 
 
-    def handle_error(self, update, context) -> None:
+    async def handle_error(self, update, context) -> None:
         """Log the error and send a telegram message to notify the developer."""
         if not update:
             logging.error("Update object is None")
             return
 
-        self.send_error_message_to_user(update, context)
+        await self.send_error_message_to_user(update, context)
 
         logging.error(msg="Exception while handling an update", exc_info=context.error)
 
@@ -52,7 +52,7 @@ class ErrorHandler:
         )
         # send the message to admin
         for admin_id in self.admin_ids:
-            context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=admin_id,
                 text=message,
                 parse_mode="HTML"
@@ -63,20 +63,20 @@ class ErrorHandler:
         # )
         # send the message to admin
         # for admin_id in self.admin_ids:
-        #     context.bot.send_message(
+        #     await context.bot.send_message(
         #         chat_id=admin_id,
         #         text=message,
         #         parse_mode="HTML"
         #     )
 
-    def send_error_message_to_user(self, update, context) -> None:
+    async def send_error_message_to_user(self, update, context) -> None:
         """Send a telegram message to notify the user that an error occurred."""
         if not context.error.args: return
         chat_id = None
         if update.callback_query: chat_id = update.callback_query.message.chat_id
         elif update.message: chat_id = update.message.chat_id
         if context.error.args[0] == ErrorHandler.INVALID_DINING_CREDENTIALS_ERROR:
-            context.bot.send_message(
+            await context.bot.send_message(
                 text=messages.invalid_credentials_message,
                 chat_id=chat_id
             )

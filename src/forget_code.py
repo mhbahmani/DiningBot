@@ -15,88 +15,88 @@ class ForgetCodeMenuHandler:
 
         self.today_forget_codes = set()
 
-    def send_forget_code_menu(self, update, context):
-        update.message.reply_text(
+    async def send_forget_code_menu(self, update, context):
+        await update.message.reply_text(
             text=messages.forget_code_menu_message,
             reply_markup=ReplyKeyboardMarkup(static_data.FORGET_CODE_MENU_CHOICES),
         )
         return static_data.FORGET_CODE_MENU_CHOOSING
 
-    def send_choose_food_court_menu_to_get(self, update, context):
+    async def send_choose_food_court_menu_to_get(self, update, context):
         if self.db.get_user_current_forget_code(update.effective_user.id):
-            update.message.reply_text(
+            await update.message.reply_text(
                 text=messages.you_already_have_forget_code_message,
             )
             return static_data.FORGET_CODE_MENU_CHOOSING
-        update.message.reply_text(
+        await update.message.reply_text(
             text=messages.choose_food_court_message_to_get,
             reply_markup=self.markup,
         )
         return static_data.CHOOSING_SELF_TO_GET
 
-    def send_choose_food_court_menu_to_give(self, update, context):
-        update.message.reply_text(
+    async def send_choose_food_court_menu_to_give(self, update, context):
+        await update.message.reply_text(
             text=messages.choose_food_court_message_to_give,
             reply_markup=self.markup,
         )
         return static_data.CHOOSING_SELF_TO_GIVE
 
-    def handle_choosed_food_court_to_get(self, update, context):
+    async def handle_choosed_food_court_to_get(self, update, context):
         choosed_food_court = update.message.text
         forget_codes = list(self.db.find_forget_code(get_food_court_id_by_name(choosed_food_court)))
         if not forget_codes:
-            update.message.reply_text(
+            await update.message.reply_text(
                 text=messages.no_code_for_this_food_court_message
             )
             return self.send_choose_food_court_menu_to_get(update, context)
         # Assign a random code to user
         forget_code = forget_codes[randint(0, len(forget_codes) - 1)]
-        update.message.reply_text(
+        await update.message.reply_text(
             text=messages.forget_code_founded_message.format(forget_code.get("forget_code"), choosed_food_court, forget_code.get("food_name"), forget_code.get("username")),
             reply_markup=self.make_return_forget_code_button(forget_code.get("forget_code"))
         )
         # If forget code is in today_forget_codes, it means bot should notify the code owner
         if forget_code.get("forget_code") in self.today_forget_codes:    
-            context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=forget_code.get("user_id"),
                 text=messages.someone_took_your_code_message
             )
             self.today_forget_codes.remove(forget_code.get("forget_code"))
         self.db.set_forget_code_for_user(update.effective_user.id, forget_code.get("forget_code"))
         self.db.update_forget_code_assignment_status(int(forget_code.get("forget_code")), True, update.effective_user.id, update.effective_user.username)
-        self.back_to_main_menu(update)
+        await self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
 
-    def handle_choosed_food_court_to_give(self, update, context):
+    async def handle_choosed_food_court_to_give(self, update, context):
         choosed_food_court = update.message.text
         context.user_data['food_court'] = choosed_food_court
-        update.message.reply_text(
+        await update.message.reply_text(
             text=messages.get_forget_code_from_user_message,
             reply_markup=ReplyKeyboardMarkup(static_data.BACK_TO_MAIN_MENU_CHOICES)
         )
         return static_data.INPUT_FORGET_CODE
 
-    def handle_forget_code_input(self, update, context):
+    async def handle_forget_code_input(self, update, context):
         forget_code = update.message.text
         try:
             forget_code = int(forget_code)
         except ValueError:
-            update.message.reply_text(
+            await update.message.reply_text(
                 text=messages.not_int_code_error_message
             )
             return static_data.INPUT_FORGET_CODE
         if not context.user_data['food_court']:
-            update.message.reply_text(
+            await update.message.reply_text(
                 text=messages.food_court_not_choosed_error_message
             )
             return static_data.CHOOSING_SELF_TO_GIVE
         context.user_data['forget_code'] = forget_code
-        update.message.reply_text(
+        await update.message.reply_text(
             text=messages.get_food_name_message
         )
         return static_data.INPUT_FOOD_NAME
     
-    def handle_forget_code_food_name_input(self, update, context):
+    async def handle_forget_code_food_name_input(self, update, context):
         # TODO: Handle duplicate forget code
         res = self.db.add_forget_code({
             "username": update.effective_user.username,
@@ -110,26 +110,26 @@ class ForgetCodeMenuHandler:
             "counted": False
         })
         if not res:
-            update.message.reply_text(
+            await update.message.reply_text(
                 text=messages.duplicate_forget_code_message
             )
             return static_data.MAIN_MENU_CHOOSING
-        update.message.reply_text(
+        await update.message.reply_text(
             text=messages.forget_code_added_message
         )
         # TODO: Change this to a more elegant way
         # Adding forget code to today_forget_codes to notify the user if someone took it
         self.today_forget_codes.add(context.user_data['forget_code'])
         if context.user_data: context.user_data.clear()
-        self.back_to_main_menu(update)
+        await self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
 
-    def send_forget_code_ranking(self, update, context):
+    async def send_forget_code_ranking(self, update, context):
         users = list(self.db.get_users_forget_code_counts())
         if users:
             users = users[:50]
         else:
-            update.message.reply_text(
+            await update.message.reply_text(
                 text=messages.no_one_added_code_yet_message
             )
             return static_data.FORGET_CODE_MENU_CHOOSING
@@ -139,60 +139,60 @@ class ForgetCodeMenuHandler:
         message += messages.user_rank_message.format(
             self.db.get_user_rank(update.effective_user.id).get('rank', messages.rank_not_found_message),
             self.db.get_num_users())
-        update.message.reply_text(
+        await update.message.reply_text(
             text=messages.users_ranking_message.format(message)
         )
         return static_data.FORGET_CODE_MENU_CHOOSING
 
-    def back_to_main_menu(self, update):
-        update.message.reply_text(
+    async def back_to_main_menu(self, update):
+        await update.message.reply_text(
             text=messages.main_menu_message,
             reply_markup=ReplyKeyboardMarkup(static_data.MAIN_MENU_CHOICES),
         )
     
-    def inline_return_forget_code_handler(self, update, context, forget_code: int):
+    async def inline_return_forget_code_handler(self, update, context, forget_code: int):
         self.db.update_forget_code_assignment_status(forget_code)
-        context.bot.edit_message_text(
+        await context.bot.edit_message_text(
             text=messages.forget_taked_back_message,
             chat_id=update.callback_query.message.chat_id,
             message_id=update.callback_query.message.message_id
         )
         self.db.set_forget_code_for_user(update.effective_user.id, None)
 
-    def get_fake_forget_code(self, update, context):
-        update.message.reply_text(
+    async def get_fake_forget_code(self, update, context):
+        await update.message.reply_text(
             text=messages.fake_forget_code_report_message,
             reply_markup=ReplyKeyboardMarkup(static_data.BACK_TO_MAIN_MENU_CHOICES),
         )
         return static_data.INPUT_FAKE_FORGET_CODE
 
-    def forget_code_statistics(self, update, context):
-        update.message.reply_text(
+    async def forget_code_statistics(self, update, context):
+        await update.message.reply_text(
             text=make_forget_code_statistics_message(self.db.get_forget_codes_by_food_court_id()))
         return static_data.FORGET_CODE_MENU_CHOOSING
 
-    def handle_fake_forget_code_input(self, update, context):
+    async def handle_fake_forget_code_input(self, update, context):
         fake_forget_code = update.message.text
         if len(fake_forget_code) < ForgetCodeMenuHandler.FORGET_CODE_MINIMUM_LENGTH \
             or len(fake_forget_code) > ForgetCodeMenuHandler.FORGET_CODE_MAXIMUM_LENGTH:
-            update.message.reply_text(
+            await update.message.reply_text(
                 text=messages.not_enough_number_error_message
             )
             return static_data.INPUT_FAKE_FORGET_CODE
         try:
             fake_forget_code = int(fake_forget_code)
         except ValueError:
-            update.message.reply_text(
+            await update.message.reply_text(
                 text=messages.not_int_code_error_message
             )
             return static_data.INPUT_FAKE_FORGET_CODE
         forget_code = self.db.get_forget_code_info(fake_forget_code)
         # TODO: handle fake forget code some how :)
         self.db.set_forget_code_for_user(update.effective_user.id, forget_code)
-        update.message.reply_text(
+        await update.message.reply_text(
             text=messages.fake_forget_code_taked_message,
         )
-        self.back_to_main_menu(update)
+        await self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
     
     def make_return_forget_code_button(self, forget_code):

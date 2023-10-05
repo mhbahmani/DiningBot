@@ -11,15 +11,17 @@ from src.forget_code import ForgetCodeMenuHandler
 from src.reserve import ReserveMenuHandler
 from src.static_data import *
 from src.utils import update_environment_variable
-from telegram import ReplyKeyboardMarkup, error
+from telegram import ReplyKeyboardMarkup, Update, error
 from telegram.ext import (
-    Updater,
-    Filters,
     CommandHandler,
+    ContextTypes,
     MessageHandler,
     CallbackQueryHandler,
-    ConversationHandler
+    ConversationHandler,
+    ApplicationBuilder,
+    filters
 )
+# from telegram.ext.filters import filters
 
 import src.messages as messages
 import logging
@@ -36,8 +38,11 @@ class DiningBot:
         admin_sso_username: str = None, admin_sso_password: str = None):
 
         self.admin_ids = admin_ids
-        self.updater = Updater(token=token, use_context=True)
-        self.dispatcher = self.updater.dispatcher
+        # self.updater = Updater(token=token, use_context=True)
+        #self.dispatcher = self.updater.dispatcher
+
+        self.application = ApplicationBuilder().token(token).build()
+        self.dispatcher = self.application
 
         self.db = db
 
@@ -54,13 +59,13 @@ class DiningBot:
             }[log_level])
 
     def check_admin(func):
-        def wrapper(self, *args, **kwargs):
+        async def wrapper(self, *args, **kwargs):
             update, _ = args[0], args[1]
             user_id = update.message.chat.id
             if user_id not in self.admin_ids:
                 msg = messages.you_are_not_admin_message
                 logging.info(f"{update.effective_user.username} is trying to run an admin command")
-                update.message.reply_text(text=msg)
+                await update.message.reply_text(text=msg)
                 return
             return func(self, *args, **kwargs)
         return wrapper
@@ -68,44 +73,50 @@ class DiningBot:
     def is_admin(self, update):
         return update.message.chat.id in self.admin_ids
 
-    def send_msg_to_admins(self, context, message):
+    @check_admin
+    async def echo(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Echo the user message."""
+        await self.send_msg_to_admins(context, update.message.text)
+        await update.message.reply_text(update.message.text)
+
+    async def send_msg_to_admins(self, context, message):
         for admin_id in self.admin_ids:
-            context.bot.send_message(
+            await context.bot.send_message(
                 admin_id, message
             )
 
-    def start(self, update, context):
+    async def start(self, update, context):
         if self.db.add_bot_user({
             "user_id": update.effective_user.id,
             "username": update.effective_user.username,
             "forget_code": None}):
-            context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=messages.start_message)
-            self.send_msg_to_admins(
+            await self.send_msg_to_admins(
                 context,
                 messages.new_user_message.format(update.effective_user.username))
-        self.send_main_menu(update, context)
+        await self.send_main_menu(update, context)
         return MAIN_MENU_CHOOSING
 
     @check_admin
-    def set(self, update, context):
+    async def set(self, update, context):
         if not update.message.text: return # on edit
         args = update.message.text.split()[1:]
         if len(args) != 2:
-            context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=messages.set_wrong_args_message)
             return
         student_number, password = args
         update_environment_variable("ADMIN_SHARIF_SSO_USERNAME", student_number)
         update_environment_variable("ADMIN_SHARIF_SSO_PASSWORD", password)
-        context.bot.send_message(
+        await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=messages.set_result_message.format(student_number, password))
 
     @check_admin
-    def automatic_reserve_food(self, update, context):
+    async def automatic_reserve_food(self, update, context):
         if not update.message.text: return
         splited_text = update.message.text.split()
         username = None
@@ -114,66 +125,67 @@ class DiningBot:
         user_id = self.db.get_user_id_by_username(username)
         self.reserve_handler.automatic_reserve(context, user_id)
 
-    def help(self, update, context):
+    async def help(self, update, context):
         if self.is_admin(update):
             msg = messages.admin_help_message
         else:
             msg = messages.help_message
-        context.bot.send_message(
+        await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=msg)
 
-    def inline_keyboard_handler(self, update, context):
+    async def inline_keyboard_handler(self, update, context):
         type = FoodPrioritiesHandler.separate_callback_data(update.callback_query.data)[0]
         if type == "FOOD":
             _, action, choosed, page = FoodPrioritiesHandler.separate_callback_data(update.callback_query.data)
-            return self.reserve_handler.inline_food_choosing_handler(update, context, action, choosed, int(page))
+            return await self.reserve_handler.inline_food_choosing_handler(update, context, action, choosed, int(page))
         elif type == "FOODCOURT":
             _, action, choosed = FoodCourtSelectingHandler.separate_callback_data(update.callback_query.data)
-            return self.reserve_handler.inline_food_court_choosing_handler(update, context, action, choosed)
+            return await self.reserve_handler.inline_food_court_choosing_handler(update, context, action, choosed)
         elif type == "FORGETCODE":
             _, forget_code = ForgetCodeMenuHandler.separate_callback_data(update.callback_query.data)
-            self.forget_code_handler.inline_return_forget_code_handler(update, context, int(forget_code))
+            await self.forget_code_handler.inline_return_forget_code_handler(update, context, int(forget_code))
         elif type == "AUTOMATIC_RESERVE":
             _, action = AutomaticReserveAlreadyActivatedHandler.separate_callback_data(update.callback_query.data)
-            self.reserve_handler.inline_already_activated_handler(update, context, action)
+            await self.reserve_handler.inline_already_activated_handler(update, context, action)
 
-    def send_main_menu(self, update, context):
+    async def send_main_menu(self, update, context):
         if context.user_data: context.user_data.clear()
-        update.message.reply_text(
+        await update.message.reply_text(
             text=messages.main_menu_message,
             reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES),
         )
         return MAIN_MENU_CHOOSING
 
-    def unknown_command(self, update, context):
-        update.message.reply_text(
+    async def unknown_command(self, update, context):
+        await update.message.reply_text(
             text=messages.restart_bot_message,
             reply_markup=ReplyKeyboardMarkup(MAIN_MENU_CHOICES),
         )
         return MAIN_MENU_CHOOSING
 
     @check_admin
-    def send_to_all(self, update, context):
+    async def send_to_all(self, update, context):
         import re
         msg = re.sub("/sendmsgtoall", "", update.message.text)
-        threading.Thread(target=self.send_message_to_all_handler, args=(context, msg,)).start()
+        # threading.Thread(target=self.send_message_to_all_handler, args=(context, msg,)).start()
+        await self.send_message_to_all_handler(context, msg)
 
-    def send_message_to_all_handler(self, context, msg):
+    async def send_message_to_all_handler(self, context, msg):
         users = self.db.get_all_bot_users()
         for user in users:
             try:
-                context.bot.send_message(
+                await context.bot.send_message(
                     chat_id=user["user_id"],
                     text=msg
                 )
             except error.Unauthorized:
                 continue
-        self.send_msg_to_admins(context, messages.send_to_all_done_message)
+        await self.send_msg_to_admins(context, messages.send_to_all_done_message)
 
     @check_admin
-    def update_foods_list_database(self, update, context):
-        update.message.reply_text(
+    async def update_foods_list_database(self, update, context):
+        await update.message.reply_text(
             text=messages.update_foods_started_message
         )
         # /update_foods <week>
@@ -181,10 +193,12 @@ class DiningBot:
         week = 0
         if len(splited_text) == 2:
             week = splited_text[-1]
-        self.reserve_handler.update_food_list(update, context, int(week))
+        await self.reserve_handler.update_food_list(update, context, int(week))
 
     def setup_handlers(self):
-        help_handler = CommandHandler('help', self.help)
+        # self.dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo))
+        
+        help_handler = CommandHandler('help', self.help, block=False)
         self.dispatcher.add_handler(help_handler)
 
         set_handler = CommandHandler('set', self.set)
@@ -203,106 +217,123 @@ class DiningBot:
         self.dispatcher.add_handler(inline_handler)
 
         menue_handler = ConversationHandler(
-            entry_points=[CommandHandler('start', self.start), MessageHandler(Filters.text & (~Filters.command), self.unknown_command)],
+            entry_points=[CommandHandler('start', self.start), MessageHandler(filters.TEXT & (~filters.COMMAND), self.unknown_command)],
             states={
                 MAIN_MENU_CHOOSING: [
                     MessageHandler(
-                        Filters.regex(FORGET_CODE_MENU_REGEX),
-                        self.forget_code_handler.send_forget_code_menu
+                        filters.Regex(FORGET_CODE_MENU_REGEX),
+                        self.forget_code_handler.send_forget_code_menu,
+                        block=False
                     ),
                     MessageHandler(
-                        Filters.regex(RESERVE_MENU_REGEX),
-                        self.reserve_handler.send_reserve_menu
+                        filters.Regex(RESERVE_MENU_REGEX),
+                        self.reserve_handler.send_reserve_menu,
+                        block=False
                     )
                 ],
                 RESERVE_MENU_CHOOSING: [
                     MessageHandler(
-                        Filters.regex(SET_FAVORITES_REGEX),
-                        self.reserve_handler.update_user_favorite_foods
+                        filters.Regex(SET_FAVORITES_REGEX),
+                        self.reserve_handler.update_user_favorite_foods,
+                        block=False
                     ),
                     MessageHandler(
-                        Filters.regex(SHOW_FAVORITES_REGEX),
-                        self.reserve_handler.show_favorite_foods
+                        filters.Regex(SHOW_FAVORITES_REGEX),
+                        self.reserve_handler.show_favorite_foods,
+                        block=False
                     ),
                     MessageHandler(
-                        Filters.regex(RESERVE_REGEX),
+                        filters.Regex(RESERVE_REGEX),
                         self.reserve_handler.reserve_next_week_food
                     ),
                     MessageHandler(
-                        Filters.regex(SET_USERNAME_AND_PASSWORD_REGEX),
-                        self.reserve_handler.set_username_and_password_handler
+                        filters.Regex(SET_USERNAME_AND_PASSWORD_REGEX),
+                        self.reserve_handler.set_username_and_password_handler,
+                        block=False
                     ),
                     MessageHandler(
-                        Filters.regex(ACTIVATE_AUTOMATIC_RESERVE_REGEX),
-                        self.reserve_handler.activate_automatic_reserve_handler
+                        filters.Regex(ACTIVATE_AUTOMATIC_RESERVE_REGEX),
+                        self.reserve_handler.activate_automatic_reserve_handler,
+                        block=False
                     )
                 ],
                 INPUT_USERNAME: [
                     MessageHandler(
-                        Filters.text & ~(Filters.command | Filters.regex(INPUT_USERNAME_AND_PASSWORD_EXCLUDE)),
-                        self.reserve_handler.handle_username_input
+                        filters.TEXT & ~(filters.COMMAND | filters.Regex(INPUT_USERNAME_AND_PASSWORD_EXCLUDE)),
+                        self.reserve_handler.handle_username_input,
+                        block=False
                     )
                 ],
                 INPUT_PASSWORD: [
                     MessageHandler(
-                        Filters.text & ~(Filters.command | Filters.regex(INPUT_USERNAME_AND_PASSWORD_EXCLUDE)),
-                        self.reserve_handler.handle_password_input
+                        filters.TEXT & ~(filters.COMMAND | filters.Regex(INPUT_USERNAME_AND_PASSWORD_EXCLUDE)),
+                        self.reserve_handler.handle_password_input,
+                        block=False
                     )
                 ],
                 FORGET_CODE_MENU_CHOOSING: [
                     MessageHandler(
-                        Filters.regex(GET_FORGET_CODE_REGEX),
-                        self.forget_code_handler.send_choose_food_court_menu_to_get
+                        filters.Regex(GET_FORGET_CODE_REGEX),
+                        self.forget_code_handler.send_choose_food_court_menu_to_get,
+                        block=False
                     ),
                     MessageHandler(
-                        Filters.regex(GIVE_FORGET_CODE_REGEX),
-                        self.forget_code_handler.send_choose_food_court_menu_to_give
+                        filters.Regex(GIVE_FORGET_CODE_REGEX),
+                        self.forget_code_handler.send_choose_food_court_menu_to_give,
+                        block=False
                     ),
                     MessageHandler(
-                        Filters.regex(RANKING_FORGET_CODE_REGEX),
-                        self.forget_code_handler.send_forget_code_ranking
+                        filters.Regex(RANKING_FORGET_CODE_REGEX),
+                        self.forget_code_handler.send_forget_code_ranking,
+                        block=False
                     ),
                     MessageHandler(
-                        Filters.regex(FAKE_FORGET_CODE_REGEX),
-                        self.forget_code_handler.get_fake_forget_code
+                        filters.Regex(FAKE_FORGET_CODE_REGEX),
+                        self.forget_code_handler.get_fake_forget_code,
+                        block=False
                     ),
                     MessageHandler(
-                        Filters.regex(TODAY_CODE_STATISTICS_REGEX),
-                        self.forget_code_handler.forget_code_statistics
+                        filters.Regex(TODAY_CODE_STATISTICS_REGEX),
+                        self.forget_code_handler.forget_code_statistics,
+                        block=False
                     )
                 ],
                 CHOOSING_SELF_TO_GET: [
                     MessageHandler(
-                        Filters.regex(FOOD_COURTS_REGEX),
+                        filters.Regex(FOOD_COURTS_REGEX),
                         self.forget_code_handler.handle_choosed_food_court_to_get
                     )
                 ],
                 CHOOSING_SELF_TO_GIVE: [
                     MessageHandler(
-                        Filters.regex(FOOD_COURTS_REGEX),
-                        self.forget_code_handler.handle_choosed_food_court_to_give
+                        filters.Regex(FOOD_COURTS_REGEX),
+                        self.forget_code_handler.handle_choosed_food_court_to_give,
+                        block=False
                     )
                 ],
                 INPUT_FOOD_NAME: [
                     MessageHandler(
-                        Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
-                        self.forget_code_handler.handle_forget_code_food_name_input
+                        filters.TEXT & ~(filters.COMMAND | filters.Regex(INPUT_FORGET_CODE_EXCLUDE)),
+                        self.forget_code_handler.handle_forget_code_food_name_input,
+                        block=False
                     )
                 ],
                 INPUT_FORGET_CODE: [
                     MessageHandler(
-                        Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
-                        self.forget_code_handler.handle_forget_code_input
+                        filters.TEXT & ~(filters.COMMAND | filters.Regex(INPUT_FORGET_CODE_EXCLUDE)),
+                        self.forget_code_handler.handle_forget_code_input,
+                        block=False
                     )
                 ],
                 INPUT_FAKE_FORGET_CODE: [
                     MessageHandler(
-                        Filters.text & ~(Filters.command | Filters.regex(INPUT_FORGET_CODE_EXCLUDE)),
-                        self.forget_code_handler.handle_fake_forget_code_input
+                        filters.TEXT & ~(filters.COMMAND | filters.Regex(INPUT_FORGET_CODE_EXCLUDE)),
+                        self.forget_code_handler.handle_fake_forget_code_input,
+                        block=False
                     )
                 ],
             },
-            fallbacks=[MessageHandler(Filters.regex(BACK_TO_MAIN_MENU_REGEX), self.send_main_menu)],
+            fallbacks=[MessageHandler(filters.Regex(BACK_TO_MAIN_MENU_REGEX), self.send_main_menu)],
         )
         self.dispatcher.add_handler(menue_handler)
 
@@ -312,6 +343,7 @@ class DiningBot:
     def run(self):
         self.reserve_handler.load_foods()
         self.setup_handlers()
-        self.updater.start_polling()
+        #self.updater.start_polling()
+        self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-        self.updater.idle()
+        # self.updater.idle()

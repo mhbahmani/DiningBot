@@ -173,13 +173,13 @@ class ReserveMenuHandler:
         return static_data.RESERVE_MENU_CHOOSING
 
     def activate_automatic_reserve_handler(self, update, context):
-        update.message.reply_text(messages.activate_automatic_reserve_started_message)
         if self.db.get_automatic_reserve_status(update.message.chat.id):
             update.message.reply_text(
                 text=messages.automatic_reserve_already_activated_message,
                 reply_markup=AutomaticReserveAlreadyActivatedHandler.create_keyboard()
             )
             return
+        message_id = update.message.reply_text(messages.activate_automatic_reserve_started_message).message_id
         user_login_info = self.db.get_user_login_info(update.effective_chat.id)
         if not user_login_info:
             update.message.reply_text(
@@ -188,9 +188,19 @@ class ReserveMenuHandler:
             return static_data.RESERVE_MENU_CHOOSING
         dining = Dining(user_login_info['student_number'], user_login_info['password'])
         context.user_data['food_courts'] = []
-        update.message.reply_text(
+        food_courts = dining.get_user_food_courts()
+        if not food_courts:
+            context.bot.edit_message_text(
+                text=messages.no_food_court_found_message,
+                chat_id=update.message.chat_id,
+                message_id=message_id,
+            )
+            return
+        context.bot.edit_message_text(
             text=messages.choose_food_courts_to_automatic_reserve_message,
-            reply_markup=FoodCourtSelectingHandler.create_food_courts_keyboard(dining.get_user_food_courts())
+            chat_id=update.message.chat_id,
+            message_id=message_id,
+            reply_markup=FoodCourtSelectingHandler.create_food_courts_keyboard(food_courts)
         )
 
     def reserve_next_week_food(self, update, context):
@@ -253,9 +263,6 @@ class ReserveMenuHandler:
                 message_id=query.message.message_id
             )
         elif action == "CHANGE_FOOD_COURTS":
-            context.bot.send_message(
-                text=messages.activate_automatic_reserve_started_message,
-                chat_id=query.message.chat_id)
             user_login_info = self.db.get_user_login_info(update.effective_chat.id)
             if not user_login_info:
                 context.bot.send_message(
@@ -263,13 +270,25 @@ class ReserveMenuHandler:
                     chat_id=query.message.chat_id,
                 )
                 return static_data.RESERVE_MENU_CHOOSING
+            context.bot.edit_message_text(
+                text=messages.activate_automatic_reserve_started_message,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+            )
             dining = Dining(user_login_info['student_number'], user_login_info['password'])
             context.user_data['food_courts'] = []
+            food_courts = dining.get_user_food_courts()
+            if not food_courts:
+                context.bot.edit_message_text(
+                    text=messages.no_food_court_found_message,
+                    chat_id=query.message.chat_id,
+                    message_id=query.message.message_id,
+                )
             context.bot.edit_message_text(
                 text=messages.choose_food_courts_to_automatic_reserve_message,
                 chat_id=query.message.chat_id,
                 message_id=query.message.message_id,
-                reply_markup=FoodCourtSelectingHandler.create_food_courts_keyboard(dining.get_user_food_courts())
+                reply_markup=FoodCourtSelectingHandler.create_food_courts_keyboard(food_courts)
             )
         elif action == "CANCEL":
             if context.user_data: context.user_data.clear()

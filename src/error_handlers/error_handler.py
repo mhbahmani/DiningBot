@@ -11,6 +11,7 @@ import src.messages as messages
 
 class ErrorHandler:
     NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR = "User is not allowed to access reservation page"
+    INVALID_DINING_CREDENTIALS_ERROR = "Invalid credentials"
 
     def __init__(self, admin_ids=set(), sentry_dsn: str = None, environment: str = "development") -> None:
         self.admin_ids = admin_ids
@@ -74,8 +75,8 @@ class ErrorHandler:
         chat_id = None
         if update.callback_query: chat_id = update.callback_query.message.chat_id
         elif update.message: chat_id = update.message.chat_id
-        if context.error.args[0] == ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR:
+        if context.error.args[0] == ErrorHandler.INVALID_DINING_CREDENTIALS_ERROR:
             context.bot.send_message(
-                text=messages.not_allowed_to_reserve_message,
+                text=messages.invalid_credentials_message,
                 chat_id=chat_id
             )

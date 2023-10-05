@@ -40,7 +40,7 @@ class Dining:
         self.csrf = None
         self.remainCredit = 0
         if not self.__setad_login():
-            raise (Exception(ErrorHandler.NOT_ALLOWED_TO_RESERVATION_PAGE_ERROR))
+            raise (Exception(ErrorHandler.INVALID_DINING_CREDENTIALS_ERROR))
 
     def reserve_food(self, place_id: int, foods: dict, choosed_food_indices: dict) -> bool:
         """
@@ -185,7 +185,9 @@ class Dining:
         script = bs(response.content, "html.parser").find("script", {"type": "text/javascript"}).next.strip()
         self.csrf = re.match(r".*X-CSRF-TOKEN' : '(?P<csrf>.*)'}.*", script).group("csrf")
 
-        if response.status_code != HTTPStatus.OK:
+        if response.status_code != HTTPStatus.OK \
+            or str(response.text).find('ورود به سامانه سماد') != -1 \
+            or str(response.text).find('نام کاربری یا رمز عبور اشتباه است') != -1:
             logging.debug("Login failed")
             return False
         return True
@@ -218,24 +220,27 @@ class Dining:
         return True
 
     def check_username_and_password(username: str, password: str) -> bool:
+        logging.debug("Checking username and password for user %s", username)
         logging.debug("Making session")
         session = requests.Session()
         logging.debug("Get login page")
-        site = session.get(Dining.SIGN_IN_URL)
-        content = bs(site.content, "html.parser")
-        authenticity_token = content.find("input", {"name": "authenticity_token"}).get('value')
-        login_data = {
-            'authenticity_token': authenticity_token,
-            'student[student_identifier]': username,
-            'student[password]': password,
-            'commit': 'ورود به حساب کاربری'
-        }
-        response = session.post(Dining.SIGN_IN_URL, login_data)
-        if bs(response.content, "html.parser").find("div", {"class": "card-alert alert alert-warning mb-0"}):
-            logging.debug("Login failed")
-            return False
-        logging.debug("Login successful")
 
+        reserve_page = session.get(Dining.RESERVE_PAGE_URL)
+        csrf = bs(reserve_page.content, "html.parser").find("input", {"name": "_csrf"}).get("value")
+        data = {
+            '_csrf': csrf,
+            'username': username,
+            'password': password,
+            'login': 'ورود',
+        }
+
+        response = session.post('https://setad.dining.sharif.edu/j_security_check',  data=data)
+
+        if response.status_code != HTTPStatus.OK \
+            or str(response.text).find('ورود به سامانه سماد') != -1 \
+            or str(response.text).find('نام کاربری یا رمز عبور اشتباه است') != -1:
+            logging.debug("Username or password was wrong")
+            return False
         return True
 
     def __load_food_table(self, place_id: str, week: int = 0) -> requests.Response:

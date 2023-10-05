@@ -319,6 +319,8 @@ class Dining:
         foods = content.find("table").find_all("span")[2:]
         result = []
         for food in foods:
+            if food.text.strip() == "":
+                continue
             food_name = food.text.strip().split("|")[1].strip()
             result.append(food_name.strip())
         return result

@@ -159,11 +159,19 @@ class ReserveMenuHandler:
 
     def handle_password_input(self, update, context):
         password = update.message.text
-        update.message.reply_text(messages.username_and_password_saved_message)
+        message_id = update.message.reply_text(messages.username_and_password_saved_message).message_id
         if not Dining.check_username_and_password(context.user_data['username'], password):
-            update.message.reply_text(messages.username_or_password_incorrect_message)
+            context.bot.edit_message_text(
+                text=messages.username_or_password_incorrect_message,
+                chat_id=update.message.chat_id,
+                message_id=message_id,
+            )
         else:
-            update.message.reply_text(messages.username_and_password_correct_message)
+            context.bot.edit_message_text(
+                text=messages.username_and_password_correct_message,
+                chat_id=update.message.chat_id,
+                message_id=message_id,
+            )
             self.db.update_user_info({
                 "user_id": update.message.chat.id,
                 "username": update.effective_user.username,

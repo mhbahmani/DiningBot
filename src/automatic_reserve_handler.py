@@ -41,10 +41,10 @@ class AutomaticReserveHandler:
     def clean_reservation_status(self):
         self.db.set_all_users_next_week_reserve_status(False)
 
-    def handle_automatic_reserve(self):
-        self.automatic_reserve()
+    async def handle_automatic_reserve(self):
+        await self.automatic_reserve()
 
-    def automatic_reserve(self, context=None, user_id: str = None):
+    async def automatic_reserve(self, context=None, user_id: str = None):
         if not context:
             if not self.token: return
             bot = Updater(token=self.token, use_context=True).bot
@@ -67,18 +67,18 @@ class AutomaticReserveHandler:
 
                 except NotEnoughCreditToReserve as e:
                     logging.debug(e.message)
-                    bot.send_message(
+                    await bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.not_enough_credit_to_reserve_message.format(
                             static_data.PLACES_NAME_BY_ID[place_id]))
                 except NoSuchFoodSchedule as e:
                     logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e.message))
-                    bot.send_message(
+                    await bot.send_message(
                         chat_id=user['user_id'],
                         text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
 
             if reserve_success:
-                bot.send_message(
+                await bot.send_message(
                     chat_id=user['user_id'],
                     text=messages.reserve_was_secceeded_message.format(
                         static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(reserved_foods), remain_credit))
@@ -87,7 +87,7 @@ class AutomaticReserveHandler:
                                                                                     place_id], remain_credit))
                 threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
             else:
-                bot.send_message(
+                await bot.send_message(
                     chat_id=user['user_id'],
                     text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
                 logging.info("Something went wrong for user {} at {}".format(user['user_id'],

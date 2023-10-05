@@ -67,7 +67,7 @@ class DiningBot:
                 logging.info(f"{update.effective_user.username} is trying to run an admin command")
                 await update.message.reply_text(text=msg)
                 return
-            return func(self, *args, **kwargs)
+            return await func(self, *args, **kwargs)
         return wrapper
 
     def is_admin(self, update):
@@ -112,12 +112,13 @@ class DiningBot:
     @check_admin
     async def automatic_reserve_food(self, update, context):
         if not update.message.text: return
+        print("///////////////////")
         splited_text = update.message.text.split()
         username = None
         if len(splited_text) == 2:
             username = splited_text[-1]
         user_id = self.db.get_user_id_by_username(username)
-        self.reserve_handler.automatic_reserve(context, user_id)
+        await self.reserve_handler.automatic_reserve(context, user_id)
 
     async def help(self, update, context):
         if self.is_admin(update):
@@ -193,19 +194,19 @@ class DiningBot:
         help_handler = CommandHandler('help', self.help, block=False)
         self.dispatcher.add_handler(help_handler)
 
-        set_handler = CommandHandler('set', self.set)
+        set_handler = CommandHandler('set', self.set, block=False)
         self.dispatcher.add_handler(set_handler)
 
-        sendtoall_handler = CommandHandler('sendmsgtoall', self.send_to_all)
+        sendtoall_handler = CommandHandler('sendmsgtoall', self.send_to_all, block=False)
         self.dispatcher.add_handler(sendtoall_handler)
 
-        update_food_list_handler = CommandHandler('update_foods', self.update_foods_list_database)
+        update_food_list_handler = CommandHandler('update_foods', self.update_foods_list_database, block=False)
         self.dispatcher.add_handler(update_food_list_handler)
 
-        reserve_food_handler = CommandHandler('reserve', self.automatic_reserve_food)
+        reserve_food_handler = CommandHandler('reserve', self.automatic_reserve_food, block=False)
         self.dispatcher.add_handler(reserve_food_handler)
 
-        inline_handler = CallbackQueryHandler(self.inline_keyboard_handler)
+        inline_handler = CallbackQueryHandler(self.inline_keyboard_handler, block=False)
         self.dispatcher.add_handler(inline_handler)
 
         menue_handler = ConversationHandler(

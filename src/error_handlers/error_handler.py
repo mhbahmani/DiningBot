@@ -27,9 +27,11 @@ class ErrorHandler:
             logging.error("Update object is None")
             return
 
-        # self.send_error_message_to_user(update, context)
+        self.send_error_message_to_user(update, context)
 
         logging.error(msg="Exception while handling an update", exc_info=context.error)
+
+        return # TODO: uncomment this line to send error message to admin
 
         # traceback.format_exception returns the usual python message about an exception, but as a
         # list of strings rather than a single string, so we have to join them together.

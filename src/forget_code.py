@@ -48,7 +48,7 @@ class ForgetCodeMenuHandler:
             await update.message.reply_text(
                 text=messages.no_code_for_this_food_court_message
             )
-            return self.send_choose_food_court_menu_to_get(update, context)
+            return await self.send_choose_food_court_menu_to_get(update, context)
         # Assign a random code to user
         forget_code = forget_codes[randint(0, len(forget_codes) - 1)]
         await update.message.reply_text(

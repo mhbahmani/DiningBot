@@ -44,6 +44,7 @@ class AutomaticReserveHandler:
         self.db.set_all_users_next_week_reserve_status(False)
 
     async def handle_automatic_reserve(self):
+        self.load_foods()
         await self.automatic_reserve()
 
     async def automatic_reserve(self, context=None, user_id: str = None, admin_user_id: str = None):

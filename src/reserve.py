@@ -47,8 +47,8 @@ class ReserveMenuHandler:
                 messages.no_favorite_foods_list
             ) 
 
-    async def automatic_reserve(self, context, user_id: str = None):
-        await AutomaticReserveHandler(self, db=self.db).automatic_reserve(context, user_id)
+    async def automatic_reserve(self, context, user_id: str = None, admin_user_id: str = None):
+        await AutomaticReserveHandler(self, db=self.db).automatic_reserve(context, user_id, admin_user_id)
 
     def load_foods(self):
         # Load foods to cache

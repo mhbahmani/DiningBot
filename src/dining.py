@@ -3,7 +3,8 @@ from http import HTTPStatus
 from src.error_handlers import ErrorHandler
 from src.error_handlers import (
     NotEnoughCreditToReserve,
-    NoSuchFoodSchedule
+    NoSuchFoodSchedule,
+    AlreadyReserved
 )
 import src.static_data as static_data
 import datetime
@@ -80,7 +81,7 @@ class Dining:
         for day in keys:
             for meal in foods[day]:
                 foods_list = foods[day][meal]
-                foods_list.reverse()
+                # foods_list.reverse()
                 for food_index, food in enumerate(foods_list):
                     food_data = []
                     if food_index == choosed_food_indices[day][meal]:
@@ -121,6 +122,8 @@ class Dining:
         #     file.write(bs(response.content, "html.parser").prettify())
         # with open("food_data.txt", "w") as file:
         #     file.writelines([f'{item}\n' for item in data])
+        if "تعداد مجاز رزرو روزانه شما بیش از حد مجاز است" in text:
+            raise(AlreadyReserved)
         if "برنامه غذایی معادل پیدا نشد" in text or "لطفا مقدار مناسب وارد کنید" in text:
             raise(NoSuchFoodSchedule)
         if "اعتبار شما کم است" in text:
@@ -267,8 +270,12 @@ class Dining:
         #    file.write(bs(response.content, "html.parser").prettify())
 
     def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
-        content = bs(reserve_table.content, "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext(
-            "table")
+        content = bs(reserve_table.content, "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table") # TODO: Uncommnet
+        # content = None
+        # with open("out.html", "r") as file:
+        #     # content = bs(str(file.read()), "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table")
+        #     content = bs(str(file.read()), "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table")
+            
         self.meals = [static_data.MEAL_FA_TO_EN[time.text.split(("\n"))[1].strip()] for time in
                       content.findNext("tr").find_all("td")]
         content = content.find_all("tr", recursive=False)
@@ -285,8 +292,7 @@ class Dining:
                 if (len(content[i].findNext("td").findNext("table").find_all("tr", recursive=False)) != 0):
                     foods = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)
                     for k in range(len(foods)):
-                        price = foods[k].find_next("div", {"class": "xstooltip"}).text.split(
-                            "\n")[2].strip()
+                        price = foods[k].find_next("div", {"class": "xstooltip"}).text.strip().split()[0].strip()
                         food_name = foods[k].findNext("span").text.split("\n")[2].strip().split("|")[1].strip()
                         food_program_id = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)[
                             meal_food_counter].find_next(

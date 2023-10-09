@@ -222,3 +222,5 @@ favorite_foods_list = """غذاهای مورد علاقه‌ی فعلی (به ت
 {}"""
 
 no_favorite_foods_list = "هنوز لیست غذاهایی که دوست داری رو بهم نگفتی"
+
+automatic_reserve_no_such_username_message = "هیچ یوزری با این یوزرنیم پیدا نکردم"

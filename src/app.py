@@ -112,12 +112,17 @@ class DiningBot:
     @check_admin
     async def automatic_reserve_food(self, update, context):
         if not update.message.text: return
-        print("///////////////////")
         splited_text = update.message.text.split()
         username = None
         if len(splited_text) == 2:
             username = splited_text[-1]
-        user_id = self.db.get_user_id_by_username(username)
+        try:
+            user_id = self.db.get_user_id_by_username(username)
+        except AttributeError as e:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=messages.automatic_reserve_no_such_username_message)
+            return
         await self.reserve_handler.automatic_reserve(context, user_id)
 
     async def help(self, update, context):

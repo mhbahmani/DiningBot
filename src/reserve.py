@@ -60,7 +60,9 @@ class ReserveMenuHandler:
         logging.info(f"Loaded {len(self.foods)} foods")
 
     def update_food_lists_caches(self):
-        for food in self.db.get_all_foods(name=True, id=True):
+        all_foods = self.db.get_all_foods(name=True, id=True)
+        self.foods_with_id = []
+        for food in all_foods:
             self.foods_with_id.append((food['id'], food['name']))
             self.food_name_by_id[food['id']] = food['name']
             self.food_id_by_name[food['name']] = food['id']

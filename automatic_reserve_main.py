@@ -22,13 +22,15 @@ if __name__ == '__main__':
             ),
         )
 
-    schedule.every().tuesday.at("10:00").do(automatic_reserve_handler.clean_reservation_status)
+    schedule.every().monday.at("10:00").do(automatic_reserve_handler.clean_reservation_status)
 
-    schedule.every().tuesday.at("13:00").do(automatic_reserve_handler.notify_users)
-    schedule.every().tuesday.at("15:00").do(automatic_reserve_handler.handle_automatic_reserve)
-    schedule.every().wednesday.at("13:00").do(automatic_reserve_handler.notify_users)
-    schedule.every().wednesday.at("15:00").do(automatic_reserve_handler.handle_automatic_reserve)
-    schedule.every().wednesday.at("16:30").do(automatic_reserve_handler.notify_users_about_reservation_status)
+    schedule.every().monday.at("14:00").do(automatic_reserve_handler.notify_users)
+    schedule.every().monday.at("16:00").do(automatic_reserve_handler.handle_automatic_reserve)
+    schedule.every().tuesday.at("14:00").do(automatic_reserve_handler.notify_users)
+    schedule.every().tuesday.at("16:00").do(automatic_reserve_handler.handle_automatic_reserve)
+    schedule.every().wednesday.at("14:00").do(automatic_reserve_handler.notify_users)
+    schedule.every().wednesday.at("16:00").do(automatic_reserve_handler.handle_automatic_reserve)
+    schedule.every().wednesday.at("17:30").do(automatic_reserve_handler.notify_users_about_reservation_status)
 
     loop = asyncio.get_event_loop()
     while True:

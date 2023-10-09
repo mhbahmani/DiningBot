@@ -13,3 +13,8 @@ class NoSuchFoodSchedule(BaseException):
     def __init__(self, *args: object, message=None) -> None:
         message = message if message else "NoSuchFoodSchedule"
         super().__init__(message, *args)
+
+class AlreadyReserved(BaseException):
+    def __init__(self, *args: object, message=None) -> None:
+        message = message if message else "AlreadyReserved"
+        super().__init__(message, *args)

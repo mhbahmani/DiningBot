@@ -60,7 +60,10 @@ class DB:
 
     def get_user_reserve_info(self, user_id):
         return self.db.users.find_one(
-            filter={'user_id': user_id, 'next_week_reserve': False},
+            # filter={'user_id': user_id, 'next_week_reserve': False},
+            # In new dining site, we can send a new reserve request in order to change the reserved foods.
+            # Also, this function only be used in /reserve command. So, there is no need to "next_week_reserve" filter.
+            filter={'user_id': user_id},
             projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
         )
 

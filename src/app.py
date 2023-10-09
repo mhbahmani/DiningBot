@@ -116,6 +116,11 @@ class DiningBot:
         username = None
         if len(splited_text) == 2:
             username = splited_text[-1]
+        elif len(splited_text) < 2:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=messages.no_username_specified_error_message)
+            return
         try:
             user_id = self.db.get_user_id_by_username(username)
         except AttributeError as e:

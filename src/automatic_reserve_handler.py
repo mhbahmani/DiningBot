@@ -3,7 +3,8 @@ import threading
 from src import messages, static_data
 from src.error_handlers import (
     NotEnoughCreditToReserve,
-    NoSuchFoodSchedule
+    NoSuchFoodSchedule,
+    AlreadyReserved
 )
 from src.dining import Dining
 from telegram.ext import ApplicationBuilder
@@ -21,6 +22,7 @@ class AutomaticReserveHandler:
 
         self.food_name_by_id = {}
         self.food_id_by_name = {}
+        self.food_id_by_name = {'خوراک فیله سوخاری': '1', 'چلو\u200cخورش قیمه\u200cبادمجان': '2', 'لوبیا پلو': '3', 'رشته پلو با گوشت': '4', 'چلو خورشت مسما بادمجان': '5', 'شوید پلو با مرغ': '6', 'چلو با شامی کباب': '7', 'چلو\u200cخورش بامیه': '8', 'استامبولی پلو با گوشت': '9', 'خوراک ماکارونی با گوشت': '10', 'ساندویچ مرغ و سوپ جو': '11', 'سبزی پلو با تن ماهی': '12', 'چلو جوجه\u200cکباب': '13', 'عدس\u200cپلو با گوشت': '14', 'خوراک بندری': '15', 'آش رشته و بسته میوه': '16', 'زرشک پلو با گوشت': '17', 'ناگت مرغ آماده (غذای سرد)': '18', 'سبزی پلو با ماهی': '19', 'چلو کباب کوبیده': '20', 'چلو\u200cخورش قورمه\u200cسبزی': '21'}
 
         logging.basicConfig(
             format='%(asctime)s - %(levelname)s - %(message)s',
@@ -44,7 +46,7 @@ class AutomaticReserveHandler:
     async def handle_automatic_reserve(self):
         await self.automatic_reserve()
 
-    async def automatic_reserve(self, context=None, user_id: str = None):
+    async def automatic_reserve(self, context=None, user_id: str = None, admin_user_id: str = None):
         if not context:
             if not self.token: return
             bot = ApplicationBuilder().token(self.token).build().bot
@@ -54,27 +56,35 @@ class AutomaticReserveHandler:
         users = [self.db.get_user_reserve_info(user_id)] if user_id else self.db.get_users_with_automatic_reserve()
         reserve_success = False
         for user in list(users):
+            msg_receiver_id = admin_user_id if admin_user_id else user['user_id']
             for place_id in user['food_courts']:
                 try:
+                    logging.debug("Reserving food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                     reserve_success, reserved_foods, remain_credit = self.reserve_next_week_food_based_on_user_priorities(
-                        user['user_id'],
                         place_id,
                         user.get('priorities',
                                 []),
                         user['student_number'],
                         user['password']
                     )
-
+                except AlreadyReserved as e:
+                    logging.debug(e.message)
+                    await bot.send_message(
+                        chat_id=msg_receiver_id,
+                        text=messages.already_reserved_message.format(
+                            static_data.PLACES_NAME_BY_ID[place_id]))
+                    # If user has already reserved his food, we should set his next_week_reserve status to True 
+                    threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
                 except NotEnoughCreditToReserve as e:
                     logging.debug(e.message)
                     await bot.send_message(
-                        chat_id=user['user_id'],
+                        chat_id=msg_receiver_id,
                         text=messages.not_enough_credit_to_reserve_message.format(
                             static_data.PLACES_NAME_BY_ID[place_id]))
                 except NoSuchFoodSchedule as e:
                     logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e.message))
                     await bot.send_message(
-                        chat_id=user['user_id'],
+                        chat_id=msg_receiver_id,
                         text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
 
             if reserve_success:
@@ -95,9 +105,9 @@ class AutomaticReserveHandler:
                                                                                 place_id]))
         logging.info("Automatic reserve finished")
 
-    def reserve_next_week_food_based_on_user_priorities(self, user_id: str, place_id, user_priorities: list, username,
+    def reserve_next_week_food_based_on_user_priorities(self, place_id, user_priorities: list, username,
                                                         password):
-        logging.debug("Reserving food for user {} at {}".format(user_id, static_data.PLACES_NAME_BY_ID[place_id]))
+        # user_priorities = [ "13", "20", "14", "17", "21", "2", "3", "10" ] # TODO: Remove
         try:
             dining = Dining(username, password)
         except Exception as e:
@@ -110,7 +120,6 @@ class AutomaticReserveHandler:
                 if not foods[day][meal]: continue
                 day_foods = list(map(lambda food: self.food_id_by_name.get(food.get("food")), foods[day][meal]))
                 if not day_foods: continue
-                choosed_food_id = foods[day][meal][0].get("food_id")
                 food_index_in_foods_list = 0
                 if len(day_foods) > 1:
                     choosed_food_index = min(
@@ -120,15 +129,8 @@ class AutomaticReserveHandler:
                     else:
                         food_index_in_foods_list = day_foods.index(user_priorities[choosed_food_index])
 
-                # food_index_in_foods_list = 0 # TODO: Remove This line
-
                 choosed_food_indices[day] = choosed_food_indices.get(day, {})
                 choosed_food_indices[day][meal] = food_index_in_foods_list
-
-                # choosed_food_id = foods[day][meal][food_index_in_foods_list]['food_id']
-                # TODO: Fix Reserve and the rest
-                # reserve_success, balance = dining.reserve_food(int(place_id), int(choosed_food_id))
-                # reserve_successes.append(reserve_success)
 
                 food_names.append((foods[day][meal][food_index_in_foods_list].get('food'), day, meal))
         remain_credit = dining.reserve_food(int(place_id), foods, choosed_food_indices)

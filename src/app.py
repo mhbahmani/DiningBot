@@ -123,7 +123,7 @@ class DiningBot:
                 chat_id=update.effective_chat.id,
                 text=messages.automatic_reserve_no_such_username_message)
             return
-        await self.reserve_handler.automatic_reserve(context, user_id)
+        await self.reserve_handler.automatic_reserve(context, user_id, update.effective_chat.id)
 
     async def help(self, update, context):
         if self.is_admin(update):

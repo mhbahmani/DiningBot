@@ -286,8 +286,8 @@ class Dining:
             time = f"{date} {day}"
             res[time] = {}
             content[i] = content[i].findNext("td")
-            meal_food_counter = 0
             for j in range(len(self.meals)):
+                meal_food_counter = 0
                 res[time][self.meals[j]] = res[time].get(self.meals[j], [])
                 if (len(content[i].findNext("td").findNext("table").find_all("tr", recursive=False)) != 0):
                     foods = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)
@@ -299,12 +299,18 @@ class Dining:
                             "div", {"class": "xstooltip"}).get("id").split("_")[-1].strip()
 
                         inputs = list(content[i].findNext("td").findAll("input"))
-                        if meal_food_counter == 0: inputs.reverse()
+                        if not inputs:
+                            break
+                        input_counter = 0
+                        # if meal_food_counter == 0: inputs.reverse()
                         for input in inputs:
                             if input.attrs.get('type') == "checkbox":
                                 food_id =  input.attrs['foodid']
                                 food_program_date = input.attrs['programdate']
                                 food_type_id = input.attrs['foodtypeid']
+                                if input_counter == meal_food_counter:
+                                    break
+                                input_counter += 1
                         res[time][self.meals[j]].append({
                             "food": food_name,
                             "price": price,

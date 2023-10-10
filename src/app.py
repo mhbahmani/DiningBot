@@ -177,6 +177,7 @@ class DiningBot:
         await self.send_message_to_all_handler(context, msg)
 
     async def send_message_to_all_handler(self, context, msg):
+        await self.send_msg_to_admins(context, messages.send_to_all_started_message)
         users = self.db.get_all_bot_users()
         for user in users:
             try:
@@ -184,8 +185,10 @@ class DiningBot:
                     chat_id=user["user_id"],
                     text=msg
                 )
-            except error.Unauthorized:
+            except error.Forbidden:
                 continue
+            except Exception as e:
+                logging.error(e)
         await self.send_msg_to_admins(context, messages.send_to_all_done_message)
 
     @check_admin

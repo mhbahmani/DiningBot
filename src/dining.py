@@ -37,6 +37,10 @@ class Dining:
         self.password = password
 
         self.meals = []
+        self.meals_id_to_name = {
+            "5": "dinner",
+            "1": "lunch"
+        }
         self.user_id = None
         self.csrf = None
         self.remainCredit = 0
@@ -68,7 +72,7 @@ class Dining:
             ('selfChangeReserveId', ''),
             ('weekStartDateTimeAjx', f"{epoch_start_of_the_week}"),
             ('freeRestaurant', 'false'),
-            ('selectedSelfDefId', '1'),
+            ('selectedSelfDefId', str(place_id)),
         ]
 
         # i = sum([ len(foods[day]['lunch']) for day in foods ]) - 1
@@ -99,7 +103,7 @@ class Dining:
                     food_data += [
                         (f"userWeekReserves[{i}].id", ''),
                         (f"userWeekReserves[{i}].programId", food.get("program_id")),
-                        (f"userWeekReserves[{i}].mealTypeId", '1'),
+                        (f"userWeekReserves[{i}].mealTypeId", food.get("meal_type_id")),
                         (f"userWeekReserves[{i}].programDateTime", program_date_epoch), # Food day
                         (f"userWeekReserves[{i}].selfId", str(place_id)),
                         (f"userWeekReserves[{i}].foodTypeId", food.get("food_type_id")),
@@ -121,7 +125,7 @@ class Dining:
         # with open("out.html", "w") as file:
         #     file.write(bs(response.content, "html.parser").prettify())
         # with open("food_data.txt", "w") as file:
-        #     file.writelines([f'{item}\n' for item in data])
+            # file.writelines([f'{item}\n' for item in data])
         if "تعداد مجاز رزرو روزانه شما بیش از حد مجاز است" in text:
             raise(AlreadyReserved)
         if "برنامه غذایی معادل پیدا نشد" in text or "لطفا مقدار مناسب وارد کنید" in text:
@@ -152,7 +156,11 @@ class Dining:
                 <food_time>: {
                     food: <food_name>,
                     price: <price>,
-                    food_id: <food_reserve_id>
+                    food_id: <food_reserve_id>,
+                    program_id: ,
+                    program_date: ,
+                    food_type_id: ,
+                    meal_type_id: 
                 }
             }'
         }    
@@ -271,6 +279,8 @@ class Dining:
 
     def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
         content = bs(reserve_table.content, "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table") # TODO: Uncommnet
+        # with open("out.html", "w") as file:
+        #     file.writelines(str(bs(reserve_table.content, "html.parser")))
         # content = None
         # with open("out.html", "r") as file:
         #     # content = bs(str(file.read()), "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table")
@@ -298,8 +308,8 @@ class Dining:
                             meal_food_counter].find_next(
                             "div", {"class": "xstooltip"}).get("id").split("_")[-1].strip()
 
-                        inputs = list(content[i].findNext("td").findAll("input"))
-                        if not inputs:
+                        inputs = list(content[i].findNext("td").findNext("table").findAll("input"))
+                        if not list(content[i].findNext("td").findAll("input")):
                             break
                         input_counter = 0
                         # if meal_food_counter == 0: inputs.reverse()
@@ -308,16 +318,19 @@ class Dining:
                                 food_id =  input.attrs['foodid']
                                 food_program_date = input.attrs['programdate']
                                 food_type_id = input.attrs['foodtypeid']
+                                meal_type_id = input.attrs['mealtypeid']
+                                res[time][self.meals_id_to_name[meal_type_id]] = res[time].get(self.meals_id_to_name[meal_type_id], [])
                                 if input_counter == meal_food_counter:
                                     break
                                 input_counter += 1
-                        res[time][self.meals[j]].append({
+                        res[time][self.meals_id_to_name[meal_type_id]].append({
                             "food": food_name,
                             "price": price,
                             "program_id": food_program_id,
                             "food_id": food_id,
                             "program_date": food_program_date,
-                            "food_type_id": food_type_id
+                            "food_type_id": food_type_id,
+                            "meal_type_id": meal_type_id
                         })
                         meal_food_counter += 1
                 content[i] = content[i].findNext("td")

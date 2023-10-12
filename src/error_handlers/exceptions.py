@@ -18,3 +18,8 @@ class AlreadyReserved(BaseException):
     def __init__(self, *args: object, message=None) -> None:
         message = message if message else "AlreadyReserved"
         super().__init__(message, *args)
+
+class FoodsCapacityIsOver(BaseException):
+    def __init__(self, *args: object, message=None) -> None:
+        message = message if message else "FoodsCapacityIsOver"
+        super().__init__(message, *args)

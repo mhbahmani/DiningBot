@@ -4,6 +4,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
 *.swp
+test.py
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

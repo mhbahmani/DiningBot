@@ -3,6 +3,7 @@ import threading
 from src import messages, static_data
 from src.error_handlers import (
     NotEnoughCreditToReserve,
+    FoodsCapacityIsOver,
     NoSuchFoodSchedule,
     AlreadyReserved
 )
@@ -22,7 +23,6 @@ class AutomaticReserveHandler:
 
         self.food_name_by_id = {}
         self.food_id_by_name = {}
-        self.food_id_by_name = {'خوراک فیله سوخاری': '1', 'چلو\u200cخورش قیمه\u200cبادمجان': '2', 'لوبیا پلو': '3', 'رشته پلو با گوشت': '4', 'چلو خورشت مسما بادمجان': '5', 'شوید پلو با مرغ': '6', 'چلو با شامی کباب': '7', 'چلو\u200cخورش بامیه': '8', 'استامبولی پلو با گوشت': '9', 'خوراک ماکارونی با گوشت': '10', 'ساندویچ مرغ و سوپ جو': '11', 'سبزی پلو با تن ماهی': '12', 'چلو جوجه\u200cکباب': '13', 'عدس\u200cپلو با گوشت': '14', 'خوراک بندری': '15', 'آش رشته و بسته میوه': '16', 'زرشک پلو با گوشت': '17', 'ناگت مرغ آماده (غذای سرد)': '18', 'سبزی پلو با ماهی': '19', 'چلو کباب کوبیده': '20', 'چلو\u200cخورش قورمه\u200cسبزی': '21'}
 
         logging.basicConfig(
             format='%(asctime)s - %(levelname)s - %(message)s',
@@ -58,57 +58,73 @@ class AutomaticReserveHandler:
         reserve_success = False
         for user in list(users):
             msg_receiver_id = admin_user_id if admin_user_id else user['user_id']
-            for place_id in user['food_courts']:
-                try:
-                    logging.debug("Reserving food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
-                    reserve_success, reserved_foods, remain_credit = self.reserve_next_week_food_based_on_user_priorities(
-                        place_id,
-                        user.get('priorities',
-                                []),
-                        user['student_number'],
-                        user['password']
-                    )
-                except AlreadyReserved as e:
-                    logging.debug(e.message)
-                    await bot.send_message(
-                        chat_id=msg_receiver_id,
-                        text=messages.already_reserved_message.format(
-                            static_data.PLACES_NAME_BY_ID[place_id]))
-                    # If user has already reserved his food, we should set his next_week_reserve status to True 
-                    threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
-                except NotEnoughCreditToReserve as e:
-                    logging.debug(e.message)
-                    await bot.send_message(
-                        chat_id=msg_receiver_id,
-                        text=messages.not_enough_credit_to_reserve_message.format(
-                            static_data.PLACES_NAME_BY_ID[place_id]))
-                except NoSuchFoodSchedule as e:
-                    logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e.message))
-                    await bot.send_message(
-                        chat_id=msg_receiver_id,
-                        text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+            try:
+                for place_id in user['food_courts']:
+                    try:
+                        logging.debug("Reserving food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
+                        reserve_success, reserved_foods, remain_credit = self.reserve_next_week_food_based_on_user_priorities(
+                            place_id,
+                            user.get('priorities',
+                                    []),
+                            user['student_number'],
+                            user['password']
+                        )
+                    except AlreadyReserved as e:
+                        logging.debug(e.message)
+                        await bot.send_message(
+                            chat_id=msg_receiver_id,
+                            text=messages.already_reserved_message.format(
+                                static_data.PLACES_NAME_BY_ID[place_id]))
+                        # If user has already reserved his food, we should set his next_week_reserve status to True 
+                        threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
+                    except NotEnoughCreditToReserve as e:
+                        logging.debug(e.message)
+                        await bot.send_message(
+                            chat_id=msg_receiver_id,
+                            text=messages.not_enough_credit_to_reserve_message.format(
+                                static_data.PLACES_NAME_BY_ID[place_id]))
+                    except FoodsCapacityIsOver as e:
+                        logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e.message))
+                        await bot.send_message(
+                            chat_id=msg_receiver_id,
+                            text=messages.food_capacity_is_over.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                        threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
+                    except NoSuchFoodSchedule as e:
+                        logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e.message))
+                        await bot.send_message(
+                            chat_id=msg_receiver_id,
+                            text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                    except Exception as e:
+                        logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e))
+                        await bot.send_message(
+                            chat_id=msg_receiver_id,
+                            text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
 
-            if reserve_success:
-                await bot.send_message(
-                    chat_id=user['user_id'],
-                    text=messages.reserve_was_secceeded_message.format(
-                        static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(reserved_foods), remain_credit))
-                logging.info("Reserve was successfull for user {} at {}, remain credit: {}".format(user['user_id'],
+                if reserve_success:
+                    await bot.send_message(
+                        chat_id=user['user_id'],
+                        text=messages.reserve_was_secceeded_message.format(
+                            static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(reserved_foods), remain_credit))
+                    logging.info("Reserve was successfull for user {} at {}, remain credit: {}".format(user['user_id'],
+                                                                                    static_data.PLACES_NAME_BY_ID[
+                                                                                        place_id], remain_credit))
+                    threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
+                else:
+                    await bot.send_message(
+                        chat_id=user['user_id'],
+                        text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                    logging.info("Something went wrong for user {} at {}".format(user['user_id'],
                                                                                 static_data.PLACES_NAME_BY_ID[
-                                                                                    place_id], remain_credit))
-                threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
-            else:
-                await bot.send_message(
-                    chat_id=user['user_id'],
-                    text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
-                logging.info("Something went wrong for user {} at {}".format(user['user_id'],
-                                                                            static_data.PLACES_NAME_BY_ID[
-                                                                                place_id]))
+                                                                                    place_id]))
+            except error.Forbidden:
+                logging.info(f"User blocked The bot f{user['user_id']}!!!")
+                # If user blocked the bot, we should disable the automatic reserve feature for him/her
+                threading.Thread(self.db.set_automatic_reserve_status(user["user_id"], False)).start()
+
         logging.info("Automatic reserve finished")
 
     def reserve_next_week_food_based_on_user_priorities(self, place_id, user_priorities: list, username,
                                                         password):
-        # user_priorities = [ "13", "20", "14", "17", "21", "2", "3", "10" ] # TODO: Remove
         try:
             dining = Dining(username, password)
         except Exception as e:

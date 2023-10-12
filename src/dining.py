@@ -3,6 +3,7 @@ from http import HTTPStatus
 from src.error_handlers import ErrorHandler
 from src.error_handlers import (
     NotEnoughCreditToReserve,
+    FoodsCapacityIsOver,
     NoSuchFoodSchedule,
     AlreadyReserved
 )
@@ -126,6 +127,8 @@ class Dining:
         #     file.write(bs(response.content, "html.parser").prettify())
         # with open("food_data.txt", "w") as file:
             # file.writelines([f'{item}\n' for item in data])
+        if "غذاهای ذیل تا حداکثر سقف ممکن توسط کاربران رزرو شده اند و امکان رزرو در آنها وجود ندارد" in text:
+            raise(FoodsCapacityIsOver)
         if "تعداد مجاز رزرو روزانه شما بیش از حد مجاز است" in text:
             raise(AlreadyReserved)
         if "برنامه غذایی معادل پیدا نشد" in text or "لطفا مقدار مناسب وارد کنید" in text:
@@ -285,7 +288,7 @@ class Dining:
         # with open("out.html", "r") as file:
         #     # content = bs(str(file.read()), "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table")
         #     content = bs(str(file.read()), "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table")
-            
+
         self.meals = [static_data.MEAL_FA_TO_EN[time.text.split(("\n"))[1].strip()] for time in
                       content.findNext("tr").find_all("td")]
         content = content.find_all("tr", recursive=False)
@@ -315,6 +318,9 @@ class Dining:
                         # if meal_food_counter == 0: inputs.reverse()
                         for input in inputs:
                             if input.attrs.get('type') == "checkbox":
+                                if input.attrs.get("value", False) == "true":
+                                    logging.info("User reserved his food")
+                                    raise(AlreadyReserved)
                                 food_id =  input.attrs['foodid']
                                 food_program_date = input.attrs['programdate']
                                 food_type_id = input.attrs['foodtypeid']

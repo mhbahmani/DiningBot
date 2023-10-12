@@ -176,9 +176,16 @@ class DiningBot:
         # threading.Thread(target=self.send_message_to_all_handler, args=(context, msg,)).start()
         await self.send_message_to_all_handler(context, msg)
 
-    async def send_message_to_all_handler(self, context, msg):
+    @check_admin
+    async def send_to_all_automatic_reserve_enabled_users(self, update, context):
+        import re
+        msg = re.sub("/sendmsgtoallautoreserve", "", update.message.text)
+        await self.send_message_to_all_handler(context, msg, self.db.get_user_ids_with_automatic_reserve())
+
+    async def send_message_to_all_handler(self, context, msg, users: list = None):
+        if not users:
+            users = self.db.get_all_bot_users()
         await self.send_msg_to_admins(context, messages.send_to_all_started_message)
-        users = self.db.get_all_bot_users()
         for user in users:
             try:
                 await context.bot.send_message(
@@ -212,6 +219,9 @@ class DiningBot:
 
         sendtoall_handler = CommandHandler('sendmsgtoall', self.send_to_all, block=False)
         self.dispatcher.add_handler(sendtoall_handler)
+
+        sendtoall_auto_reserve_handler = CommandHandler('sendmsgtoallautoreserve', self.send_to_all_automatic_reserve_enabled_users, block=False)
+        self.dispatcher.add_handler(sendtoall_auto_reserve_handler)
 
         update_food_list_handler = CommandHandler('update_foods', self.update_foods_list_database, block=False)
         self.dispatcher.add_handler(update_food_list_handler)

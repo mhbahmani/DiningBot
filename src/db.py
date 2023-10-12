@@ -58,6 +58,12 @@ class DB:
             projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
         )
 
+    def get_user_ids_with_automatic_reserve(self):
+        return self.db.users.find(
+            filter={'automatic_reserve': True},
+            projection={'_id': 0, 'user_id': 1}
+        )
+
     def get_user_reserve_info(self, user_id):
         return self.db.users.find_one(
             # filter={'user_id': user_id, 'next_week_reserve': False},

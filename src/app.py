@@ -7,7 +7,7 @@ from src.inline_keyboards_handlers.choose_food_courts_handler import (
 from src.inline_keyboards_handlers.food_priorities_handler import (
     FoodPrioritiesHandler)
 from src.inline_keyboards_handlers.choose_reserve_days_food_court_handler import (
-    ChooseReserveDaysHandler
+    ChooseReserveDaysFoodCourtHandler
 )
 from src.db import DB
 from src.forget_code import ForgetCodeMenuHandler
@@ -157,7 +157,7 @@ class DiningBot:
             _, action = AutomaticReserveAlreadyActivatedHandler.separate_callback_data(update.callback_query.data)
             await self.reserve_handler.inline_already_activated_handler(update, context, action)
         elif type == "DAYS/FOOD_COURTS":
-            _, action, food_court = ChooseReserveDaysHandler.separate_callback_data(update.callback_query.data)
+            _, action, food_court = ChooseReserveDaysFoodCourtHandler.separate_callback_data(update.callback_query.data)
             await self.reserve_handler.inline_choosing_days_food_court_choosing_handler(update, context, action, food_court)
 
     async def send_main_menu(self, update, context):

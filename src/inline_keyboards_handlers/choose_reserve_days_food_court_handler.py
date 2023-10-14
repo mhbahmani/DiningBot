@@ -9,7 +9,7 @@ from src.messages import (
 
 PAGE_SIZE = 10
 
-class ChooseReserveDaysHandler:
+class ChooseReserveDaysFoodCourtHandler:
     @staticmethod
     def create_food_list_keyboard(food_courts: dict) -> InlineKeyboardMarkup:
         keyboard = []
@@ -24,17 +24,17 @@ class ChooseReserveDaysHandler:
                 row.append(
                     InlineKeyboardButton(
                         food_court_name,
-                        callback_data=ChooseReserveDaysHandler.create_callback_data(
+                        callback_data=ChooseReserveDaysFoodCourtHandler.create_callback_data(
                             action="SELECT", food_court_id=food_court_id)))
             keyboard.append(row)
 
         row = []
         row.append(
             InlineKeyboardButton(
-                cancel_button_message, callback_data=ChooseReserveDaysHandler.create_callback_data("CANCEL")))
+                cancel_button_message, callback_data=ChooseReserveDaysFoodCourtHandler.create_callback_data("CANCEL")))
         row.append(
             InlineKeyboardButton(
-                done_button_message, callback_data=ChooseReserveDaysHandler.create_callback_data("DONE")))
+                done_button_message, callback_data=ChooseReserveDaysFoodCourtHandler.create_callback_data("DONE")))
         keyboard.append(row)
 
         return InlineKeyboardMarkup(keyboard)

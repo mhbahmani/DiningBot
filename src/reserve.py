@@ -8,7 +8,7 @@ from src.inline_keyboards_handlers.choose_food_courts_handler import (
 from src.inline_keyboards_handlers.food_priorities_handler import (
     FoodPrioritiesHandler)
 from src.inline_keyboards_handlers.choose_reserve_days_food_court_handler import (
-    ChooseReserveDaysHandler)
+    ChooseReserveDaysFoodCourtHandler)
 from src.dining import Dining
 import src.messages as messages
 import src.static_data as static_data
@@ -246,7 +246,7 @@ class ReserveMenuHandler:
             ])
             await update.message.reply_text(
                 text=messages.choose_days_to_reserve_message,
-                reply_markup=ChooseReserveDaysHandler.create_food_list_keyboard(user_food_courts)
+                reply_markup=ChooseReserveDaysFoodCourtHandler.create_food_list_keyboard(user_food_courts)
             )
             
         return static_data.CHOOSE_RESERVE_DAYS_FOOD_COURT

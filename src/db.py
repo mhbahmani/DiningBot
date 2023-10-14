@@ -91,6 +91,18 @@ class DB:
             {'$set': {'food_courts': food_courts, 'automatic_reserve': True, 'next_week_reserve': False}}
         )
 
+    def get_user_food_courts_with_automatic_reserve(self, user_id: int):
+        return self.db.users.find_one(
+            filter={'user_id': user_id},
+            projection={'_id': 0, 'user_id': 1, 'food_courts': 1, 'automatic_reserve': 1}
+        )
+
+    def set_user_reserve_days(self, user_id: int, choosed_days: dict = {}):
+        self.db.users.update_one(
+            {'user_id': int(user_id)},
+            {"$set": {"reserve_days": choosed_days}}
+        )
+
     def set_all_users_next_week_reserve_status(self, status: bool):
         self.db.users.update_many({"automatic_reserve": True}, {"$set": {"next_week_reserve": status}})
 

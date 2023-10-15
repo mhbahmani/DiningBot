@@ -1,7 +1,5 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from src.messages import (
-    next_page_button_message,
-    previous_page_button_message,
     done_button_message,
     cancel_button_message
 )
@@ -11,7 +9,7 @@ PAGE_SIZE = 10
 
 class ChooseReserveDaysFoodCourtHandler:
     @staticmethod
-    def create_food_list_keyboard(food_courts: dict) -> InlineKeyboardMarkup:
+    def create_food_courts_list_keyboard(food_courts: dict) -> InlineKeyboardMarkup:
         keyboard = []
         food_courts = list(food_courts.items())
         food_courts.reverse()

@@ -9,6 +9,9 @@ from src.inline_keyboards_handlers.food_priorities_handler import (
     FoodPrioritiesHandler)
 from src.inline_keyboards_handlers.choose_reserve_days_food_court_handler import (
     ChooseReserveDaysFoodCourtHandler)
+from src.inline_keyboards_handlers.choose_reserve_days_handler import (
+    ChooseReserveDaysHandler
+)
 from src.dining import Dining
 import src.messages as messages
 import src.static_data as static_data
@@ -216,20 +219,27 @@ class ReserveMenuHandler:
         )
 
     async def reserve_next_week_food(self, update, context):
-        await update.message.reply_text(
-            text=messages.still_under_struction,
-        )
-        return static_data.RESERVE_MENU_CHOOSING
+        # TODO: Implement this
+        # This function is related to RESERVE_LABEL button and it's for 
+        # when user wants to trigger reserve function for it'self
+        return await self.send_reserve_menu(update, context)
 
     async def send_reserve_menu(self, update, context):
         # await update.message.reply_text(
         #     text=messages.still_under_struction,
         # )
         # return static_data.MAIN_MENU_CHOOSING
-        await update.message.reply_text(
-            text=messages.reserve_menu_messsage,
-            reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES),
-        )
+        if not update.message:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=messages.reserve_menu_messsage,
+                reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES)
+            )
+        else:
+            await update.message.reply_text(
+                text=messages.reserve_menu_messsage,
+                reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES),
+            )
         return static_data.RESERVE_MENU_CHOOSING
 
     async def choose_days_to_reserve(self, update, context):
@@ -246,10 +256,8 @@ class ReserveMenuHandler:
             ])
             await update.message.reply_text(
                 text=messages.choose_days_to_reserve_message,
-                reply_markup=ChooseReserveDaysFoodCourtHandler.create_food_list_keyboard(user_food_courts)
+                reply_markup=ChooseReserveDaysFoodCourtHandler.create_food_courts_list_keyboard(user_food_courts)
             )
-            
-        return static_data.CHOOSE_RESERVE_DAYS_FOOD_COURT
 
     async def inline_food_court_choosing_handler(self, update, context, action, choosed):
         query = update.callback_query
@@ -288,7 +296,7 @@ class ReserveMenuHandler:
         logging.debug("Process choosed action or food: {} {}".format(action, choosed_food_court))
         if action == "SELECT":
             context.user_data['choosed_days'] = \
-                context.user_data.get('choosed_days', {})[choosed_food_court] = {} 
+                context.user_data.get('choosed_days', {choosed_food_court: []})
             await context.bot.send_message(
                 text=static_data.PLACES_NAME_BY_ID.get(choosed_food_court, messages.food_court_not_found_message),
                 chat_id=update.effective_chat.id
@@ -298,29 +306,67 @@ class ReserveMenuHandler:
                     static_data.PLACES_NAME_BY_ID[choosed_food_court]
                 ),
                 chat_id=query.message.chat_id,
-                message_id=query.message.message_id
+                message_id=query.message.message_id,
+                reply_markup=ChooseReserveDaysHandler.create_days_list_keyboard(choosed_food_court)
             )
             return static_data.CHOOSE_RESERVE_DAYS
         elif action == "CANCEL":
+            print(static_data.CHOOSE_RESERVE_DAYS_FOOD_COURT)
             if context.user_data: context.user_data.clear()
             await context.bot.edit_message_text(
                 text=messages.choosing_food_courts_cancel_message,
                 chat_id=query.message.chat_id,
                 message_id=query.message.message_id)     
+            return await self.send_reserve_menu(update, context)
+        elif action == "DONE":
+            if not context.user_data.get('choosed_days'):
+                await context.bot.send_message(
+                    text=messages.no_reserve_day_choosed_message,
+                    chat_id=update.effective_chat.id
+                )
+                return await self.send_reserve_menu(update, context)
+            self.db.set_user_reserve_days(update.effective_chat.id, context.user_data.get('choosed_days', {}))
+            if context.user_data: context.user_data.clear()
+            await context.bot.edit_message_text(
+                text=messages.seting_reserve_days_done_message,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id)
+            return await self.send_reserve_menu(update, context)
+
+    async def inline_choosing_days_handler(self, update, context, action, choosed_food_court, choosed_day_id):
+        query = update.callback_query
+        logging.debug("Process choosed action or food: {} {} {}".format(action, choosed_food_court, choosed_day_id))
+        if action == "SELECT":
+            choosed_day_id = int(choosed_day_id)
+            context.user_data['choosed_days'][choosed_food_court].append(choosed_day_id)
+            await context.bot.send_message(
+                text=static_data.WEEK_DAYS[choosed_day_id],
+                chat_id=update.effective_chat.id
+            )
+        elif action == "CANCEL":
+            if context.user_data: context.user_data.clear()
+            await context.bot.edit_message_text(
+                text=messages.choosing_food_courts_cancel_message,
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id)
             return static_data.RESERVE_MENU_CHOOSING
         elif action == "DONE":
-            if not context.user_data.get('food_courts'):
+            if not context.user_data.get('choosed_days'):
                 await context.bot.send_message(
                     text=messages.no_reserve_day_choosed_message,
                     chat_id=update.effective_chat.id
                 )
                 return
-            self.db.set_user_reserve_days(update.effective_chat.id, context.user_data.get('choosed_days', {}))
+            user_food_courts = dict([
+                (static_data.PLACES_NAME_BY_ID[food_court_id], food_court_id) for food_court_id in self.db.get_user_food_courts_with_automatic_reserve(update.effective_chat.id)['food_courts']
+            ])
             await context.bot.edit_message_text(
-                text=messages.seting_reserve_days_done_message,
+                text=messages.food_court_days_choosed_message,
                 chat_id=query.message.chat_id,
-                message_id=query.message.message_id)
-            return static_data.RESERVE_MENU_CHOOSING
+                message_id=query.message.message_id,
+                reply_markup=ChooseReserveDaysFoodCourtHandler.create_food_courts_list_keyboard(user_food_courts)
+            )
+            return await self.reserve_next_week_food(update, context)
 
     async def inline_already_activated_handler(self, update, context, action):
         query = update.callback_query

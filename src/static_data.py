@@ -36,6 +36,8 @@ PLACES_NAME_BY_ID = {
     # "59": "رستوران های مکمل - سلف آزاد - لاله"
 }
 
+UNIVERSITY_FOOD_COURT_IDS = ["1", "2"]
+
 FOOD_COURT_IDS = {
     "سلف پسرها": 1,
     "سلف دخترها": 2,
@@ -67,6 +69,15 @@ MEAL_EN_TO_FA = {
     "sahari": "سحری",
     "eftari": "افطار"
 }
+
+WEEK_DAYS = [
+    "شنبه",
+    "یک‌شنبه",
+    "دوشنبه",
+    "سه‌شنبه",
+    "چهارشنبه",
+    "پنج‌شنبه"
+]
 
 # Stages
 MAIN_MENU_CHOOSING, FORGET_CODE_MENU_CHOOSING, RESERVE_MENU_CHOOSING, \
@@ -117,6 +128,7 @@ FORGET_CODE_MENU_CHOICES = [
     [RANKING_FORGET_CODE_LABLE, FAKE_FORGET_CODE_LABLE, TODAY_CODE_STATISTICS_LABEL],
     [BACK_TO_MAIN_MENU_LABEL]
 ]
+
 # TODO: Add RESERVE_LABEL to RESERVE_MENU_CHOICES
 RESERVE_MENU_CHOICES = [
     [SET_USERNAME_AND_PASSWORD_LABEL, ACTIVATE_AUTOMATIC_RESERVE_LABEL],

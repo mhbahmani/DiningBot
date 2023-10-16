@@ -32,7 +32,7 @@ class AutomaticReserveHandler:
                 'ERROR': logging.ERROR,
             }[log_level])
 
-        self.load_foods()
+        # self.load_foods()
 
     def load_foods(self):
         for food in self.db.get_all_foods(name=True, id=True):
@@ -64,7 +64,7 @@ class AutomaticReserveHandler:
                         logging.debug("Reserving food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                         reserve_success, reserved_foods, remain_credit = self.reserve_next_week_food_based_on_user_priorities(
                             place_id,
-                            user.get('reserve_days'),
+                            user.get('reserve_days', {}).get(str(place_id), []),
                             user.get('priorities',
                                     []),
                             user['student_number'],
@@ -124,7 +124,7 @@ class AutomaticReserveHandler:
 
         logging.info("Automatic reserve finished")
 
-    def reserve_next_week_food_based_on_user_priorities(self, place_id, reserve_days: set, user_priorities: list, username,
+    def reserve_next_week_food_based_on_user_priorities(self, place_id, reserve_days: list, user_priorities: list, username,
                                                         password):
         try:
             dining = Dining(username, password)

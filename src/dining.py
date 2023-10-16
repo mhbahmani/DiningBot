@@ -94,7 +94,7 @@ class Dining:
                     if food_index == choosed_food_indices[day][meal] \
                         and (not reserve_day_ids \
                         or (reserve_day_ids and " ".join(day.split()[1:]).strip() in reserve_days)):
-                        print(food.get("food"))
+                        # print(food.get("food"))
                         food_data += [
                             (f"userWeekReserves[{i}].selected", 'true'),
                             (f"userWeekReserves[{i}].selectedCount", '1')

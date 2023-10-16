@@ -32,7 +32,7 @@ class AutomaticReserveHandler:
                 'ERROR': logging.ERROR,
             }[log_level])
 
-        # self.load_foods()
+        self.load_foods()
 
     def load_foods(self):
         for food in self.db.get_all_foods(name=True, id=True):

@@ -325,7 +325,7 @@ class ReserveMenuHandler:
                     chat_id=update.effective_chat.id
                 )
                 return await self.send_reserve_menu(update, context)
-            self.db.set_user_reserve_days(update.effective_chat.id, context.user_data.get('choosed_days', {}))
+            self.db.set_user_reserve_days(update.effective_chat.id, context.user_data.get('choosed_days', []))
             if context.user_data: context.user_data.clear()
             await context.bot.edit_message_text(
                 text=messages.seting_reserve_days_done_message,
@@ -366,7 +366,6 @@ class ReserveMenuHandler:
                 message_id=query.message.message_id,
                 reply_markup=ChooseReserveDaysFoodCourtHandler.create_food_courts_list_keyboard(user_food_courts)
             )
-            return await self.reserve_next_week_food(update, context)
 
     async def inline_already_activated_handler(self, update, context, action):
         query = update.callback_query

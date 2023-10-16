@@ -48,7 +48,7 @@ class Dining:
         if not self.__setad_login():
             raise (Exception(ErrorHandler.INVALID_DINING_CREDENTIALS_ERROR))
 
-    def reserve_food(self, place_id: int, foods: dict, choosed_food_indices: dict) -> bool:
+    def reserve_food(self, place_id: int, foods: dict, choosed_food_indices: dict, reserve_day_ids: list = []) -> bool:
         """
         food: {
             food: <food_name>,
@@ -64,6 +64,8 @@ class Dining:
         start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7)
         epoch_start_of_the_week = str(int(start_of_week.timestamp()) * 1000)
         epoch_start_of_the_next_week = str(int((now + datetime.timedelta(days=(7 - (now.weekday() + 2)))).replace(hour=0, minute=0, second=0).timestamp()) * 1000)
+
+        reserve_days = set(static_data.WEEK_DAYS[day_id] for day_id in reserve_day_ids)
 
         data = [
             ('weekStartDateTime', f'{epoch_start_of_the_next_week}'),
@@ -89,8 +91,10 @@ class Dining:
                 # foods_list.reverse()
                 for food_index, food in enumerate(foods_list):
                     food_data = []
-                    if food_index == choosed_food_indices[day][meal]:
-                    # if food.get("food") in ['شوید پلو با مرغ', 'چلو خورشت مسما بادمجان', 'رشته پلو با گوشت', 'چلو‌خورش بامیه', 'چلو با شامی کباب']:
+                    if food_index == choosed_food_indices[day][meal] \
+                        and (not reserve_day_ids \
+                        or (reserve_day_ids and " ".join(day.split()[1:]).strip() in reserve_days)):
+                        print(food.get("food"))
                         food_data += [
                             (f"userWeekReserves[{i}].selected", 'true'),
                             (f"userWeekReserves[{i}].selectedCount", '1')
@@ -170,8 +174,8 @@ class Dining:
         """
         table = self.__load_food_table(place_id=place_id)
         # Save page.text to file
-        # with open("out.html", "w") as file:
-        #     file.write(bs(table.content, "html.parser").prettify())
+        with open("out.html", "w") as file:
+            file.write(bs(table.content, "html.parser").prettify())
         self.remainCredit = int(bs(table.content, "html.parser").find("span", {"id": "creditId"}).text)
         if table.status_code != HTTPStatus.OK:
             logging.debug("Something went wrong with status code: %s", table.status_code)
@@ -317,10 +321,12 @@ class Dining:
                         input_counter = 0
                         # if meal_food_counter == 0: inputs.reverse()
                         for input in inputs:
+                            if input.attrs.get("type") == "hidden" \
+                                and input.attrs.get("id", "").count("hidden") \
+                                and int(input.attrs.get("value", 0)) == 1:
+                                logging.info("User reserved his food")
+                                raise(AlreadyReserved)
                             if input.attrs.get('type') == "checkbox":
-                                if input.attrs.get("value", False) == "true":
-                                    logging.info("User reserved his food")
-                                    raise(AlreadyReserved)
                                 food_id =  input.attrs['foodid']
                                 food_program_date = input.attrs['programdate']
                                 food_type_id = input.attrs['foodtypeid']

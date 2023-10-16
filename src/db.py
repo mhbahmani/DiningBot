@@ -55,7 +55,7 @@ class DB:
     def get_users_with_automatic_reserve(self):
         return self.db.users.find(
             filter={'automatic_reserve': True, 'next_week_reserve': False},
-            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
         )
 
     def get_user_ids_with_automatic_reserve(self):
@@ -70,7 +70,7 @@ class DB:
             # In new dining site, we can send a new reserve request in order to change the reserved foods.
             # Also, this function only be used in /reserve command. So, there is no need to "next_week_reserve" filter.
             filter={'user_id': user_id},
-            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1}
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
         )
 
     def set_user_next_week_reserve_status(self, user_id: int, status: bool):

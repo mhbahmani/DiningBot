@@ -72,11 +72,11 @@ MEAL_EN_TO_FA = {
 
 WEEK_DAYS = [
     "شنبه",
-    "یک‌شنبه",
+    "یکشنبه",
     "دوشنبه",
-    "سه‌شنبه",
+    "سه شنبه",
     "چهارشنبه",
-    "پنج‌شنبه"
+    "پنج شنبه"
 ]
 
 # Stages
@@ -112,7 +112,7 @@ RESERVE_LABEL = "رزرو غذا"
 RESERVE_REGEX = '^{}$'.format(RESERVE_LABEL)
 SET_USERNAME_AND_PASSWORD_LABEL = "تنظیم نام کاربری و رمز عبور"
 SET_USERNAME_AND_PASSWORD_REGEX = '^{}$'.format(SET_USERNAME_AND_PASSWORD_LABEL)
-CHOOSE_DAYS_LABEL = "انتخاب روزهایی ک غذا می‌خوای"
+CHOOSE_DAYS_LABEL = "انتخاب روزهایی که غذا می‌خوای"
 CHOOSE_DAYS_REGEX = '^{}$'.format(CHOOSE_DAYS_LABEL)
 ACTIVATE_AUTOMATIC_RESERVE_LABEL = "فعال کردن رزرو خودکار"
 ACTIVATE_AUTOMATIC_RESERVE_REGEX = '^{}$'.format(ACTIVATE_AUTOMATIC_RESERVE_LABEL)

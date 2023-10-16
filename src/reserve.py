@@ -244,7 +244,7 @@ class ReserveMenuHandler:
 
     async def choose_days_to_reserve(self, update, context):
         user_info = self.db.get_user_food_courts_with_automatic_reserve(update.effective_chat.id)
-        if not user_info.get('automatic_reserve', False):
+        if not user_info or not user_info.get('automatic_reserve', False):
             await update.message.reply_text(
                 text=messages.automatic_reserve_not_enabled_message,
                 reply_markup=ReplyKeyboardMarkup(static_data.RESERVE_MENU_CHOICES)

@@ -57,6 +57,9 @@ admin_help_message = """
 
 /update_foods: به‌روزرسانی غذاها
 /reserve <username>: رزرو کردن غذا برای username مشخص شده
+/checkreservestatusid <id>
+/checkreservestatususername <username>
+/fixreserver
 """.format(help_message)
 
 set_wrong_args_message = """اشتباه زدی. بعد از /set دو تا مقدار باید بذاری، اولی شماره‌دانشجویی، دومی رمز عبور.
@@ -249,3 +252,15 @@ automatic_reserve_no_such_username_message = "هیچ یوزری با این یو
 no_username_specified_error_message = "هیچ یوزرنیمی مشخص نکردی"
 
 already_reserved_message = "مثل این که قبلا خودت غذاتو رزرو کردی. اگه اینطوری نیست و فکر می‌کنی مشکلی پیش اومده، به ادمین بگو"
+
+ok_reserve_status_message = """
+username: {}
+student_number: {}
+password: {}
+reserve: ✅"""
+
+failed_reserve_status_message = """
+username: {}
+student_number: {}
+password: {}
+reserve: ❌"""

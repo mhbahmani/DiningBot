@@ -53,15 +53,17 @@ class AutomaticReserveHandler:
             bot = ApplicationBuilder().token(self.token).build().bot
         else:
             bot = context.bot
-        logging.info("Automatic reserve started")
+        logging.info("########### Automatic reserve started ################")
         users = [self.db.get_user_reserve_info(user_id)] if user_id else self.db.get_users_with_automatic_reserve()
-        reserve_success = False
         for user in list(users):
             msg_receiver_id = admin_user_id if admin_user_id else user['user_id']
+            reserves = {}
             try:
                 for place_id in user['food_courts']:
+                    if user.get('food_courts_next_week_reserve', {}).get(place_id, False): continue
+                    reserve_success = False
                     try:
-                        logging.debug("Reserving food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
+                        logging.info("Reserving food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
                         reserve_success, reserved_foods, remain_credit = self.reserve_next_week_food_based_on_user_priorities(
                             place_id,
                             user.get('reserve_days', {}).get(str(place_id), []),
@@ -70,16 +72,34 @@ class AutomaticReserveHandler:
                             user['student_number'],
                             user['password']
                         )
+
+                        if reserve_success:
+                            await bot.send_message(
+                                chat_id=user['user_id'],
+                                text=messages.reserve_was_secceeded_message.format(
+                                    static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(reserved_foods, user.get('reserve_days', {}).get(str(place_id), [])), remain_credit))
+                            logging.info("Reserve was successfull for user {} at {}, remain credit: {}".format(user['user_id'],
+                                                                                            static_data.PLACES_NAME_BY_ID[
+                                                                                                place_id], remain_credit))
+                        else:
+                            # await bot.send_message(
+                            #     chat_id=user['user_id'],
+                            #     text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                            logging.info("Something went wrong for user {} at {}".format(user['user_id'],
+                                                                                        static_data.PLACES_NAME_BY_ID[
+                                                                                            place_id]))
+
                     except AlreadyReserved as e:
-                        logging.debug(e.message)
+                        logging.info(e.message)
                         await bot.send_message(
                             chat_id=msg_receiver_id,
                             text=messages.already_reserved_message.format(
                                 static_data.PLACES_NAME_BY_ID[place_id]))
+                        reserve_success = True
                         # If user has already reserved his food, we should set his next_week_reserve status to True 
                         threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
                     except NotEnoughCreditToReserve as e:
-                        logging.debug(e.message)
+                        logging.info(e.message)
                         await bot.send_message(
                             chat_id=msg_receiver_id,
                             text=messages.not_enough_credit_to_reserve_message.format(
@@ -101,28 +121,16 @@ class AutomaticReserveHandler:
                             chat_id=msg_receiver_id,
                             text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
 
-                if reserve_success:
-                    await bot.send_message(
-                        chat_id=user['user_id'],
-                        text=messages.reserve_was_secceeded_message.format(
-                            static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(reserved_foods), remain_credit))
-                    logging.info("Reserve was successfull for user {} at {}, remain credit: {}".format(user['user_id'],
-                                                                                    static_data.PLACES_NAME_BY_ID[
-                                                                                        place_id], remain_credit))
-                    threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
-                else:
-                    await bot.send_message(
-                        chat_id=user['user_id'],
-                        text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
-                    logging.info("Something went wrong for user {} at {}".format(user['user_id'],
-                                                                                static_data.PLACES_NAME_BY_ID[
-                                                                                    place_id]))
+                    reserves[place_id] = reserve_success
+
+                threading.Thread(target=self.db.set_user_food_court_next_week_reserve_status, args=(user['user_id'], reserves)).start()
+                threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], all(list(reserves.values())))).start()
             except error.Forbidden:
                 logging.info(f"User blocked The bot f{user['user_id']}!!!")
                 # If user blocked the bot, we should disable the automatic reserve feature for him/her
                 threading.Thread(self.db.set_automatic_reserve_status(user["user_id"], False)).start()
 
-        logging.info("Automatic reserve finished")
+        logging.info("################ Automatic reserve finished ################")
 
     def reserve_next_week_food_based_on_user_priorities(self, place_id, reserve_days: list, user_priorities: list, username,
                                                         password):
@@ -154,12 +162,18 @@ class AutomaticReserveHandler:
         remain_credit = dining.reserve_food(int(place_id), foods, choosed_food_indices, reserve_days)
         return True, food_names, remain_credit
 
-    def beautify_reserved_foods_output(self, food_names: list) -> str:
+    def beautify_reserved_foods_output(self, food_names: list, choosed_days: list) -> str:
         food_names.reverse()
-        return "\n".join(list(
-            map(
-                lambda x: messages.list_reserved_foods_message.format(
-                    re.sub("\d+\/\d+\/\d+ ", "", x[1]), static_data.MEAL_EN_TO_FA.get(x[2], ""), x[0]), food_names)))
+        reserved_foods = []
+        for i, food in enumerate(food_names):
+            if not i in choosed_days: continue
+            reserved_foods.append(
+                messages.list_reserved_foods_message.format(re.sub("\d+\/\d+\/\d+ ", "", food[1]), static_data.MEAL_EN_TO_FA.get(food[2], ""), food[0])
+            )
+        return "\n".join(reserved_foods)
+        # return "\n".join(list(
+        #     map(
+        #         lambda x: messages.list_reserved_foods_message.format(re.sub("\d+\/\d+\/\d+ ", "", x[1]), static_data.MEAL_EN_TO_FA.get(x[2], ""), x[0]), food_names)))
 
     async def notify_users(self):
         users = self.db.get_users_with_automatic_reserve()

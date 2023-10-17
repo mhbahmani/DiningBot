@@ -13,6 +13,7 @@ from src.inline_keyboards_handlers.choose_reserve_days_handler import (
     ChooseReserveDaysHandler
 )
 from src.dining import Dining
+from src.error_handlers import AlreadyReserved
 import src.messages as messages
 import src.static_data as static_data
 import logging
@@ -223,6 +224,46 @@ class ReserveMenuHandler:
         # This function is related to RESERVE_LABEL button and it's for 
         # when user wants to trigger reserve function for it'self
         return await self.send_reserve_menu(update, context)
+
+    async def check_reserve_status_by_username(self, update, context, username: str = None):
+        if username: users = [self.db.get_user_info_by_username(username)]
+        else: users = self.db.get_users_with_automatic_reserve()
+
+        await self.check_reserve_status(update, context, users)
+
+    async def check_reserve_status_by_id(self, update, context, user_id: int = None):
+        if user_id: users = [self.db.get_user_info_by_id(user_id)]
+        else: users = self.db.get_users_with_automatic_reserve()
+
+        await self.check_reserve_status(update, context, users)
+    
+    async def check_reserve_status(sefl, update, context, users: list = []):
+        for user in users:
+            for food_court in user.get("food_courts", []):
+                try:
+                    Dining(user.get("student_number"), user.get("password")).get_reserve_table_foods(int(food_court))
+                    await update.message.reply_text(
+                        text=messages.failed_reserve_status_message.format(user.get("username"), user.get("student_number"), user.get("password"))
+                    )
+                except AlreadyReserved as e:
+                    logging.debug(e)
+                    await update.message.reply_text(
+                        text=messages.ok_reserve_status_message.format(user.get("username"), user.get("student_number"), user.get("password"))
+                    )
+
+    async def fix_reserve_status(self, update, context):
+        users = self.db.get_users_with_automatic_reserve()
+
+        for user in users:
+            for food_court in user.get("food_courts", []):
+                try:
+                    Dining(user.get("student_number"), user.get("password")).get_reserve_table_foods(int(food_court))
+                    logging.info("Reservation wasn't successful for user: {} {}".format(user.get("username"), user.get("user_id")))
+                except AlreadyReserved as e:
+                    logging.info("Reservation is all done for user: {} {}".format(user.get("username"), user.get("user_id")))
+                    threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
+                except Exception as e:
+                    logging.error("Error on check reservation for user {} with message {}".format(user['user_id'], e))
 
     async def send_reserve_menu(self, update, context):
         # await update.message.reply_text(

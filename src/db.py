@@ -16,6 +16,18 @@ class DB:
             {'$set': fields}, upsert=True
         )
 
+    def get_user_info_by_username(self, username: str):
+        return self.db.users.find_one(
+            filter={'username': username},
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
+        )
+    
+    def get_user_info_by_id(self, user_id: int):
+        return self.db.users.find_one(
+            filter={'user_id': int(user_id)},
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
+        )
+
     def get_user_login_info(self, user_id: int) -> tuple:
         out = self.db.users.find_one(
             filter={'user_id': int(user_id)},
@@ -55,7 +67,13 @@ class DB:
     def get_users_with_automatic_reserve(self):
         return self.db.users.find(
             filter={'automatic_reserve': True, 'next_week_reserve': False},
-            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1, 'food_courts_next_week_reserve': 1}
+        )
+
+    def get_all_users_with_automatic_reserve(self):
+        return self.db.users.find(
+            filter={'automatic_reserve': True, 'next_week_reserve': False},
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1, 'food_courts_next_week_reserve': 1}
         )
 
     def get_user_ids_with_automatic_reserve(self):
@@ -70,13 +88,19 @@ class DB:
             # In new dining site, we can send a new reserve request in order to change the reserved foods.
             # Also, this function only be used in /reserve command. So, there is no need to "next_week_reserve" filter.
             filter={'user_id': user_id},
-            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
+            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1, 'food_courts_next_week_reserve': 1}
         )
 
     def set_user_next_week_reserve_status(self, user_id: int, status: bool):
         self.db.users.update_one(
             {"user_id": int(user_id)},
             {"$set": {"next_week_reserve": status}}
+        )
+
+    def set_user_food_court_next_week_reserve_status(self, user_id: int, reserves: dict):
+        self.db.users.update_one(
+            {"user_id": int(user_id)},
+            {"$set": {"food_courts_next_week_reserve": reserves}}
         )
 
     def set_user_food_priorities(self, user_id: int, priorities: list):

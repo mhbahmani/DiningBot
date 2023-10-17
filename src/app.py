@@ -136,6 +136,26 @@ class DiningBot:
             return
         await self.reserve_handler.automatic_reserve(context, user_id, update.effective_chat.id)
 
+    @check_admin
+    async def check_reserve_status_by_id(self, update, context):
+        splited_text = update.message.text.split()
+        user_id = None
+        if len(splited_text) == 2:
+            user_id = splited_text[-1]
+        await self.reserve_handler.check_reserve_status_by_id(update, context, user_id)
+
+    @check_admin
+    async def check_reserve_status_by_username(self, update, context):
+        splited_text = update.message.text.split()
+        username = None
+        if len(splited_text) == 2:
+            username = splited_text[-1]
+        await self.reserve_handler.check_reserve_status_by_username(update, context, username)
+
+    @check_admin
+    async def fix_reservation_status_for_all_users(self, update, context):
+        await self.reserve_handler.fix_reserve_status(update, context)
+
     async def help(self, update, context):
         if self.is_admin(update):
             msg = messages.admin_help_message
@@ -229,6 +249,15 @@ class DiningBot:
 
         set_handler = CommandHandler('set', self.set, block=False)
         self.dispatcher.add_handler(set_handler)
+
+        check_reserve_status_id = CommandHandler('checksid', self.check_reserve_status_by_id, block=False)
+        self.dispatcher.add_handler(check_reserve_status_id)
+
+        check_reserve_status_username = CommandHandler('checkusername', self.check_reserve_status_by_username, block=False)
+        self.dispatcher.add_handler(check_reserve_status_username)
+
+        fix_reserve_status_for_all_users = CommandHandler('fixreservestatus', self.fix_reservation_status_for_all_users, block=False)
+        self.dispatcher.add_handler(fix_reserve_status_for_all_users)
 
         sendtoall_handler = CommandHandler('sendmsgtoall', self.send_to_all, block=False)
         self.dispatcher.add_handler(sendtoall_handler)

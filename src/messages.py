@@ -57,9 +57,9 @@ admin_help_message = """
 
 /update_foods: به‌روزرسانی غذاها
 /reserve <username>: رزرو کردن غذا برای username مشخص شده
-/checkreservestatusid <id>
-/checkreservestatususername <username>
-/fixreserver
+/checksid <id>
+/checkusername <username>
+/fixreservestatus: بررسی وضعیت رزرو غذای تمام کاربرها و به روزرسانی وضعیت رزرو در دیتابیس
 """.format(help_message)
 
 set_wrong_args_message = """اشتباه زدی. بعد از /set دو تا مقدار باید بذاری، اولی شماره‌دانشجویی، دومی رمز عبور.
@@ -256,11 +256,9 @@ already_reserved_message = "مثل این که قبلا خودت غذاتو تو
 ok_reserve_status_message = """
 username: {}
 student_number: {}
-password: {}
 reserve: ✅"""
 
 failed_reserve_status_message = """
 username: {}
 student_number: {}
-password: {}
 reserve: ❌"""

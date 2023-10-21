@@ -23,3 +23,8 @@ class FoodsCapacityIsOver(BaseException):
     def __init__(self, *args: object, message=None) -> None:
         message = message if message else "FoodsCapacityIsOver"
         super().__init__(message, *args)
+
+class DiningConnectionError(BaseException):
+    def __init__(self, *args: object, message=None) -> None:
+        message = message if message else "Can not connect to dining"
+        super().__init__(message, *args)

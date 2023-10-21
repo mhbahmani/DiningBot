@@ -13,7 +13,7 @@ from src.inline_keyboards_handlers.choose_reserve_days_handler import (
     ChooseReserveDaysHandler
 )
 from src.dining import Dining
-from src.error_handlers import AlreadyReserved
+from src.error_handlers import AlreadyReserved, DiningConnectionError
 import src.messages as messages
 import src.static_data as static_data
 import logging
@@ -168,23 +168,31 @@ class ReserveMenuHandler:
     async def handle_password_input(self, update, context):
         password = update.message.text
         message_id = (await update.message.reply_text(messages.username_and_password_saved_message)).message_id
-        if not Dining.check_username_and_password(context.user_data['username'], password):
+        try:
+            if not Dining.check_username_and_password(context.user_data['username'], password):
+                await context.bot.edit_message_text(
+                    text=messages.username_or_password_incorrect_message,
+                    chat_id=update.message.chat_id,
+                    message_id=message_id,
+                )
+            else:
+                await context.bot.edit_message_text(
+                    text=messages.username_and_password_correct_message,
+                    chat_id=update.message.chat_id,
+                    message_id=message_id,
+                )
+                self.db.update_user_info({
+                    "user_id": update.message.chat.id,
+                    "username": update.effective_user.username,
+                    "student_number": context.user_data['username'],
+                    "password": password})
+        except DiningConnectionError:
             await context.bot.edit_message_text(
-                text=messages.username_or_password_incorrect_message,
+                text=messages.dining_connection_error_message,
                 chat_id=update.message.chat_id,
                 message_id=message_id,
             )
-        else:
-            await context.bot.edit_message_text(
-                text=messages.username_and_password_correct_message,
-                chat_id=update.message.chat_id,
-                message_id=message_id,
-            )
-            self.db.update_user_info({
-                "user_id": update.message.chat.id,
-                "username": update.effective_user.username,
-                "student_number": context.user_data['username'],
-                "password": password})
+   
         await self.send_reserve_menu(update, context)
         return static_data.RESERVE_MENU_CHOOSING
 

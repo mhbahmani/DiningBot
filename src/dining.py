@@ -3,6 +3,7 @@ from http import HTTPStatus
 from src.error_handlers import ErrorHandler
 from src.error_handlers import (
     NotEnoughCreditToReserve,
+    DiningConnectionError,
     FoodsCapacityIsOver,
     NoSuchFoodSchedule,
     AlreadyReserved
@@ -244,6 +245,11 @@ class Dining:
         logging.debug("Get login page")
 
         reserve_page = session.get(Dining.RESERVE_PAGE_URL)
+
+        if reserve_page.status_code != HTTPStatus.OK:
+            logging.info(f"Something went wrong with connection to dining with status code {reserve_page.status_code}")
+            raise DiningConnectionError()
+
         csrf = bs(reserve_page.content, "html.parser").find("input", {"name": "_csrf"}).get("value")
         data = {
             '_csrf': csrf,

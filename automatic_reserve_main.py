@@ -20,6 +20,7 @@ if __name__ == '__main__':
                 host=config('DB_HOST', default='127.0.0.1'),
                 port=config('DB_PORT', default='27017')
             ),
+            sentry_dsn=config('SENTRY_DSN', default=None)
         )
 
     schedule.every().tuesday.at("10:00").do(automatic_reserve_handler.clean_reservation_status)

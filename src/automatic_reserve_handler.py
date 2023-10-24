@@ -5,7 +5,8 @@ from src.error_handlers import (
     NotEnoughCreditToReserve,
     FoodsCapacityIsOver,
     NoSuchFoodSchedule,
-    AlreadyReserved
+    AlreadyReserved,
+    ErrorHandler
 )
 from src.dining import Dining
 from telegram.ext import ApplicationBuilder
@@ -16,7 +17,7 @@ import re
 
 
 class AutomaticReserveHandler:
-    def __init__(self, token="TOKEN", admin_ids=set(), log_level='INFO', db=None) -> None:
+    def __init__(self, token="TOKEN", admin_ids=set(), log_level='INFO', db=None, sentry_dsn: str = None) -> None:
         self.db = db
         self.token = token
         self.admin_ids = admin_ids
@@ -31,6 +32,8 @@ class AutomaticReserveHandler:
                 'DEBUG': logging.DEBUG,
                 'ERROR': logging.ERROR,
             }[log_level])
+
+        self.error_handler = ErrorHandler(admin_ids, sentry_dsn)
 
         self.load_foods()
 

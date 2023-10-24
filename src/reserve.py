@@ -251,12 +251,12 @@ class ReserveMenuHandler:
                 try:
                     Dining(user.get("student_number"), user.get("password")).get_reserve_table_foods(int(food_court))
                     await update.message.reply_text(
-                        text=messages.failed_reserve_status_message.format(user.get("username"), user.get("student_number"))
+                        text=messages.failed_reserve_status_message.format(user.get("username"), user.get("student_number"), food_court)
                     )
                 except AlreadyReserved as e:
                     logging.debug(e)
                     await update.message.reply_text(
-                        text=messages.ok_reserve_status_message.format(user.get("username"), user.get("student_number"))
+                        text=messages.ok_reserve_status_message.format(user.get("username"), user.get("student_number"), food_court)
                     )
 
     async def fix_reserve_status(self, update, context):
@@ -326,7 +326,7 @@ class ReserveMenuHandler:
                     chat_id=update.effective_chat.id
                 )
                 return
-            self.db.set_user_food_courts(update.effective_chat.id, context.user_data.get('food_courts', []))
+            self.db.set_user_food_courts(update.effective_chat.id, list(set(context.user_data.get('food_courts', []))))
             await context.bot.edit_message_text(
                 text=messages.choosing_food_courts_done_message,
                 chat_id=query.message.chat_id,

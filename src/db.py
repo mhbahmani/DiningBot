@@ -19,13 +19,13 @@ class DB:
     def get_user_info_by_username(self, username: str):
         return self.db.users.find_one(
             filter={'username': username},
-            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
+            projection={'_id': 0, 'username': 1, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
         )
     
     def get_user_info_by_id(self, user_id: int):
         return self.db.users.find_one(
             filter={'user_id': int(user_id)},
-            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
+            projection={'_id': 0, 'username': 1, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1}
         )
 
     def get_user_login_info(self, user_id: int) -> tuple:
@@ -67,7 +67,7 @@ class DB:
     def get_users_with_automatic_reserve(self):
         return self.db.users.find(
             filter={'automatic_reserve': True, 'next_week_reserve': False},
-            projection={'_id': 0, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1, 'food_courts_next_week_reserve': 1}
+            projection={'_id': 0, 'username': 1, 'user_id': 1, 'priorities': 1, 'food_courts': 1, 'student_number': 1, 'password': 1, 'reserve_days': 1, 'food_courts_next_week_reserve': 1}
         )
 
     def get_all_users_with_automatic_reserve(self):

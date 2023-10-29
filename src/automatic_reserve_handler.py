@@ -165,18 +165,16 @@ class AutomaticReserveHandler:
         remain_credit = dining.reserve_food(int(place_id), foods, choosed_food_indices, reserve_days)
         return True, food_names, remain_credit
 
-    def beautify_reserved_foods_output(self, food_names: list, choosed_days: list) -> str:
+    def beautify_reserved_foods_output(self, food_names: list, choosed_days: list = []) -> str:
         food_names.reverse()
         reserved_foods = []
         for i, food in enumerate(food_names):
-            if not i in choosed_days: continue
+            # If choosed days is empty, the whole week has been reserved
+            if choosed_days and not i in choosed_days: continue
             reserved_foods.append(
                 messages.list_reserved_foods_message.format(re.sub("\d+\/\d+\/\d+ ", "", food[1]), static_data.MEAL_EN_TO_FA.get(food[2], ""), food[0])
             )
         return "\n".join(reserved_foods)
-        # return "\n".join(list(
-        #     map(
-        #         lambda x: messages.list_reserved_foods_message.format(re.sub("\d+\/\d+\/\d+ ", "", x[1]), static_data.MEAL_EN_TO_FA.get(x[2], ""), x[0]), food_names)))
 
     async def notify_users(self):
         users = self.db.get_users_with_automatic_reserve()

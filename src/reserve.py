@@ -249,14 +249,15 @@ class ReserveMenuHandler:
         for user in users:
             for food_court in user.get("food_courts", []):
                 try:
-                    Dining(user.get("student_number"), user.get("password")).get_reserve_table_foods(int(food_court))
+                    dining = Dining(user.get("student_number"), user.get("password"))
+                    dining.get_reserve_table_foods(int(food_court))
                     await update.message.reply_text(
-                        text=messages.failed_reserve_status_message.format(user.get("username"), user.get("student_number"), food_court)
+                        text=messages.failed_reserve_status_message.format(user.get("username"), user.get("student_number"), food_court, dining.remain_credit)
                     )
                 except AlreadyReserved as e:
                     logging.debug(e)
                     await update.message.reply_text(
-                        text=messages.ok_reserve_status_message.format(user.get("username"), user.get("student_number"), food_court)
+                        text=messages.ok_reserve_status_message.format(user.get("username"), user.get("student_number"), food_court, dining.remain_credit)
                     )
 
     async def fix_reserve_status(self, update, context):

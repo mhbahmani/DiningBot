@@ -45,7 +45,7 @@ class Dining:
         }
         self.user_id = None
         self.csrf = None
-        self.remainCredit = 0
+        self.remain_credit = 0
         if not self.__setad_login():
             raise (Exception(ErrorHandler.INVALID_DINING_CREDENTIALS_ERROR))
 
@@ -126,12 +126,14 @@ class Dining:
         for d in data_batch:
             data += d
 
+        # data.append(('_csrf', self.csrf))
+
         response = self.session.post(Dining.RESERVE_FOOD_URL, data=data)
         text = bs(response.content, "html.parser").prettify()
         # with open("out.html", "w") as file:
         #     file.write(bs(response.content, "html.parser").prettify())
         # with open("food_data.txt", "w") as file:
-            # file.writelines([f'{item}\n' for item in data])
+        #     file.writelines([f'{item}\n' for item in data])
         if "غذاهای ذیل تا حداکثر سقف ممکن توسط کاربران رزرو شده اند و امکان رزرو در آنها وجود ندارد" in text:
             raise(FoodsCapacityIsOver)
         if "تعداد مجاز رزرو روزانه شما بیش از حد مجاز است" in text:
@@ -139,9 +141,13 @@ class Dining:
         if "برنامه غذایی معادل پیدا نشد" in text or "لطفا مقدار مناسب وارد کنید" in text:
             raise(NoSuchFoodSchedule)
         if "اعتبار شما کم است" in text:
+            with open(f"out-{self.student_id}.html", "w") as file:
+                file.write(bs(response.content, "html.parser").prettify())
             raise(NotEnoughCreditToReserve)
-        self.remainCredit -= total_food_prices
-        return self.remainCredit
+        if "تغییر اطلاعات رزرو" in text:
+            return False
+        self.remain_credit -= total_food_prices
+        return self.remain_credit
 
     def cancel_food(self, user_id: int, food_id: int):
         params = {'user_id': user_id, }
@@ -175,9 +181,9 @@ class Dining:
         """
         table = self.__load_food_table(place_id=place_id)
         # Save page.text to file
-        with open("out.html", "w") as file:
-            file.write(bs(table.content, "html.parser").prettify())
-        self.remainCredit = int(bs(table.content, "html.parser").find("span", {"id": "creditId"}).text)
+        # with open("out.html", "w") as file:
+            # file.write(bs(table.content, "html.parser").prettify())
+        self.remain_credit = int(bs(table.content, "html.parser").find("span", {"id": "creditId"}).text)
         if table.status_code != HTTPStatus.OK:
             logging.debug("Something went wrong with status code: %s", table.status_code)
             return {}

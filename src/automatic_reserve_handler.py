@@ -185,7 +185,7 @@ class AutomaticReserveHandler:
                     chat_id=user['user_id'],
                     text=messages.automatic_reserve_notification_message
                 )
-            except error.Unauthorized:
+            except error.Forbidden:
                 continue
 
     async def notify_users_about_reservation_status(self):
@@ -198,5 +198,5 @@ class AutomaticReserveHandler:
                     parse_mode="MarkdownV2",
                     text=messages.you_dont_have_food_for_next_week_message
                 )
-            except error.Unauthorized:
+            except error.Forbidden:
                 continue

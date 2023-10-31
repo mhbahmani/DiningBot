@@ -121,7 +121,7 @@ class Dining:
                     data_batch.append(food_data)
                     i += 1
         
-        data.insert(1,('remainCredit', str(self.remainCredit - total_food_prices)))
+        data.insert(1,('remainCredit', str(self.remain_credit - total_food_prices)))
         # data_batch.reverse()
         for d in data_batch:
             data += d

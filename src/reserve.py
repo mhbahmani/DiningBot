@@ -127,7 +127,15 @@ class ReserveMenuHandler:
                 chat_id=update.effective_chat.id
             )
         elif action == "DONE":
-            self.db.set_user_food_priorities(update.effective_chat.id, context.user_data.get('priorities'))
+            # Set priorities add user to users collection if it's not
+            self.db.update_user_info({
+                    "user_id": update.effective_chat.id,
+                    "username": update.effective_user.username,
+                    "priorities": context.user_data.get('priorities'),
+                    "automatic_reserve": False,
+                    "next_week_reserve": False})
+            # Deprecated
+            # self.db.set_user_food_priorities(update.effective_chat.id, context.user_data.get('priorities'))
             if context.user_data: context.user_data.clear()
             await context.bot.edit_message_text(
                 text=messages.choosing_food_priorities_done_message,

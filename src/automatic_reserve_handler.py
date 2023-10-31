@@ -116,13 +116,15 @@ class AutomaticReserveHandler:
                     except NoSuchFoodSchedule as e:
                         logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e.message))
                         await bot.send_message(
-                            chat_id=msg_receiver_id,
-                            text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                            chat_id=self.admin_ids[0],
+                            # text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                            text=messages.reserve_was_failed_message.format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id], place_id, e.message))
                     except Exception as e:
                         logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e))
                         await bot.send_message(
-                            chat_id=msg_receiver_id,
-                            text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                            chat_id=self.admin_ids[0],
+                            # text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
+                            text=messages.reserve_was_failed_message.format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id], place_id, e.message))
 
                     reserves[place_id] = reserve_success
 

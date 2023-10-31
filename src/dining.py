@@ -79,7 +79,6 @@ class Dining:
             ('selectedSelfDefId', str(place_id)),
         ]
 
-        # i = sum([ len(foods[day]['lunch']) for day in foods ]) - 1
         i = 0
         food_data = []
         data_batch = []
@@ -141,11 +140,9 @@ class Dining:
         if "برنامه غذایی معادل پیدا نشد" in text or "لطفا مقدار مناسب وارد کنید" in text:
             raise(NoSuchFoodSchedule)
         if "اعتبار شما کم است" in text:
-            with open(f"out-{self.student_id}.html", "w") as file:
-                file.write(bs(response.content, "html.parser").prettify())
+            # with open(f"out-{self.student_id}.html", "w") as file:
+            #     file.write(bs(response.content, "html.parser").prettify())
             raise(NotEnoughCreditToReserve)
-        if "تغییر اطلاعات رزرو" in text:
-            return False
         self.remain_credit -= total_food_prices
         return self.remain_credit
 
@@ -204,8 +201,6 @@ class Dining:
         }
 
         response = self.session.post('https://setad.dining.sharif.edu/j_security_check',  data=data)
-        # with open("out.html", "w") as file:
-        #     file.write(bs(response.content, "html.parser").prettify())
 
         script = bs(response.content, "html.parser").find("script", {"type": "text/javascript"}).next.strip()
         self.csrf = re.match(r".*X-CSRF-TOKEN' : '(?P<csrf>.*)'}.*", script).group("csrf")
@@ -277,7 +272,6 @@ class Dining:
         now = datetime.datetime.now()
         start_of_week = now - datetime.timedelta(days=(now.weekday() + 2) % 7) + datetime.timedelta(weeks=week)
         epoch_start_of_week = str(int(start_of_week.timestamp()) * 1000)
-        # print(epoch_start_of_week)
 
         data = [
             ('weekStartDateTime', epoch_start_of_week),
@@ -292,18 +286,9 @@ class Dining:
         ]
 
         return self.session.post(Dining.RESERVE_FOOD_URL, data=data)
-        # Save response text to out.html
-        # with open("out.html", "w") as file:
-        #    file.write(bs(response.content, "html.parser").prettify())
 
     def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
         content = bs(reserve_table.content, "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table") # TODO: Uncommnet
-        # with open("out.html", "w") as file:
-        #     file.writelines(str(bs(reserve_table.content, "html.parser")))
-        # content = None
-        # with open("out.html", "r") as file:
-        #     # content = bs(str(file.read()), "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table")
-        #     content = bs(str(file.read()), "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table")
 
         self.meals = [static_data.MEAL_FA_TO_EN[time.text.split(("\n"))[1].strip()] for time in
                       content.findNext("tr").find_all("td")]
@@ -363,8 +348,6 @@ class Dining:
 
     def __parse_food_table_to_get_foods_list(self, table: requests.Response) -> list:
         content = bs(table.content, "html.parser")
-        # with open("content.html", "w") as file:
-        #     file.write(str(content))
         foods = content.find("table").find_all("span")[2:]
         result = []
         for food in foods:

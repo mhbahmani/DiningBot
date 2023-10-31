@@ -186,7 +186,8 @@ class AutomaticReserveHandler:
                     text=messages.automatic_reserve_notification_message
                 )
             except error.Forbidden:
-                continue
+                # If user blocked the bot, we should disable the automatic reserve feature for him/her
+                threading.Thread(self.db.set_automatic_reserve_status(user["user_id"], False)).start()
 
     async def notify_users_about_reservation_status(self):
         users = self.db.get_users_with_automatic_reserve()
@@ -199,4 +200,5 @@ class AutomaticReserveHandler:
                     text=messages.you_dont_have_food_for_next_week_message
                 )
             except error.Forbidden:
-                continue
+                # If user blocked the bot, we should disable the automatic reserve feature for him/her
+                threading.Thread(self.db.set_automatic_reserve_status(user["user_id"], False)).start()

@@ -3,6 +3,7 @@ from http import HTTPStatus
 from src.error_handlers import ErrorHandler
 from src.error_handlers import (
     NotEnoughCreditToReserve,
+    NoFoodScheduleForUser,
     DiningConnectionError,
     FoodsCapacityIsOver,
     NoSuchFoodSchedule,
@@ -290,8 +291,11 @@ class Dining:
     def __parse_reserve_table(self, reserve_table: requests.Response) -> dict:
         content = bs(reserve_table.content, "html.parser").find("td", {"id": "pageTD"}).findNext("table").findNext("table") # TODO: Uncommnet
 
-        self.meals = [static_data.MEAL_FA_TO_EN[time.text.split(("\n"))[1].strip()] for time in
-                      content.findNext("tr").find_all("td")]
+        try:
+            self.meals = [static_data.MEAL_FA_TO_EN[time.text.split(("\n"))[1].strip()] for time in
+                          content.findNext("tr").find_all("td")]
+        except AttributeError:
+            raise NoFoodScheduleForUser
         content = content.find_all("tr", recursive=False)
         res = {}
         for i in range(1, len(content)):

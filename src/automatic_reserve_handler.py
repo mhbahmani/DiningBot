@@ -3,6 +3,7 @@ import threading
 from src import messages, static_data
 from src.error_handlers import (
     NotEnoughCreditToReserve,
+    NoFoodScheduleForUser,
     FoodsCapacityIsOver,
     NoSuchFoodSchedule,
     AlreadyReserved,
@@ -58,12 +59,13 @@ class AutomaticReserveHandler:
             bot = context.bot
         logging.info("########### Automatic reserve started ################")
         users = [self.db.get_user_reserve_info(user_id)] if user_id else self.db.get_users_with_automatic_reserve()
+        logging.info(f"**** Number of users: {len(users)} ****")
         for user in list(users):
             msg_receiver_id = admin_user_id if admin_user_id else user['user_id']
             reserves = {}
             try:
                 for place_id in user['food_courts']:
-                    if user.get('food_courts_next_week_reserve', {}).get(place_id, False): continue
+                    if user.get('food_courts_next_week_reserve', {}).get(str(place_id), False): continue
                     reserve_success = False
                     try:
                         logging.info("Reserving food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
@@ -99,8 +101,9 @@ class AutomaticReserveHandler:
                             text=messages.already_reserved_message.format(
                                 static_data.PLACES_NAME_BY_ID[place_id]))
                         reserve_success = True
-                        # If user has already reserved his food, we should set his next_week_reserve status to True 
-                        threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
+                        # If user has already reserved his food, we should set his food_court_next_week_reserve status to True
+                        # Because of the above line, the line below is unnecessary
+                        # threading.Thread(target=self.db.set_user_specific_food_court_reserve_status, args=(user['user_id'], place_id, reserve_success)).start()
                     except NotEnoughCreditToReserve as e:
                         logging.info(e.message)
                         await bot.send_message(
@@ -112,19 +115,23 @@ class AutomaticReserveHandler:
                         await bot.send_message(
                             chat_id=msg_receiver_id,
                             text=messages.food_capacity_is_over.format(static_data.PLACES_NAME_BY_ID[place_id]))
-                        threading.Thread(target=self.db.set_user_next_week_reserve_status, args=(user['user_id'], True)).start()
+                    except NoFoodScheduleForUser as e:
+                        logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e.message))
+                        await bot.send_message(
+                            chat_id=msg_receiver_id,
+                            text=messages.no_food_schedule_on_this_court_for_you_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
                     except NoSuchFoodSchedule as e:
                         logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e.message))
                         await bot.send_message(
-                            chat_id=self.admin_ids[0],
+                            chat_id=list(self.admin_ids)[0],
                             # text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
-                            text=messages.reserve_was_failed_message.format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id], place_id, e.message))
+                            text=messages.reserve_was_failed_message.format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id], place_id, e))
                     except Exception as e:
                         logging.error("Error on reserving food for user {} with message {}".format(user['user_id'], e))
                         await bot.send_message(
-                            chat_id=self.admin_ids[0],
+                            chat_id=list(self.admin_ids)[0],
                             # text=messages.reserve_was_failed_message.format(static_data.PLACES_NAME_BY_ID[place_id]))
-                            text=messages.reserve_was_failed_message.format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id], place_id, e.message))
+                            text=messages.reserve_was_failed_message.format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id], place_id, e))
 
                     reserves[place_id] = reserve_success
 

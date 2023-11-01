@@ -28,3 +28,8 @@ class DiningConnectionError(BaseException):
     def __init__(self, *args: object, message=None) -> None:
         message = message if message else "Can not connect to dining"
         super().__init__(message, *args)
+
+class NoFoodScheduleForUser(BaseException):
+    def __init__(self, *args: object, message=None) -> None:
+        message = message if message else "NoFoodScheduleForUser"
+        super().__init__(message, *args)

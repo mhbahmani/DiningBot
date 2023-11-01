@@ -97,6 +97,12 @@ class DB:
             {"$set": {"next_week_reserve": status}}
         )
 
+    def set_user_specific_food_court_reserve_status(self, user_id: int, place_id: str, reserve_status: bool):
+        user = self.get_user_reserve_info(user_id)
+        food_courts_next_week_reserve = user.get("food_courts_next_week_reserve", {})
+        food_courts_next_week_reserve[place_id] = reserve_status
+        self.set_user_food_court_next_week_reserve_status(user_id, food_courts_next_week_reserve)
+
     def set_user_food_court_next_week_reserve_status(self, user_id: int, reserves: dict):
         self.db.users.update_one(
             {"user_id": int(user_id)},

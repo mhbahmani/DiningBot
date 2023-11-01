@@ -58,9 +58,9 @@ class AutomaticReserveHandler:
         else:
             bot = context.bot
         logging.info("########### Automatic reserve started ################")
-        users = [self.db.get_user_reserve_info(user_id)] if user_id else self.db.get_users_with_automatic_reserve()
+        users = [self.db.get_user_reserve_info(user_id)] if user_id else list(self.db.get_users_with_automatic_reserve())
         logging.info(f"**** Number of users: {len(users)} ****")
-        for user in list(users):
+        for user in users:
             msg_receiver_id = admin_user_id if admin_user_id else user['user_id']
             reserves = {}
             try:

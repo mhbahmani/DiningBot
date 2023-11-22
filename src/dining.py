@@ -134,6 +134,8 @@ class Dining:
         #     file.write(bs(response.content, "html.parser").prettify())
         # with open("food_data.txt", "w") as file:
         #     file.writelines([f'{item}\n' for item in data])
+        with open(f"out-{self.student_id}.html", "w") as file:
+            file.write(bs(response.content, "html.parser").prettify())
         if "غذاهای ذیل تا حداکثر سقف ممکن توسط کاربران رزرو شده اند و امکان رزرو در آنها وجود ندارد" in text:
             raise(FoodsCapacityIsOver)
         if "تعداد مجاز رزرو روزانه شما بیش از حد مجاز است" in text:
@@ -141,8 +143,6 @@ class Dining:
         if "برنامه غذایی معادل پیدا نشد" in text or "لطفا مقدار مناسب وارد کنید" in text:
             raise(NoSuchFoodSchedule)
         if "اعتبار شما کم است" in text:
-            # with open(f"out-{self.student_id}.html", "w") as file:
-            #     file.write(bs(response.content, "html.parser").prettify())
             raise(NotEnoughCreditToReserve)
         self.remain_credit -= total_food_prices
         return self.remain_credit

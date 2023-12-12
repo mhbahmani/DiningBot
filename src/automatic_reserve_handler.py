@@ -69,7 +69,7 @@ class AutomaticReserveHandler:
                     reserve_success = False
                     try:
                         logging.info("Reserving food for user {} at {}".format(user['user_id'], static_data.PLACES_NAME_BY_ID[place_id]))
-                        reserve_success, reserved_foods, remain_credit = self.reserve_next_week_food_based_on_user_priorities(
+                        reserve_success, reserved_foods, remain_credit, reserved_days = self.reserve_next_week_food_based_on_user_priorities(
                             place_id,
                             user.get('reserve_days', {}).get(str(place_id), []),
                             user.get('priorities',
@@ -79,10 +79,13 @@ class AutomaticReserveHandler:
                         )
 
                         if reserve_success:
+                            reserve_report_message = messages.reserve_was_secceeded_message.format(
+                                    static_data.PLACES_NAME_BY_ID[place_id],
+                                    self.beautify_reserved_foods_output(reserved_foods, user.get('reserve_days', {}).get(str(place_id), []), reserved_days),
+                                    remain_credit)
                             await bot.send_message(
                                 chat_id=user['user_id'],
-                                text=messages.reserve_was_secceeded_message.format(
-                                    static_data.PLACES_NAME_BY_ID[place_id], self.beautify_reserved_foods_output(reserved_foods, user.get('reserve_days', {}).get(str(place_id), [])), remain_credit))
+                                text=reserve_report_message)
                             logging.info("Reserve was successfull for user {} at {}, remain credit: {}".format(user['user_id'],
                                                                                             static_data.PLACES_NAME_BY_ID[
                                                                                                 place_id], remain_credit))
@@ -171,18 +174,21 @@ class AutomaticReserveHandler:
                 choosed_food_indices[day][meal] = food_index_in_foods_list
 
                 food_names.append((foods[day][meal][food_index_in_foods_list].get('food'), day, meal))
-        remain_credit = dining.reserve_food(int(place_id), foods, choosed_food_indices, reserve_days)
-        return True, food_names, remain_credit
+        reserved_days, remain_credit = dining.reserve_food(int(place_id), foods, choosed_food_indices, reserve_days)
+        return True, food_names, remain_credit, reserved_days
 
-    def beautify_reserved_foods_output(self, food_names: list, choosed_days: list = []) -> str:
+    def beautify_reserved_foods_output(self, food_names: list, choosed_days: list = [], reserved_days: list = []) -> str:
         food_names.reverse()
         reserved_foods = []
         for i, food in enumerate(food_names):
             # If choosed days is empty, the whole week has been reserved
-            if choosed_days and not i in choosed_days: continue
+            # If the food day is not in reserved days, continue
+            # if choosed_days and not i in choosed_days: continue
+            if choosed_days and not " ".join(food[1].split()[1:]) in reserved_days: continue
             reserved_foods.append(
                 messages.list_reserved_foods_message.format(re.sub("\d+\/\d+\/\d+ ", "", food[1]), static_data.MEAL_EN_TO_FA.get(food[2], ""), food[0])
             )
+        print("\n".join(reserved_foods))
         return "\n".join(reserved_foods)
 
     async def notify_users(self):

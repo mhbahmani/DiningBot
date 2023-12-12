@@ -68,6 +68,7 @@ class Dining:
         epoch_start_of_the_next_week = str(int((now + datetime.timedelta(days=(7 - (now.weekday() + 2)))).replace(hour=0, minute=0, second=0).timestamp()) * 1000)
 
         reserve_days = set(static_data.WEEK_DAYS[day_id] for day_id in reserve_day_ids)
+        reserved_days = []
 
         data = [
             ('weekStartDateTime', f'{epoch_start_of_the_next_week}'),
@@ -101,6 +102,7 @@ class Dining:
                             (f"userWeekReserves[{i}].selectedCount", '1')
                         ]
                         total_food_prices += int(food.get("price"))
+                        reserved_days.append(" ".join(day.split()[1:]).strip())
 
                     # Convert food['program_date'] to epoch
                     program_date_epoch = str(int(
@@ -145,7 +147,7 @@ class Dining:
         if "اعتبار شما کم است" in text:
             raise(NotEnoughCreditToReserve)
         self.remain_credit -= total_food_prices
-        return self.remain_credit
+        return reserved_days, self.remain_credit
 
     def cancel_food(self, user_id: int, food_id: int):
         params = {'user_id': user_id, }

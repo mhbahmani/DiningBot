@@ -18,26 +18,29 @@ class Samad:
     FORGET_CODE_API = SETAD_BASE_URL + "forget-card-codes/print/"
     LOGIN_PAGE_URL = SAMAD_BASE_URL + "login/"
     OAUTH_TOKEN_URL = SETAD_DOMAIN + "oauth/token"
-# https://setad.dining.sharif.edu/oauth/token
+
 
     def __init__(self, student_id: str, password: str) -> None:
         self.student_id = student_id
         self.password = password
 
-        self.meals = []
-        self.meals_id_to_name = {
-            "5": "dinner",
-            "1": "lunch"
-        }
-        self.user_id = None
-        self.csrf = None
-        self.remain_credit = 0
         if not self.__samad_login():
             raise (Exception(ErrorHandler.INVALID_DINING_CREDENTIALS_ERROR))
-        self.headers = {
-        }
+        self.headers = {}
 
-    def get_current_today_all_forget_codes(self) -> list:
+    def get_current_day_all_forget_codes(self) -> list:
+        """
+        Output:
+        [
+            {
+                meal_type_id: <str>,
+                id: <str>,
+                food_name: <str>,
+                forget_code: <str>,
+                food_court_name: <src>
+            }
+        ]
+        """
         today_foods = self.find_current_day_reserves()
         foods = []
         for food in today_foods:
@@ -52,7 +55,8 @@ class Samad:
         [
             {
                 meal_type_id: <str>,
-                id: <str>
+                id: <str>,
+                food_court_name: <src>
             }
         ]
         """
@@ -65,7 +69,8 @@ class Samad:
                 for meal in reserve.get("mealTypes"):
                     today_reserves.append({
                         "meal_type_id": meal.get("mealTypeId"),
-                        "id": meal.get("reserve").get("id")
+                        "id": meal.get("reserve", {}).get("id"),
+                        "food_court_name": meal.get("reserve").get("selfName")
                     })
         
         return today_reserves
@@ -98,7 +103,7 @@ class Samad:
         if response.status_code != HTTPStatus.OK:
             pass
         return {
-            "food_name": response.json().get("payload", {}).get("foodName"),
+            "food_name": response.json().get("payload", {}).get("foodName").replace("|", ""),
             "forget_code": response.json().get("payload", {}).get("forgotCardCode")
         }
 

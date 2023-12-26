@@ -1,6 +1,9 @@
 from http import HTTPStatus
+from bs4 import BeautifulSoup as bs
 import requests
 import datetime
+import logging
+import re
 
 from src.error_handlers import ErrorHandler
 
@@ -8,9 +11,14 @@ from src.error_handlers import ErrorHandler
 class Samad:
     DEFAULT_DOMAIN_SCHEME = "https://"
     SETAD_DOMAIN = DEFAULT_DOMAIN_SCHEME + "setad.dining.sharif.edu/"
+    SAMAD_DOMAIN = DEFAULT_DOMAIN_SCHEME + "samad.app"
+    SAMAD_BASE_URL = SAMAD_DOMAIN + "/"
     SETAD_BASE_URL = SETAD_DOMAIN + "rest/"
     RESERVES_LIST_URL = SETAD_BASE_URL + "reserves/"
     FORGET_CODE_API = SETAD_BASE_URL + "forget-card-codes/print/"
+    LOGIN_PAGE_URL = SAMAD_BASE_URL + "login/"
+    OAUTH_TOKEN_URL = SETAD_DOMAIN + "oauth/token"
+# https://setad.dining.sharif.edu/oauth/token
 
     def __init__(self, student_id: str, password: str) -> None:
         self.student_id = student_id
@@ -67,7 +75,7 @@ class Samad:
             'weekStartDate': '',
         }
 
-        response = requests.get(Samad.RESERVES_LIST_URL, params=params, headers=self.headers)
+        response = self.session.get(Samad.RESERVES_LIST_URL, params=params, headers=self.headers)
         if response.status_code != HTTPStatus.OK:
             pass
         return response.json().get("payload", {}).get("weekDays", [])
@@ -86,7 +94,7 @@ class Samad:
             'dailySale': 'false',
         }
 
-        response = requests.get(Samad.FORGET_CODE_API, params=params, headers=self.headers)
+        response = self.session.get(Samad.FORGET_CODE_API, params=params, headers=self.headers)
         if response.status_code != HTTPStatus.OK:
             pass
         return {
@@ -95,8 +103,46 @@ class Samad:
         }
 
     def __samad_login(self) -> bool:
-        # TODO
-        return True
+        try:
+            self.session = requests.Session()
+            login_page = self.session.get(Samad.LOGIN_PAGE_URL)
+            # extract main java script url from this html with bs
+            soup = bs(login_page.content, 'html.parser')
+            for js_url in soup.find_all('script'):
+                if js_url.get('src') and "main" in js_url.get('src'):
+                    main_js_uri = js_url.get('src')
+                    break
+            # get main js file
+            main_js = self.session.get(Samad.SAMAD_DOMAIN + main_js_uri)
+
+            for authorization_elemnt in main_js.text.split("Authorization:"):
+                if "Basic" in authorization_elemnt and re.search(r'Basic \w+=*\"\,\"Content-Type\":\"application/x-www-form-urlencoded', authorization_elemnt):
+                    authorization_header = authorization_elemnt.split("}")[0].strip().replace('"', '').split(",")[0]
+                    break
+
+            headers = {"authorization": authorization_header}
+
+            data = {
+                'username': self.student_id,
+                'password': self.password,
+                'grant_type': 'password',
+                'scope': 'read+write',
+            }
+
+            # perform main login request
+            response = self.session.post(Samad.OAUTH_TOKEN_URL, headers=headers, data=data)
+            if response.status_code != HTTPStatus.OK:
+                return False
+
+            # get user authorization and refresh token
+            authorization_token = response.json().get("access_token")
+            # Add authorization token to session headers
+            self.session.headers.update({"Authorization": f"Bearer {authorization_token}"})
+            self.refresh_token = response.json().get("refresh_token")
+            return True
+        except Exception as e:
+            logging.error(f"Login to samad failed: {e}")
+            return False
 
     def check_username_and_password(username: str, password: str) -> bool:
         # TODO

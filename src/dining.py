@@ -210,7 +210,8 @@ class Dining:
 
         if response.status_code != HTTPStatus.OK \
             or str(response.text).find('ورود به سامانه سماد') != -1 \
-            or str(response.text).find('نام کاربری یا رمز عبور اشتباه است') != -1:
+            or str(response.text).find('نام کاربری یا رمز عبور اشتباه است') != -1 \
+            or str(response.text).find('کاربری شما در حال حاضر قفل گردیده است') != -1:
             logging.debug("Login failed")
             return False
         return True
@@ -297,7 +298,7 @@ class Dining:
             self.meals = [static_data.MEAL_FA_TO_EN[time.text.split(("\n"))[1].strip()] for time in
                           content.findNext("tr").find_all("td")]
         except AttributeError:
-            raise NoFoodScheduleForUser
+            raise(NoFoodScheduleForUser)
         content = content.find_all("tr", recursive=False)
         res = {}
         for i in range(1, len(content)):

@@ -33,3 +33,9 @@ class NoFoodScheduleForUser(BaseException):
     def __init__(self, *args: object, message=None) -> None:
         message = message if message else "NoFoodScheduleForUser"
         super().__init__(message, *args)
+
+
+class DiningLoginFailed(BaseException):
+    def __init__(self, *args: object, message=None) -> None:
+        message = message if message else "DiningLoginFailed"
+        super().__init__(message, *args)

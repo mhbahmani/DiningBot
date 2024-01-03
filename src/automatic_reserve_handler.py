@@ -6,6 +6,7 @@ from src.error_handlers import (
     NoFoodScheduleForUser,
     FoodsCapacityIsOver,
     NoSuchFoodSchedule,
+    DiningLoginFailed,
     AlreadyReserved,
     ErrorHandler
 )
@@ -107,6 +108,13 @@ class AutomaticReserveHandler:
                         # If user has already reserved his food, we should set his food_court_next_week_reserve status to True
                         # Because of the above line, the line below is unnecessary
                         # threading.Thread(target=self.db.set_user_specific_food_court_reserve_status, args=(user['user_id'], place_id, reserve_success)).start()
+
+                    except DiningLoginFailed as e:
+                        logging.info(e.message)
+                        await bot.send_message(
+                            chat_id=msg_receiver_id,
+                            text=messages.logind_failed_on_automatic_reserve_message.format(
+                                static_data.PLACES_NAME_BY_ID[place_id]))
                     except NotEnoughCreditToReserve as e:
                         logging.info(e.message)
                         await bot.send_message(
@@ -152,7 +160,7 @@ class AutomaticReserveHandler:
         try:
             dining = Dining(username, password)
         except Exception as e:
-            return [False], []
+            raise(DiningLoginFailed)
         foods = dining.get_reserve_table_foods(place_id)
         choosed_food_indices = {}
         food_names = []

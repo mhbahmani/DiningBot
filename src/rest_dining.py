@@ -18,6 +18,7 @@ class Samad:
     FORGET_CODE_API = SETAD_BASE_URL + "forget-card-codes/print/"
     LOGIN_PAGE_URL = SAMAD_BASE_URL + "login/"
     OAUTH_TOKEN_URL = SETAD_DOMAIN + "oauth/token"
+    RESERVE_TABLE_URL = SETAD_BASE_URL + "programs/v2/"
 # https://setad.dining.sharif.edu/oauth/token
 
     def __init__(self, student_id: str, password: str) -> None:
@@ -143,6 +144,28 @@ class Samad:
         except Exception as e:
             logging.error(f"Login to samad failed: {e}")
             return False
+
+    def check_user_week_reservation_status(self, food_court_id):
+        # Get date of the start of the next week starting date in 2024-01-06 00:00:00 format
+        now = datetime.datetime.now()
+        next_week_start_date = (now + datetime.timedelta(days=(7 - now.weekday() - 2))).strftime("%Y-%m-%d 00:00:00")
+
+        params = {
+            'selfId': str(food_court_id),
+            'weekStartDate': next_week_start_date,
+        }
+        response = self.session.get(
+            Samad.RESERVE_TABLE_URL,
+            headers=self.headers,
+            params=params
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            pass
+
+        if response.json().get("payload", {}).get("userWeekReserves"):
+            return True
+        return False
 
     def check_username_and_password(username: str, password: str) -> bool:
         # TODO

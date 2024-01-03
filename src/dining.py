@@ -329,6 +329,7 @@ class Dining:
                                 and int(input.attrs.get("value", 0)) == 1:
                                 logging.info("User reserved his food")
                                 raise(AlreadyReserved)
+                        for input in inputs:
                             if input.attrs.get('type') == "checkbox":
                                 food_id =  input.attrs['foodid']
                                 food_program_date = input.attrs['programdate']

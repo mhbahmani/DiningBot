@@ -5,6 +5,7 @@
 
 *.swp
 test.py
+.vscode
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

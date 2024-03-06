@@ -42,7 +42,9 @@ class Dining:
         self.meals = []
         self.meals_id_to_name = {
             "5": "dinner",
-            "1": "lunch"
+            "1": "lunch",
+            "2": "sahari",
+            "4": "eftari"
         }
         self.user_id = None
         self.csrf = None
@@ -308,18 +310,23 @@ class Dining:
             res[time] = {}
             content[i] = content[i].findNext("td")
             for j in range(len(self.meals)):
+                if day == "سه شنبه" and j == 4:
+                    print("yaaa")
                 meal_food_counter = 0
                 res[time][self.meals[j]] = res[time].get(self.meals[j], [])
-                if (len(content[i].findNext("td").findNext("table").find_all("tr", recursive=False)) != 0):
-                    foods = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)
+                # if (len(content[i].findNext("td").findNext("table").find_all("tr", recursive=False)) != 0):
+                if content[i].findNext("td", valign="top").find("table"):
+                    foods = content[i].findNext("td", valign="top").find("table").find_all("tr", recursive=False)
+                    if not foods:
+                        foods = content[i].findNext("td", valign="top").find("table").find_all("tr", recursive=False)[0].find_all("div")[0].find("table").find_all("tr", recursive=False)
                     for k in range(len(foods)):
                         price = foods[k].find_next("div", {"class": "xstooltip"}).text.strip().split()[0].strip()
                         food_name = foods[k].findNext("span").text.split("\n")[2].strip().split("|")[1].strip()
-                        food_program_id = content[i].findNext("td").findNext("table").find_all("tr", recursive=False)[
+                        food_program_id = content[i].findNext("td", valign="top").find("table").find_all("tr", recursive=False)[
                             meal_food_counter].find_next(
                             "div", {"class": "xstooltip"}).get("id").split("_")[-1].strip()
 
-                        inputs = list(content[i].findNext("td").findNext("table").findAll("input"))
+                        inputs = list(content[i].findNext("td", valign="top").find("table").findAll("input"))
                         if not list(content[i].findNext("td").findAll("input")):
                             break
                         input_counter = 0
@@ -349,7 +356,7 @@ class Dining:
                             "meal_type_id": meal_type_id
                         })
                         meal_food_counter += 1
-                content[i] = content[i].findNext("td")
+                content[i] = content[i].findNext("td", valign="top")
         foods = dict(reversed(list(res.items())))
         return foods
 

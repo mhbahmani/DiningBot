@@ -62,7 +62,9 @@ class DiningBot:
                 'INFO': logging.INFO,
                 'DEBUG': logging.DEBUG,
                 'ERROR': logging.ERROR,
-            }[log_level])
+            }[log_level],
+            filename="./dining-bot.log",
+            filemode='a')
 
     def check_admin(func):
         async def wrapper(self, *args, **kwargs):

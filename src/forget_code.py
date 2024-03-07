@@ -1,9 +1,10 @@
 from random import randint
-from src.utils import get_food_court_id_by_name, make_forget_code_statistics_message
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+
+from src.utils import get_food_court_id_by_name, make_forget_code_statistics_message
+from src.rest_dining import Samad 
 import src.messages as messages
 import src.static_data as static_data
-
 
 class ForgetCodeMenuHandler:
     FORGET_CODE_MINIMUM_LENGTH = 6
@@ -159,6 +160,28 @@ class ForgetCodeMenuHandler:
         )
         self.db.set_forget_code_for_user(update.effective_user.id, None)
 
+    async def get_user_forget_codes_for_today_reserves(self, update, context):
+        user_info = self.db.get_user_info_by_id(update.effective_user.id)
+        if not user_info or not user_info.get("student_number") or not user_info.get("password"):
+            await update.message.reply_text(
+                text=messages.username_and_password_not_set_message,
+            )
+            await self.back_to_main_menu(update)
+            return static_data.MAIN_MENU_CHOOSING
+        
+        dining = Samad(user_info.get("student_number"), user_info.get("password"))
+        today_reserve_forget_codes = dining.get_current_day_all_forget_codes()
+        if not today_reserve_forget_codes:
+            await update.message.reply_text(
+                text=messages.no_food_reserved_today_message,
+            )
+        else:
+            for forget_code in today_reserve_forget_codes:        
+                await update.message.reply_text(
+                    text=self.forget_code_list_message(forget_code),
+                )
+        return await self.send_forget_code_menu(update, context)
+
     async def get_fake_forget_code(self, update, context):
         await update.message.reply_text(
             text=messages.fake_forget_code_report_message,
@@ -195,6 +218,14 @@ class ForgetCodeMenuHandler:
         await self.back_to_main_menu(update)
         return static_data.MAIN_MENU_CHOOSING
     
+    def forget_code_list_message(self, forget_code: dict) -> str:
+        return messages.forget_code_list_message.format(
+            static_data.MEAL_EN_TO_FA.get(static_data.MEALS_ID_TO_NAME.get(str(forget_code.get("meal_type_id"))), messages.unkonw_meal_type),
+            forget_code.get("food_court_name"),
+            forget_code.get("food_name"),
+            forget_code.get("forget_code")
+        )
+
     def make_return_forget_code_button(self, forget_code):
         return InlineKeyboardMarkup([[InlineKeyboardButton(
                     messages.i_dont_want_this_code_message,

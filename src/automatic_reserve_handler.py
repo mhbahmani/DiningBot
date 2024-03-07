@@ -200,7 +200,6 @@ class AutomaticReserveHandler:
             reserved_foods.append(
                 messages.list_reserved_foods_message.format(re.sub("\d+\/\d+\/\d+ ", "", food[1]), static_data.MEAL_EN_TO_FA.get(food[2], ""), food[0])
             )
-        print("\n".join(reserved_foods))
         return "\n".join(reserved_foods)
 
     async def notify_users(self):

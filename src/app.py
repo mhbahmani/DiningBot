@@ -359,6 +359,11 @@ class DiningBot:
                         block=False
                     ),
                     MessageHandler(
+                        filters.Regex(GIVE_USER_TODAY_RESERVE_FORGET_CODE_REGEX),
+                        self.forget_code_handler.get_user_forget_codes_for_today_reserves,
+                        block=False
+                    ),
+                    MessageHandler(
                         filters.Regex(TODAY_CODE_STATISTICS_REGEX),
                         self.forget_code_handler.forget_code_statistics,
                         block=False

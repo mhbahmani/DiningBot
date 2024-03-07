@@ -8,6 +8,7 @@ DiningBot(
     token=config('TOKEN'), 
     admin_ids=seprate_admins(config('ADMIN_ID')),
     log_level=config('LOG_LEVEL', default='INFO'),
+    log_file_path=config('LOG_FILE_PATH', default='dining-bot.log'),
     db=DB(
         host=config('DB_HOST', default='127.0.0.1'),
         port=config('DB_PORT', default='27017')

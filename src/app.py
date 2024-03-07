@@ -40,7 +40,8 @@ class DiningBot:
         token, admin_ids=set(),
         sentry_dsn: str = None,
         environment: str = "development",
-        log_level='INFO', db: DB = None,
+        log_level='INFO', log_file_path="./dining-bot.log",
+        db: DB = None,
         admin_sso_username: str = None, admin_sso_password: str = None):
 
         self.admin_ids = admin_ids
@@ -63,7 +64,7 @@ class DiningBot:
                 'DEBUG': logging.DEBUG,
                 'ERROR': logging.ERROR,
             }[log_level],
-            filename="./dining-bot.log",
+            filename=log_file_path,
             filemode='a')
 
     def check_admin(func):

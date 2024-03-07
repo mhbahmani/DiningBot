@@ -11,6 +11,7 @@ from src.error_handlers import (
     ErrorHandler
 )
 from src.dining import Dining
+from src.rest_dining import Samad
 from telegram.ext import ApplicationBuilder
 from telegram import error
 
@@ -158,6 +159,9 @@ class AutomaticReserveHandler:
     def reserve_next_week_food_based_on_user_priorities(self, place_id, reserve_days: list, user_priorities: list, username,
                                                         password):
         try:
+            samad = Samad(username, password)
+            if samad.check_user_week_reservation_status(place_id):
+                raise(AlreadyReserved)
             dining = Dining(username, password)
         except Exception as e:
             raise(DiningLoginFailed)

@@ -28,7 +28,9 @@ class Samad:
         self.meals = []
         self.meals_id_to_name = {
             "5": "dinner",
-            "1": "lunch"
+            "1": "lunch",
+            "2": "sahari",
+            "4": "eftari"
         }
         self.user_id = None
         self.csrf = None
